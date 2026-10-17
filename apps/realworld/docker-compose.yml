@@ -1,0 +1,48 @@
+# [agentic] RealWorld/Conduit test subject.
+#   docker compose up -d --build        -> http://127.0.0.1:4100
+#   FAULTS=F01,F03 docker compose up -d -> same app with seeded faults on
+# Reset data between runs:  python -m harness.app reset  (or see README)
+name: conduit
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: conduit
+      POSTGRES_PASSWORD: conduit
+      POSTGRES_DB: conduit
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/agentic-reset.sql:/docker-entrypoint-initdb.d/10-agentic-reset.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conduit -d conduit"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 120s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.agentic
+    environment:
+      DATABASE_URL: postgresql://conduit:conduit@db:5432/conduit?schema=public
+      JWT_SECRET: agentic-local-secret
+      FAULTS: ${FAULTS:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.agentic
+    environment:
+      FAULTS: ${FAULTS:-}
+    ports:
+      - "127.0.0.1:${CONDUIT_PORT:-4100}:80"
+    depends_on:
+      - backend
+
+volumes:
+  dbdata:

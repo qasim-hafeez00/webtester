@@ -1,0 +1,4 @@
+# Shell scripts and SQL run inside Linux containers: keep LF even with core.autocrlf=true
+apps/**/*.sh text eol=lf
+apps/**/*.sql text eol=lf
+apps/bookstack/faults/injected.js text eol=lf

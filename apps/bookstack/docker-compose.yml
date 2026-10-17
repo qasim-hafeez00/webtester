@@ -1,0 +1,74 @@
+# BookStack 25.2.1 from the WebTestPilot benchmark (code-philia/WebTestPilot-benchmark @ b3055bf),
+# adapted to run as a long-lived app for exploration. Differences from their compose are listed in
+# README.md (no per-task browser container, host port, worker accounts, snapshot reset).
+name: bookstack
+
+services:
+  webapp:
+    image: solidnerd/bookstack:25.2.1
+    platform: linux/amd64
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      # Absolute URLs in pages must point at the address the browsers use.
+      - APP_URL=http://127.0.0.1:4200
+      - APP_KEY=base64:F4hZhDJ4XTPq2i11SejFCd3DzLa7ARzVUo5+q4PN9og=
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=bookstack
+      # No persistent cache: a cached setting would survive the DB reset between runs.
+      - CACHE_DRIVER=array
+      - CACHE_STORE=array
+    ports:
+      - "127.0.0.1:4200:8080"
+    volumes:
+      - app_config:/config
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/login"]
+      interval: 2s
+      timeout: 5s
+      retries: 90
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    environment:
+      - MYSQL_DATABASE=bookstack
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - db:/var/lib/mysql
+      - ./environment/baseline.sql:/docker-entrypoint-initdb.d/00-baseline.sql:ro
+      - ./environment:/agentic/environment:ro
+      - ./agentic:/agentic/bin:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uadmin", "-padmin"]
+      interval: 2s
+      timeout: 5s
+      retries: 25
+    restart: unless-stopped
+
+  # One-shot: snapshot the migrated, unseeded DB (first start only), then load the seed and
+  # the worker accounts. Runs again on every `up`, so the app always starts from the seed.
+  seed-loader:
+    image: mysql:8.4
+    volumes:
+      - ./environment:/agentic/environment:ro
+      - ./agentic:/agentic/bin:ro
+    command: bash /agentic/bin/setup.sh
+    depends_on:
+      webapp:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  app_config:
+  db:

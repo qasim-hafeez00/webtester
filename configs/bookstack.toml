@@ -1,0 +1,53 @@
+# BookStack 25.2.1 (apps/bookstack), the second subject app: from the WebTestPilot benchmark,
+# with its injected faults (decisions D31-D35). Run with:
+#   python -m webtester --config configs/bookstack.toml app up --faults all
+#   python -m webtester --config configs/bookstack.toml run --agent b4 --workers 4 --tokens 190000 ...
+
+[app]
+name = "bookstack"
+base_url = "http://127.0.0.1:4200"
+compose_dir = "apps/bookstack"
+health_path = "/login"
+# Snapshot restore + benchmark seed + worker accounts (apps/bookstack/agentic/reset.sh), about 1-3 s.
+reset_compose_args = ["exec", "-T", "db", "bash", "/agentic/bin/reset.sh"]
+# `app up` waits for this one-shot service (snapshot + seed + workers) before returning.
+setup_service = "seed-loader"
+# Client-side injected faults (WebTestPilot style), built by apps/bookstack/faults/build_injected.py.
+fault_script = "apps/bookstack/faults/injected.js"
+# D35: every worker is an admin, so one worker could delete another worker's account (that
+# worker would be locked out for the rest of the run), and webhooks make the BookStack server
+# send requests to any URL typed in. Neither is offered to agents.
+blocked_text = ["Delete User", "Create Webhook"]
+# The crawler cannot log back in mid-run, so it never clicks logout.
+crawler_avoid_text = ["logout", "log out"]
+# One account per worker, Admin role, with a copy of the admin's seeded favourites and views
+# (apps/bookstack/agentic/workers.sql).
+account_template = { username = "worker{i:02d}", email = "worker{i:02d}@bookstack.test", password = "password" }
+
+[app.login]
+path = "/login"
+fields = { "Email" = "{email}", "Password" = "{password}" }
+submit = "Log In"
+
+# [llm], [budget] and [run]: copied verbatim from configs/realworld.toml, so both apps run the
+# same model with the same settings (fairness rule, plan section 6). Change both files together.
+[llm]
+provider = "gemini"
+model = "gemini-3.5-flash-lite"
+temperature = 0.2
+max_output_tokens = 800
+json_mode = true
+min_interval_s = 6.5
+key_fallback = true
+price_in = 0.0
+price_out = 0.0
+
+[budget]
+max_steps = 300
+max_minutes = 15
+max_tokens = 1500000
+
+[run]
+seed = 1
+headless = true
+out_dir = "runs"

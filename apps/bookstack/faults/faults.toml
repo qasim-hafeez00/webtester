@@ -1,0 +1,176 @@
+# Ground truth for the injected faults in BookStack (second subject app, decisions D31-D35).
+#
+# Source: the 27 BookStack bug scripts of the WebTestPilot benchmark
+# (github.com/code-philia/WebTestPilot-benchmark @ b3055bf7, 2026-10-01), vendored unchanged in
+# wtp/bugs/. They are client-side: each is a JavaScript condition + DOM mutation that a browser
+# init script applies when the condition holds (see wtp/bug_injector.js). Identical or
+# same-effect scripts are merged into one fault here, so 27 scripts = 18 distinct faults.
+#
+# Fields:
+#   scripts      benchmark bug scripts (file stems) that implement the fault; all are injected
+#   class        the benchmark's own categories: missing-element | data (data inconsistency)
+#                (it also defines no-op and navigation; none of the BookStack scripts is one)
+#   trigger      when the script fires (read from its isConditionMet)
+#   effect       what the user sees (read from its onConditionMet)
+#   reachable    true if exploration can trigger it with the seeded data alone; false if the
+#                trigger needs a literal that only the benchmark's test specification supplies
+#   needs        for reachable = false: that literal
+#   note         anything else that limits when the effect is visible
+#
+# None of these faults crashes or logs an error, so implicit oracles cannot detect any of them
+# (no `detect` rules): they are found only by inferred oracles (G3) and labelled by hand.
+# When a fault fires, the injector logs "[wt-fault] <id>" (exposure, recorded in the trace).
+
+[[fault]]
+id = "BS01"
+scripts = ["favourite_book", "favourite_chapter", "favourite_page", "favourite_page_template", "unfavourite_shelf"]
+class = "missing-element"
+trigger = "Open My Favourites (/favourites)"
+effect = "The favourited shelf 'Shelf' is missing from My Favourites"
+reachable = true
+
+[[fault]]
+id = "BS02"
+scripts = ["recently_viewed_book", "recently_viewed_page", "recently_viewed_page_template", "recently_viewed_shelf"]
+class = "missing-element"
+trigger = "Arrive on the dashboard (/) for the 2nd time"
+effect = "'Chapter 2' is missing from Recently Viewed"
+reachable = true
+
+[[fault]]
+id = "BS03"
+scripts = ["recently_viewed_chapter"]
+class = "missing-element"
+trigger = "Arrive on the dashboard (/) for the 2nd time"
+effect = "'Page Template' is missing from Recently Viewed"
+reachable = true
+
+[[fault]]
+id = "BS04"
+scripts = ["delete_book"]
+class = "data"
+trigger = "Arrive on the Books list (heading 'Books') for the 2nd time"
+effect = "A phantom book card 'Book' (link /books/book-duplicate) is appended to the list"
+reachable = true
+
+[[fault]]
+id = "BS05"
+scripts = ["count_recently_created_books"]
+class = "data"
+trigger = "A user profile page, /user/<slug> (it has the 'Recently Created Pages' heading, h2#recent-pages)"
+effect = "A phantom book 'Custom Book Title' is listed under Recently Created Books, inconsistent with the profile's Created Content count"
+reachable = true
+note = "The script only appends to a non-empty list: a fresh worker's own profile has none ('has not created any ...'), so the phantom entry shows on profiles with created content, e.g. /user/admin, or on the worker's own profile after it creates one (verified 16 Oct)"
+
+[[fault]]
+id = "BS06"
+scripts = ["count_recently_created_chapters"]
+class = "data"
+trigger = "A user profile page, /user/<slug>"
+effect = "A phantom chapter 'Custom Chapter Title' is listed under Recently Created Chapters, inconsistent with Created Content"
+reachable = true
+note = "The script only appends to a non-empty list: a fresh worker's own profile has none ('has not created any ...'), so the phantom entry shows on profiles with created content, e.g. /user/admin, or on the worker's own profile after it creates one (verified 16 Oct)"
+
+[[fault]]
+id = "BS07"
+scripts = ["count_recently_created_shelves"]
+class = "data"
+trigger = "A user profile page, /user/<slug>"
+effect = "A phantom shelf 'Shelf 2' is listed under Recently Created Shelves, inconsistent with Created Content"
+reachable = true
+note = "The script only appends to a non-empty list: a fresh worker's own profile has none ('has not created any ...'), so the phantom entry shows on profiles with created content, e.g. /user/admin, or on the worker's own profile after it creates one (verified 16 Oct)"
+
+[[fault]]
+id = "BS08"
+scripts = ["count_recently_created_pages"]
+class = "data"
+trigger = "A Search Results page (heading 'Search Results'), e.g. 'View All' next to a profile's Recently Created Pages"
+effect = "A phantom result 'Some Page' (in 'Some Book') is appended to the results"
+reachable = true
+
+[[fault]]
+id = "BS09"
+scripts = ["recent_activity_all"]
+class = "data"
+trigger = "A user profile page (its Recent Activity block, #recent-user-activity)"
+effect = "Activity entries about Book1 claim they happened '1 year ago'"
+reachable = true
+note = "A worker's own profile lists only its own activity, so the effect shows once that worker has acted on Book1, or on /user/admin (I23)"
+
+[[fault]]
+id = "BS10"
+scripts = ["recent_activity_chapter", "recent_activity_page", "recent_activity_shelf"]
+class = "data"
+trigger = "A book or shelf page, e.g. /books/book1 (in 25.2.1 only these show both 'Recent Activity' and 'Details')"
+note = "Chapter pages and page views show Details but no Recent Activity, so the scripts recent_activity_chapter and recent_activity_page cannot fire on the page their own test case is about (I27); the merged fault still fires via book and shelf pages (verified 16 Oct)"
+effect = "Relative timestamps ('N minutes/hours/days ago') in Details and Recent Activity read '2 days ago'"
+reachable = true
+
+[[fault]]
+id = "BS11"
+scripts = ["recent_activity_page_template"]
+class = "data"
+trigger = "A page view (its Details block, #page-details), e.g. /books/book/page/page-template"
+effect = "The page's relative timestamps read '2 days ago'"
+reachable = true
+
+[[fault]]
+id = "BS12"
+scripts = ["search"]
+class = "data"
+trigger = "Open the book 'Book2' (/books/book2)"
+effect = "Its page 'Page 1' is listed as 'Page 3', inconsistent with search results"
+reachable = true
+
+[[fault]]
+id = "BS13"
+scripts = ["settings"]
+class = "missing-element"
+trigger = "Settings > Sorting (/settings/sorting)"
+effect = "The 'Create Sort Rule' button is missing"
+reachable = true
+
+[[fault]]
+id = "BS14"
+scripts = ["comment"]
+class = "data"
+trigger = "A comment with the text 'I like this template' is shown"
+effect = "The most deeply nested reply is moved up one level in the thread"
+reachable = false
+needs = "comment text 'I like this template'"
+
+[[fault]]
+id = "BS15"
+scripts = ["create_book"]
+class = "data"
+trigger = "Arrive on the Books list for the 2nd time, with a book named 'New Book'"
+effect = "'New Book' shows the description 'Bad Description' (or disappears from New Books)"
+reachable = false
+needs = "book name 'New Book'"
+
+[[fault]]
+id = "BS16"
+scripts = ["create_page"]
+class = "data"
+trigger = "Open the page at /books/book/page/new-page"
+effect = "The comment section is replaced by a stale one ('1 Comment' by Admin)"
+reachable = false
+needs = "a page titled 'New Page' in the book 'Book'"
+
+[[fault]]
+id = "BS17"
+scripts = ["create_sort_rule"]
+class = "data"
+trigger = "Arrive on Settings > Sorting for the 2nd time, with a rule named 'New Sort Rule'"
+effect = "The rule's order reads '(Desc)' instead of '(Asc)'"
+reachable = false
+needs = "sort rule name 'New Sort Rule'"
+
+[[fault]]
+id = "BS18"
+scripts = ["update_book"]
+class = "data"
+trigger = "Arrive on the Books list for the 2nd time, with a book named 'Updated Book'"
+effect = "'Updated Book' is shown as 'Book2'"
+reachable = false
+needs = "book name 'Updated Book'"

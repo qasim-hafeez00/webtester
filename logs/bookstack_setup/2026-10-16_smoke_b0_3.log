@@ -1,0 +1,38 @@
+run finished in 5.2 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261016-151730_bookstack_b0_n2_bssmoke3
+  run_id                   20261016-151730_bookstack_b0_n2_bssmoke3
+  agent                    b0
+  workers                  2
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    212
+  wall_minutes             5.07
+  unique_states            31
+  unique_routes            4
+  actions                  204
+  duplicate_action_rate    0.6716
+  failed_action_rate       0.049
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                0
+  llm_retries              0
+  policy_errors            0
+  tokens_total             0
+  tokens_per_step          0.0
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)

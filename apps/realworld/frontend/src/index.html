@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Conduit</title>
+    <base href="/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- [agentic patch P3] Styles vendored under assets/vendor (the original
+         demo.productionready.io theme is 404). Google Fonts dropped so runs
+         make no external requests. The AutoE2E start/stop/restart harness
+         buttons and the axios CDN script were removed: they are evaluation
+         controls, not app features, and an exploring agent would click them. -->
+    <link rel="stylesheet" href="assets/vendor/ionicons/css/ionicons.min.css" />
+    <link rel="stylesheet" href="assets/vendor/conduit-theme.css" />
+    <script src="assets/runtime-config.js"></script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>

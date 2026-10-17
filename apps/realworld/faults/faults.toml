@@ -1,0 +1,104 @@
+# Ground truth for seeded faults in RealWorld/Conduit.
+#
+# Every fault is dormant unless its id is in the FAULTS variable of the run
+# (`python -m webtester app up --faults F01,F02`). `detect` is the
+# implicit-oracle signature a fault produces (kind + substring of the finding
+# signature, optional page-URL substring). Faults without `detect` cannot be
+# caught by implicit oracles and need a semantic (inferred) oracle - that gap is
+# what research question RQ3 measures.
+#
+# classes: crash | validation | data | authorization | noop-ui
+#
+# `hint` (routes where the step started, check types) only helps a person label
+# inferred-oracle findings (`python -m webtester triage`). It is never shown to an
+# agent and never used as a label by itself.
+
+[[fault]]
+id = "F01"
+class = "crash"
+layer = "backend"
+summary = "Posting a comment longer than 280 characters returns HTTP 500"
+trigger = "Log in, open any article, post a comment of more than 280 characters"
+oracle = "Server error response; the comment does not appear"
+detect = { kind = ["http_5xx"], contains = "/comments" }
+
+[[fault]]
+id = "F02"
+class = "crash"
+layer = "frontend"
+summary = "Adding a tag that contains a space throws a TypeError in the editor"
+trigger = "Log in, New Article, type a tag with a space (e.g. 'web dev') and press Enter or publish"
+oracle = "Uncaught error logged; the tag is not added and publishing does nothing"
+detect = { kind = ["console_error", "page_error"], contains = "Cannot read properties of undefined", page = "/editor" }
+
+[[fault]]
+id = "F03"
+class = "validation"
+layer = "backend"
+summary = "Registration accepts an empty username"
+trigger = "Sign up with an email and password but an empty username"
+oracle = "Required field accepted (other blank fields are rejected); the new user has no name in the nav bar / profile link"
+hint = { routes = ["/register"], checks = ["route", "shows", "not_shows", "changes"] }
+
+[[fault]]
+id = "F04"
+class = "data"
+layer = "backend"
+summary = "Editing an article silently removes all of its tags"
+trigger = "Create an article with tags, open Edit, change the body, publish"
+oracle = "Tags shown before the edit are gone afterwards although they were never removed"
+hint = { routes = ["/editor", "/editor/*", "/article/*"], checks = ["shows"] }
+
+[[fault]]
+id = "F05"
+class = "data"
+layer = "backend"
+summary = "After favoriting, the displayed favorites count does not increase"
+trigger = "Log in, click the heart/favorite button of an article you have not favorited"
+oracle = "Button becomes active but the count stays the same; reloading shows the correct (+1) count"
+hint = { routes = ["/", "/article/*", "/profile/*", "/?page", "/?tag"], checks = ["count", "shows"] }
+
+[[fault]]
+id = "F06"
+class = "data"
+layer = "backend"
+summary = "Deleting a comment is acknowledged but not performed"
+trigger = "Post a comment, click its trash icon, reload the article"
+oracle = "The deleted comment reappears after reload"
+hint = { routes = ["/article/*"], checks = ["not_shows"] }
+
+[[fault]]
+id = "F07"
+class = "authorization"
+layer = "frontend+backend"
+summary = "Any logged-in user sees Edit/Delete on other users' articles, and delete succeeds"
+trigger = "Log in as a worker account, open an article written by alice/bob/carol/dave"
+oracle = "Modify controls offered to a non-author; deleting another user's article works"
+hint = { routes = ["/article/*"], checks = ["not_shows", "route"] }
+
+[[fault]]
+id = "F08"
+class = "data"
+layer = "backend"
+summary = "'Your Feed' lists articles from authors the user does not follow"
+trigger = "Log in as a worker account (follows nobody) and open Your Feed"
+oracle = "Feed should be empty (or only followed authors) but shows every article"
+hint = { routes = ["/"], checks = ["shows", "not_shows"] }
+
+[[fault]]
+id = "F09"
+class = "noop-ui"
+layer = "frontend"
+summary = "Clicking a pagination link does nothing"
+trigger = "On the home page (12 articles, 10 per page) click page 2"
+oracle = "Same articles still shown; page 2 never loads"
+hint = { routes = ["/", "/?page"], checks = ["changes", "shows", "not_shows", "route"] }
+
+[[fault]]
+id = "F10"
+class = "data"
+layer = "backend"
+summary = "Filtering by tag returns articles that do not have that tag"
+trigger = "Click a tag in the Popular Tags sidebar"
+oracle = "The tag-filtered list contains articles whose tag list lacks the selected tag"
+hint = { routes = ["/", "/?tag"], checks = ["shows", "not_shows"] }

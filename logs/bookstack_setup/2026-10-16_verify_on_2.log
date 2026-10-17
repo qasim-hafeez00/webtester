@@ -1,0 +1,22 @@
+enabled faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+Traceback (most recent call last):
+  File "C:\Users\Seraphindra\Desktop\agenticproject\apps\bookstack\faults\verify_faults.py", line 160, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\apps\bookstack\faults\verify_faults.py", line 151, in main
+    errors = check_reset(ctl) + asyncio.run(check_faults(args.expect == "on", faults))
+             ~~~~~~~~~~~^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\apps\bookstack\faults\verify_faults.py", line 79, in check_reset
+    left = db("SELECT COUNT(*) FROM bookstack.bookshelves WHERE slug = 'verify-reset'")
+  File "C:\Users\Seraphindra\Desktop\agenticproject\apps\bookstack\faults\verify_faults.py", line 67, in db
+    out = subprocess.run(["docker", "compose", "exec", "-T", "db", "mysql", "-uroot", "-proot", "-N", "-e", sql],
+                         cwd=ROOT / "apps/bookstack", capture_output=True, text=True, timeout=60)
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1640, in _communicate
+    raise TimeoutExpired(self.args, orig_timeout)
+subprocess.TimeoutExpired: Command '['docker', 'compose', 'exec', '-T', 'db', 'mysql', '-uroot', '-proot', '-N', '-e', "SELECT COUNT(*) FROM bookstack.bookshelves WHERE slug = 'verify-reset'"]' timed out after 60 seconds

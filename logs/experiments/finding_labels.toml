@@ -1,0 +1,33 @@
+# Finding labels (ground truth for precision and semantic-fault recall). See src/webtester/labels.py.
+# label = seeded fault id (F01..), U1-U5 (known upstream defect), "new: <what>" or "fp".
+
+["20261016-135850_realworld_b3v2local_n4_g1rep1"."console_error|ERROR {}"]
+label = ""  # suggest: U5? | candidate
+
+["20261016-135850_realworld_b3v2local_n4_g1rep1"."http_5xx|GET /api/profiles/*|500"]
+label = ""  # suggest: - | candidate
+
+["20261016-135850_realworld_b3v2local_n4_g1rep1"."console_error|ERROR \nInvalid `prisma.user.findUnique()` invocation:\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-poo"]
+label = ""  # suggest: - | candidate
+
+["20261016-141257_realworld_b3v2local_n4_g1rep2"."console_error|ERROR {}"]
+label = ""  # suggest: U5? | candidate
+
+["20261016-141257_realworld_b3v2local_n4_g1rep2"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/%3Cscript%3Ealert(<n>)%3C/scri"]
+label = ""  # suggest: - | candidate
+
+["20261016-141257_realworld_b3v2local_n4_g1rep2"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01 | candidate
+
+["20261016-142654_realworld_b3v2local_n4_g1rep3"."console_error|ERROR {}"]
+label = ""  # suggest: U5? | candidate
+
+["20261016-142654_realworld_b3v2local_n4_g1rep3"."http_5xx|GET /api/articles/*/comments|500"]
+label = ""  # suggest: F01 | candidate
+
+["20261016-142654_realworld_b3v2local_n4_g1rep3"."console_error|ERROR \nInvalid `prisma.article.findUnique()` invocation:\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-"]
+label = ""  # suggest: - | candidate
+
+["20261016-142654_realworld_b3v2local_n4_g1rep3"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01 | candidate
+

@@ -1,0 +1,8 @@
+seed-loader-1  | [agentic] waiting for BookStack
+seed-loader-1  | mysql: [Warning] Using a password on the command line interface can be insecure.
+seed-loader-1  | [agentic] first start: installing procedures and taking the snapshot
+seed-loader-1  | mysql: [Warning] Using a password on the command line interface can be insecure.
+seed-loader-1  | mysql: [Warning] Using a password on the command line interface can be insecure.
+seed-loader-1  | mysql: [Warning] Using a password on the command line interface can be insecure.
+seed-loader-1  | mysql: [Warning] Using a password on the command line interface can be insecure.
+seed-loader-1  | [agentic] ready

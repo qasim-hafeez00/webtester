@@ -1,0 +1,7 @@
+2026-10-16 15:43 window 1: 13 run(s) left
+15:44 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label g23rep
+=== b4 n=4 g23rep1 ===
+2026-10-16 15:45 window 1: 13 run(s) left
+waiting 1219 min for the quota reset

@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Secrets
+.env
+
+# Run outputs (traces can be large; archive the ones used in the paper separately)
+runs/
+
+# Copyrighted paper PDFs: keep locally, never publish
+literature/pdfs/
+
+# App build artefacts
+node_modules/
+dist/
+.angular/
+
+# Faults chosen at `app up --faults` for apps with client-side injected faults
+apps/*/.enabled_faults

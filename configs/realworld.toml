@@ -1,0 +1,43 @@
+# RealWorld / Conduit (apps/realworld). Development app for Phase 1.
+
+[app]
+name = "realworld"
+base_url = "http://127.0.0.1:4100"
+compose_dir = "apps/realworld"
+health_path = "/api/tags"
+reset_compose_args = ["exec", "-T", "db", "psql", "-q", "-U", "conduit", "-d", "conduit",
+                      "-v", "ON_ERROR_STOP=1", "-c", "SELECT agentic_reset()"]
+# Nothing in Conduit is destructive beyond the app's own data, which is reset per run.
+blocked_text = []
+# The crawler cannot log back in mid-run, so it never clicks logout.
+crawler_avoid_text = ["logout", "log out"]
+# One seeded account per worker (apps/realworld/backend/src/agentic/seed.ts).
+account_template = { username = "worker{i:02d}", email = "worker{i:02d}@conduit.test", password = "conduit-test-pw" }
+
+[app.login]
+path = "/login"
+fields = { "Email" = "{email}", "Password" = "{password}" }
+submit = "Sign in"
+
+[llm]
+# Free tier first (see docs/00_research_plan.md section 12). Any OpenAI-compatible
+# provider works: gemini | groq | openrouter | cerebras | openai | ollama.
+provider = "gemini"
+model = "gemini-3.5-flash-lite"   # 2.5-flash is closed to new keys; 3.8-flash timed out on 11 Oct
+temperature = 0.2
+max_output_tokens = 800
+json_mode = true
+min_interval_s = 6.5   # free tier is ~10 requests/minute
+key_fallback = true  
+price_in = 0.0
+price_out = 0.0
+
+[budget]
+max_steps = 300
+max_minutes = 15
+max_tokens = 1500000
+
+[run]
+seed = 1
+headless = true
+out_dir = "runs"

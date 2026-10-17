@@ -1,0 +1,230 @@
+# Hand-written status for each run (keyed by run id). The registry merges this.
+# status: valid | invalid | smoke
+
+["20261011-134659_realworld_random_n1_smoke"]
+status = "smoke"
+note = "First end-to-end harness check (random policy, no faults)."
+
+["20261011-134750_realworld_b0_n1_smoke"]
+status = "smoke"
+note = "Crawler check. Exposed oracle noise: Chrome logs every 4xx as a console error (fixed: those lines are ignored)."
+
+["20261011-140303_realworld_b0_n1_pilot-allfaults"]
+status = "valid"
+note = "B0 pilot, all 10 faults on. Its 2 console-error findings are upstream defect U5 (missing article/profile gives an uncaught error): true positives, unseeded."
+
+["20261011-144141_realworld_b1_n1_first-b1"]
+status = "invalid"
+note = "First LLM run (5 min). 5 replies rejected by the parser; a click that navigated was logged as failed. Both fixed afterwards."
+
+["20261011-144730_realworld_b1_n1_b1-15min"]
+status = "invalid"
+note = "Stopped at 8 min: shorthand action format ({\"click\": \"11\"}) rejected 11 times, worker aborted after 5 in a row. Fixed."
+
+["20261011-145643_realworld_b1_n1_b1-15min-v2"]
+status = "valid"
+note = "B1 pilot, all 10 faults on. Found F01 and F02 (the implicit-oracle ceiling). Clicked page 2 (F09) and favorite (F05) without noticing."
+
+["20261011-153030_realworld_b0_n1_rep2"]
+status = "valid"
+note = "B0 rep 2."
+
+["20261011-154535_realworld_b1_n1_rep2"]
+status = "invalid"
+note = "Network outage: 'Connection error' after 7 retries, an 8-minute stall, only 67 steps. Not comparable at equal wall-clock."
+
+["20261011-160047_realworld_b0_n1_rep3"]
+status = "valid"
+note = "B0 rep 3."
+
+["20261011-161552_realworld_b1_n1_rep3"]
+status = "valid"
+note = "B1 rep 3. Clean. Found F02 only."
+
+["20261011-163102_realworld_b0_n1_rep4"]
+status = "valid"
+note = "B0 rep 4."
+
+["20261011-164610_realworld_b1_n1_rep4"]
+status = "invalid"
+note = "Gemini free-tier daily quota exhausted (429) at minute 5.4."
+
+["20261011-170136_realworld_b0_n1_rep5"]
+status = "valid"
+note = "B0 rep 5."
+
+["20261011-171643_realworld_b1_n1_rep5"]
+status = "invalid"
+note = "Quota still exhausted: no steps."
+
+["20261012-152541_realworld_b1_n1_rep6"]
+status = "invalid"
+note = "One Gemini call took 61.7 s (no retry) on the last step: stall > 60 s, so invalid under D20 (applied as written; ~1 of 15 min lost). Sensitivity check: including it does not change any conclusion (see progress 12 Oct)."
+
+["20261012-154048_realworld_b1_n1_rep7"]
+status = "valid"
+note = "B1 rep 7. Found F02, plus upstream defect U1 (PUT /api/user -> 500 on a username collision): an unseeded true positive."
+
+["20261012-155554_realworld_b1_n1_rep8"]
+status = "valid"
+note = "B1 rep 8. Found F02."
+
+["20261012-173416_realworld_b1_n1_rep9"]
+status = "valid"
+note = "B1 rep 9 (second API key, same model, D21). Found F02. Completes B1 n = 5."
+
+["20261012-222054_realworld_b3_n2_smoke"]
+status = "smoke"
+note = "B3 v1 smoke (2 workers, 17 steps)."
+
+["20261012-222335_realworld_b1_n4_p2pilot"]
+status = "pilot"
+note = "B2 pilot (4 workers, 190k tokens). Design pilot, not counted: 25 states, 56% duplicate actions, F02."
+
+["20261012-223900_realworld_b3_n4_p2pilot"]
+status = "pilot"
+note = "B3 v1 pilot (advisory marks). Not counted: 31 states, 56% duplicates (no reduction). The suggestion never fired (0/137 steps) because the threshold counts nav-bar elements, so no page ever looks exhausted. Leads to B3 v2."
+
+["20261012-225412_realworld_b1_n4_g1rep1"]
+status = "valid"
+note = "B2 rep 1 (4 workers, 190k tokens). Healthy, budget-stopped. Run by the user with key_fallback = true (key rotation); same model, so measurements are comparable."
+
+["20261012-230953_realworld_b3_n4_g1rep1"]
+status = "valid"
+note = "B3 **v1** rep 1 (advisory frontier). Healthy, budget-stopped. key_fallback = true. Counts only for B3 v1."
+
+["20261012-232457_realworld_b1_n4_g1rep2"]
+status = "valid"
+note = "B2 rep 2. Healthy, budget-stopped. key_fallback = true."
+
+["20261012-234032_realworld_b3_n4_g1rep2"]
+status = "valid"
+note = "B3 **v1** rep 2. Healthy, budget-stopped. key_fallback = true. Counts only for B3 v1."
+
+["20261012-235517_realworld_b1_n4_g1rep3"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors."
+
+["20261013-000039_realworld_b3_n4_g1rep3"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors and zero steps."
+
+["20261013-000355_realworld_b1_n4_g1rep4"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors and zero steps."
+
+["20261013-000642_realworld_b3_n4_g1rep4"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors."
+
+["20261013-000941_realworld_b1_n4_g1rep5"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors and zero steps."
+
+["20261013-001235_realworld_b3_n4_g1rep5"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' (Google blocked a key's project during rotation, I17); all workers stopped with policy_unavailable; 20 policy errors and zero steps."
+
+["20261014-014147_realworld_b1_n4_g1rep3"]
+status = "valid"
+note = "B2 rep 3 (re-run of the 13 Oct rep 3 lost to I17). Single key, no rotation. Healthy, budget-stopped. Found F01 and F02."
+
+["20261014-015811_realworld_b3_n4_g1rep3"]
+status = "invalid"
+note = "Network outage: 8 LLM calls failed with 'Connection error' after 7 attempts, 740 s stall, 26.6 min wall clock. Invalid under D20; re-run."
+
+["20261014-022516_realworld_b3_n4_g1rep3"]
+status = "valid"
+note = "B3 v1 rep 3 (re-run after the network outage). Single key, no rotation. Healthy, budget-stopped. Found F02."
+
+["20261014-024016_realworld_b1_n4_g1rep4"]
+status = "invalid"
+note = "Gemini free-tier daily quota exhausted (429) mid-run: 22 LLM failures, 775 s stall, stopped by the 30-min cap at 89 steps. Re-run after the quota reset."
+
+["20261014-120511_realworld_b1_n4_g1rep4"]
+status = "valid"
+note = "B2 rep 4 (re-run after the 429). Primary key only. Healthy, budget-stopped. No seeded fault found."
+
+["20261014-122011_realworld_b3_n4_g1rep4"]
+status = "valid"
+note = "B3 v1 rep 4. Primary key only. Healthy, budget-stopped. Found F02."
+
+["20261014-123458_realworld_b3v2_n4_v2pilot1"]
+status = "pilot"
+note = "B3 v2 design pilot, not counted. Duplicate actions 37% (B2/B3 v1 ~55%), 25 states, 10 routes, F02. 60% of steps on the assigned focus area. Leak found: /profile/alice and its tabs were separate areas from /profile/*, fixed before the counted runs."
+
+["20261014-105402_realworld_b1_n4_rem-b2"]
+status = "invalid"
+note = "Run by the user before the quota reset: every call 429 'exceeded your current quota', all workers policy_unavailable after 2 steps. Also the wrong budget (15 min / 1.5M tokens instead of the Phase 2 190k tokens / 30 min, D24)."
+
+["20261014-110937_realworld_b3_n4_rem-b3"]
+status = "invalid"
+note = "Run by the user before the quota reset: every call 429, zero steps. Wrong budget as well (15 min / 1.5M tokens, not 190k / 30 min)."
+
+["20261014-112501_realworld_b3v2_n4_rem-b3v2"]
+status = "invalid"
+note = "Run by the user before the quota reset: every call 429, zero steps. Wrong budget as well. Also predates the frozen B3 v2 (profile sub-page fix came at 12:50)."
+
+["20261014-172648_realworld_b1_n4_g1rep5"]
+status = "valid"
+note = "B2 rep 5. Healthy, budget-stopped (146 steps). Run by the user with key_fallback = true; same model, so comparable. Found F02. Completes B2 n = 5."
+
+["20261014-174354_realworld_b3_n4_g1rep5"]
+status = "valid"
+note = "B3 v1 rep 5. Healthy, budget-stopped. key_fallback = true, same model. Found F01 and F02, plus U5 ('ERROR {errors: Object}'). Untriaged: POST /api/articles with tag '!@#$' -> 504, then 500 on the retry (possible unseeded defect, see I20). Completes B3 v1 n = 5."
+
+["20261014-175856_realworld_b3v2_n4_g1rep1"]
+status = "valid"
+note = "B3 v2 rep 1 (frozen v2). Healthy, budget-stopped. key_fallback = true, same model. Duplicate actions 37%, 38 states, 10 routes. Found F01 and F02."
+
+["20261014-181254_realworld_b3v2_n4_g1rep2"]
+status = "valid"
+note = "B3 v2 rep 2. Healthy, budget-stopped. key_fallback = true, same model. 41 states. No seeded fault found; its one finding is U5 ('ERROR {}')."
+
+["20261014-182650_realworld_b3v2_n4_g1rep3"]
+status = "invalid"
+note = "403 PERMISSION_DENIED 'Your project has been denied access' at minute 8.9 (I17 again: key rotation reached a blocked project); 20 policy errors, all workers policy_unavailable, 78 steps. Re-run as 20261015-151213 (label g13)."
+
+["20261015-151213_realworld_b3v2_n4_g13"]
+status = "valid"
+note = "B3 v2 rep 3 (label 'g13' = g1 rep 3). Healthy, budget-stopped, 0 retries (no key rotation happened). 37 states, 12 routes, duplicates 34%. Found F02, plus U5 twice."
+
+["20261015-152713_realworld_b3v2_n4_g14"]
+status = "valid"
+note = "B3 v2 rep 4 (label 'g14'). Healthy, budget-stopped, 0 retries. 48 states, duplicates 30%. Found F01 and F02. Three HTTP 504s at steps 102-125 (POST /api/articles with whitespace-only fields, POST comments on article '-1', DELETE follow) are untriaged; they coincide with 21 unrelated Docker containers (sk-*) starting on the laptop (I19), so probably load, not app defects."
+
+["20261015-154304_realworld_b3v2_n4_g15"]
+status = "valid"
+note = "B3 v2 rep 5 (label 'g15'). Healthy, budget-stopped, 0 retries. 37 states, 10 routes, duplicates 40%. Found F01 and F02, plus U5. Ran while the unrelated sk-* containers were up (I19). Completes B3 v2 n = 5."
+
+["20261016-145916_bookstack_random_n2_bssmoke"]
+status = "smoke"
+note = "BookStack smoke 1 (random policy, 2 workers, 80 steps, all 18 faults on). Harness, reset and injector load OK; random never logs in, so it stayed on /login and /register (5 states) and exposed nothing. 0 findings: no false page errors from the injector. Ran after the app-up/reset race fix (I28)."
+
+["20261016-150111_bookstack_b0_n2_bssmoke"]
+status = "smoke"
+note = "BookStack smoke 2 (B0 crawler, 2 workers, 5 min). 216 steps, 31 states, 0 findings. Exposed nothing because the crawler loop did not yet record exposure markers (only the LLM worker did); fixed in crawler.py right after (I30)."
+
+["20261016-150719_bookstack_b0_n2_bssmoke2"]
+status = "smoke"
+note = "BookStack smoke 3 (B0, 2 workers, 5 min) after the crawler fix: 192 steps, 28 states, 0 findings, 14 faults 'exposed', including BS15 and BS18, whose trigger held with no 'New Book'/'Updated Book' to change. Led to the visible/no-change marker (A3 refined, I30)."
+
+["20261016-151730_bookstack_b0_n2_bssmoke3"]
+status = "smoke"
+note = "BookStack smoke 4 (B0, 2 workers, 5 min) with the visible/no-change marker: 212 steps, 31 states, 0 findings, visible exposure of exactly the 13 reachable faults BS01-BS13; BS15 and BS18 trigger-only (no visible change); 0 injector errors. Confirms D32's reachable/literal split empirically, and that implicit oracles detect none of the 18 faults."
+
+["20261016-152848_realworld_b4_n4_b4pilot1"]
+status = "pilot"
+note = "B4 design pilot, not counted. Healthy, budget-stopped, 94 steps (B3 v2 ~124: about 2,040 tokens/step vs ~1,600 because of the check instructions), 30 states, 11 routes, duplicates 38%. Checks: 67 proposed, 48 pass, 11 violated, 8 skipped. Gate: 8 candidates, 5 confirmed, 3 rejected, 22 replays, 1.8 min. Judge: 4 calls, 1,008 tokens (0.5% of the run), 3 'bug', 1 'wrong_expectation'. Findings read by hand (not labels): F01 confirmed; 'Edit Article' offered to a non-author bounces home = F07 symptom, confirmed; U5 console error rejected by the gate (recall-loss case); route checks after a self-logout (auth redirect) and after saving settings (redirect to profile) = false positives, both confirmed by replay, judge caught one of the two. Worker 2 spent ~40 steps on an unreachable focus area (/editor/<someone else's article>). Decision D40: freeze B4 unchanged."
+
+["20261016-135850_realworld_b3v2local_n4_g1rep1"]
+status = "valid"
+note = "B3v2-local rep 1 (G1 ablation: the B3 v2 frontier per worker, not shared). Run by the user after the 16 Oct quota reset, before the B4 pilot. Healthy, budget-stopped, 114 steps, 29 states, 49% duplicates, no seeded fault found. key_fallback = true as configured."
+
+["20261016-141257_realworld_b3v2local_n4_g1rep2"]
+status = "valid"
+note = "B3v2-local rep 2. Run by the user. Healthy, budget-stopped, 116 steps, 25 states, 54% duplicates. Found F01."
+
+["20261016-142654_realworld_b3v2local_n4_g1rep3"]
+status = "invalid"
+note = "B3v2-local rep 3. Run by the user. Stall of 265 s at step 50 (worker 2: one LLM call needed 6 retries, 127 s total latency, step took 276 s), 21-min wall clock. Invalid under D20 (stall > 60 s); the queue re-runs rep 3."
