@@ -6,7 +6,9 @@ session that worker had, with the app's data reset before every replay:
 
 1. Minimise: replay the last 1 step, then the last `windows[1]` steps, ... up to
    the finding's step, until one replay reproduces the finding. That window is
-   the finding's minimal trace.
+   the finding's minimal trace. A window size of 0 means the worker's whole log
+   from its first step: the only window that rebuilds data the worker created
+   earlier (its own account, articles), which the reset wipes (gate v2, I32).
 2. Confirm: replay the minimal trace until there are `k` replays in total.
 3. Label: confirmed (k/k), flaky (1..k-1 of k), rejected (no replay reproduced
    it), unverified (gate time ran out first).
@@ -43,7 +45,7 @@ have). Reply with one JSON object and nothing else:
 @dataclass(frozen=True)
 class GateConfig:
     k: int = 3
-    windows: tuple[int, ...] = (1, 4)  # minimal-trace search: suffix lengths in steps
+    windows: tuple[int, ...] = (1, 4, 0)  # minimal-trace search: suffix lengths in steps, 0 = full prefix
     max_minutes: float = 20.0
     judge: bool = True
 
@@ -72,7 +74,7 @@ def windows_for(log: list[StepRecord], step: int, sizes: tuple[int, ...]) -> lis
         return []
     out, seen = [], set()
     for n in sizes:
-        start = max(0, idx - n + 1)
+        start = 0 if n <= 0 else max(0, idx - n + 1)
         if start in seen:
             continue
         seen.add(start)
@@ -81,13 +83,13 @@ def windows_for(log: list[StepRecord], step: int, sizes: tuple[int, ...]) -> lis
 
 
 async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) -> dict:
-    """One replay of `window` on freshly reset data. Returns {reproduced, missing, seconds}."""
+    """One replay of `window` on freshly reset data. Returns {reproduced, missing, failed, reason, seconds}."""
     t0 = time.monotonic()
     if ctl is not None:
         await asyncio.to_thread(ctl.reset)
     s = BrowserSession(browser, cfg, finding.worker)
     await s.start(storage_state=window[0].storage)
-    missing = 0
+    missing = failed = 0
     reproduced = False
     try:
         await s.goto(window[0].url)
@@ -105,6 +107,7 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                     break
                 res = await s.execute(a["do"], el.id if el else None, a["value"])
                 if not res.ok:
+                    failed += 1
                     ran_all = False
                     break
             if i == len(window) - 1 and finding.kind == "oracle_violation":
@@ -113,7 +116,10 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
             reproduced = any(signature(sig) == finding.sig for sig in s.drain_signals())
     finally:
         await s.close()
-    return {"reproduced": reproduced, "missing": missing, "seconds": round(time.monotonic() - t0, 1)}
+    reason = ("reproduced" if reproduced else "missing elements" if missing else "action failed" if failed
+              else "ran, not reproduced")
+    return {"reproduced": reproduced, "missing": missing, "failed": failed, "reason": reason,
+            "seconds": round(time.monotonic() - t0, 1)}
 
 
 async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation) -> bool:

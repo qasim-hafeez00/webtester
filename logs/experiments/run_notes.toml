@@ -228,3 +228,75 @@ note = "B3v2-local rep 2. Run by the user. Healthy, budget-stopped, 116 steps, 2
 ["20261016-142654_realworld_b3v2local_n4_g1rep3"]
 status = "invalid"
 note = "B3v2-local rep 3. Run by the user. Stall of 265 s at step 50 (worker 2: one LLM call needed 6 retries, 127 s total latency, step took 276 s), 21-min wall clock. Invalid under D20 (stall > 60 s); the queue re-runs rep 3."
+
+["20261020-194916_realworld_b4_n4_g23rep1"]
+status = "invalid"
+note = "B4 rep 1, started by a GitHub Copilot agent loop in VS Code (not by the queue). Stall 71 s and 14 LLM retries, 20.3-min wall clock for 104 steps. Invalid under D20 (stall > 60 s); re-run as 20261024-133035."
+
+["20261024-133035_realworld_b4_n4_g23rep1"]
+status = "valid"
+note = "B4 rep 1. Primary key. Healthy, budget-stopped, 103 steps, 27 states, 37% duplicates. Checks 74 proposed / 23 violated / 17 skipped. Gate: 15 candidates, 5 confirmed, 10 rejected, 2.6 min; judge 3 calls, 878 tokens. Candidates hit F01 and F02, but the gate rejected the F01 candidate (POST comments 500 not reproduced on replay: recall loss), so confirmed detection is F02 only."
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"]
+status = "valid"
+note = "A-G1 rep 1 (B4 without the shared frontier). Primary key. Healthy, budget-stopped, 114 steps, 26 states, 57% duplicates. Checks 108 / 19 violated. Gate: 12 candidates, 9 confirmed; judge 8 x 'bug'. Found F02 (confirmed)."
+
+["20261024-140256_realworld_b4_n4_g23rep2"]
+status = "valid"
+note = "B4 rep 2. Primary key. Healthy, budget-stopped, 96 steps, 31 states, 31% duplicates. Gate: 10 candidates, 7 confirmed. F01 candidate (POST comments 500) rejected by the gate (not reproduced), so 0/10 confirmed: recall-loss case. 1 policy error (recovered)."
+
+["20261024-141705_realworld_b4nog1_n4_g23rep2"]
+status = "invalid"
+note = "A-G1 rep 2. Stall 92 s (one slow step), 0 LLM failures, budget-stopped at 115 steps. Invalid under D20; re-run as 20261024-143711."
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"]
+status = "valid"
+note = "A-G1 rep 2 (re-run). Primary key. Healthy, budget-stopped, 113 steps, 31 states, 57% duplicates. Gate: 13 candidates, 9 confirmed; judge 3 bug / 5 wrong_expectation. Found F02 (confirmed). Its PUT /api/user -> 504 did not reproduce (untriaged, cf. I20)."
+
+["20261024-145604_realworld_b4_n4_g23rep3"]
+status = "valid"
+note = "B4 rep 3. Primary key. Healthy, budget-stopped, 100 steps, 34 states, 32% duplicates. Gate: 12 candidates, 9 confirmed. Found F02 (confirmed). GET /api/profiles/worker02 -> 500 did not reproduce (untriaged)."
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"]
+status = "valid"
+note = "A-G1 rep 3. Primary key. Re-run of 20261024-151007 (killed at step ~108 when the laptop entered Modern Standby; no summary, so not listed). Healthy, budget-stopped, 111 steps, 20 states, 67% duplicates. Gate: 12 candidates, 8 confirmed. Found F02 (confirmed)."
+
+["20261024-185243_realworld_b3v2local_n4_g1rep3"]
+status = "invalid"
+note = "B3v2-local rep 3. 20 x 403 PERMISSION_DENIED from minute 9.75: the primary key ran out of quota and key_fallback rotated to a blocked project (I17). 83 steps. Re-run as 20261024-191133."
+
+["20261024-191133_realworld_b3v2local_n4_g1rep3"]
+status = "valid"
+note = "B3v2-local rep 3 (re-run). GEMINI_API_KEY_4 (D41; same model and settings). Healthy, budget-stopped, 124 steps, 37 states, 38% duplicates. Found F02. Also DELETE favorite -> 500 (untriaged, ungated condition)."
+
+["20261024-192558_realworld_b4_n4_g23rep4"]
+status = "valid"
+note = "B4 rep 4. Key 4 (D41). Healthy, budget-stopped, 98 steps, 30 states, 30% duplicates. Checks 69 / 6 violated. Gate: 10 candidates, 6 confirmed; judge 3 x 'bug'. Found F01 and F02, both confirmed (F01 replayed 3/3 in 1 step)."
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"]
+status = "valid"
+note = "A-G1 rep 4. Key 4 (D41). Healthy, budget-stopped, 114 steps, 25 states, 62% duplicates; max step gap 49.8 s (under the 60 s rule). Gate: 11 candidates, 4 confirmed. No seeded fault found. Three 5xx (DELETE follow 500, GET /api/tags 500, PUT /api/user 504) did not reproduce (untriaged)."
+
+["20261024-195602_realworld_b3v2local_n4_g1rep4"]
+status = "invalid"
+note = "B3v2-local rep 4. Key 4. Stall 69 s: one LLM call needed 1 retry and 100.6 s (worker 3, step 95); 0 LLM failures, budget-stopped. Invalid under D20; re-run."
+
+["20261024-203129_realworld_b3v2local_n4_g1rep4"]
+status = "invalid"
+note = "B3v2-local rep 4 re-run. Key 4 out of daily quota: 20 x 429 from minute 5.3, 21 steps. Re-run on key 5 as 20261024-205906."
+
+["20261024-205906_realworld_b3v2local_n4_g1rep4"]
+status = "valid"
+note = "B3v2-local rep 4. GEMINI_API_KEY_5 (D41). Healthy, budget-stopped, 123 steps, 22 states, 52% duplicates, 16 LLM retries (no failures). Found F01 and F02."
+
+["20261024-211443_realworld_b4_n4_g23rep5"]
+status = "valid"
+note = "B4 rep 5. Key 5 (D41). Healthy, budget-stopped, 98 steps, 28 states, 36% duplicates. Gate: 8 candidates, 6 confirmed, 1 rejected. Candidates hit F01 and F02; F01 confirmed (3/3 in 1 step), F02 console-error candidate not confirmed (recall-loss case)."
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"]
+status = "valid"
+note = "A-G1 rep 5. Key 5 (D41). Healthy, budget-stopped, 113 steps, 35 states, 44% duplicates; max step gap 48.6 s. Gate: 10 candidates, 6 confirmed. Found F02 (confirmed). POST /api/articles -> 504 did not reproduce (untriaged)."
+
+["20261024-215010_realworld_b3v2local_n4_g1rep5"]
+status = "valid"
+note = "B3v2-local rep 5. Key 5 (D41). Healthy, budget-stopped, 112 steps, 26 states, 51% duplicates. Found F01. Completes B3v2-local n = 5, and with it the Phase 2 B4 / A-G1 / B3v2-local queue (5 valid reps each)."

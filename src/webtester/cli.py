@@ -9,6 +9,7 @@
   python -m webtester compare b0 b1                         median/IQR, Mann-Whitney U, A12 over valid runs
   python -m webtester triage runs/<run_id>                  list findings, add blank labels to finding_labels.toml
   python -m webtester gate-report b4 --workers 4            G2 per run: raw vs gate-confirmed (A-G2)
+  python -m webtester regate runs/<run_id>                  re-run the evidence gate on a finished run
 """
 
 from __future__ import annotations
@@ -76,6 +77,12 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--label-contains", default="")
     g.add_argument("--workers", type=int)
 
+    rg = sub.add_parser("regate", help="re-run the evidence gate on a finished run (needs its replay.jsonl)")
+    rg.add_argument("run_dir")
+    rg.add_argument("--gate-k", type=int, default=3)
+    rg.add_argument("--gate-minutes", type=float, default=20.0)
+    rg.add_argument("--no-judge", action="store_true")
+
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
 
@@ -135,6 +142,16 @@ def main(argv: list[str] | None = None) -> int:
         from .stats import gate_report, load_valid_runs
 
         print(gate_report(load_valid_runs(args.agent, args.label_contains, args.workers)))
+        return 0
+
+    if args.cmd == "regate":
+        import asyncio
+
+        from .gate import GateConfig
+        from .runner import regate
+
+        gate_cfg = GateConfig(k=args.gate_k, max_minutes=args.gate_minutes, judge=not args.no_judge)
+        print(json.dumps(asyncio.run(regate(cfg, Path(args.run_dir), gate_cfg)), indent=2))
         return 0
 
     if args.cmd == "report":

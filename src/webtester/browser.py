@@ -37,12 +37,25 @@ OBSERVE_JS = r"""
   };
   const SEL = 'a[href], button, input:not([type=hidden]), textarea, select, [role=button], [role=link], [role=tab], ' +
               '[role=checkbox], [role=menuitem], [role=switch], [contenteditable=""], [contenteditable=true], [onclick]';
+  // Framework click handlers (Angular (click), React onClick) leave no attribute behind, so an
+  // <a> without href or an icon <i> is invisible to SEL. Their usual tell is cursor:pointer: take
+  // the outermost such element (cursor is inherited) that is not inside an element SEL already
+  // takes (D43, I33).
+  const pointerCursor = new Map();
+  const isPointer = (el) => {
+    if (!el) return false;
+    if (!pointerCursor.has(el)) pointerCursor.set(el, getComputedStyle(el).cursor === 'pointer');
+    return pointerCursor.get(el);
+  };
+  const byCursor = (el) => isPointer(el) && !isPointer(el.parentElement) && !(el.parentElement && el.parentElement.closest(SEL));
   document.querySelectorAll('[data-wt-id]').forEach((e) => e.removeAttribute('data-wt-id'));
   const clean = (s, n) => (s || '').replace(/\s+/g, ' ').trim().slice(0, n);
   const els = [];
   let next = 1;
-  for (const el of document.querySelectorAll(SEL)) {
+  for (const el of document.body ? document.body.querySelectorAll('*') : []) {
     if (els.length >= maxEls) break;
+    const std = el.matches(SEL);
+    if (!std && !byCursor(el)) continue;
     if (!visible(el)) continue;
     const id = String(next++);
     el.setAttribute('data-wt-id', id);
@@ -50,6 +63,8 @@ OBSERVE_JS = r"""
     let label = '';
     if (el.labels && el.labels.length) label = el.labels[0].innerText;
     label = label || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('title') || el.getAttribute('name') || '';
+    // An icon taken by its cursor has no text; its class names (e.g. 'ion-trash-a') say what it does.
+    if (!std && !label && !clean(el.innerText, 1)) label = el.getAttribute('class') || '';
     let options = [];
     if (tag === 'select') options = Array.from(el.options).slice(0, 15).map((o) => clean(o.text, 30));
     const form = el.form || el.closest('form');

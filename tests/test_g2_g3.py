@@ -116,9 +116,22 @@ def test_gate_labels_windows_and_locate():
     assert [[r.step for r in w] for w in windows_for(log, 9, (1, 4))] == [[9], [2, 5, 9]]
     assert [[r.step for r in w] for w in windows_for(log, 2, (1, 4))] == [[2]]  # clipped duplicates dropped
     assert windows_for(log, 7, (1, 4)) == []
-    a, b = Element(id="4", tag="button", text="Delete"), Element(id="9", tag="button", text="Delete")
+    # gate v2: 0 = the worker's whole log up to the finding (rebuilds data it created earlier, I32)
+    assert [[r.step for r in w] for w in windows_for(log, 11, (1, 4, 0))] == [[11], [2, 5, 9, 11]]
+    assert [[r.step for r in w] for w in windows_for(log, 9, (1, 2, 0))] == [[9], [5, 9], [2, 5, 9]]
+    a, b =Element(id="4", tag="button", text="Delete"), Element(id="9", tag="button", text="Delete")
     obs = _obs("http://h/", a, b)
     assert locate(obs, a.key(), 1) is b and locate(obs, a.key(), 5) is a and locate(obs, "nope", 0) is None
+
+
+def test_replay_log_round_trip(tmp_path):
+    from webtester.worker import StepRecord, load_replay_log, save_replay_log
+
+    log = {2: [StepRecord(1, "http://h/a", {"cookies": [], "origins": []},
+                          [{"do": "click", "ekey": "button||||Go|", "nth": 0, "value": None}], [])],
+           1: [StepRecord(3, "http://h/b", {}, [], [{"check": "changes"}]), StepRecord(4, "http://h/c", {}, [], [])]}
+    save_replay_log(tmp_path / "replay.jsonl", log)
+    assert load_replay_log(tmp_path / "replay.jsonl") == log
 
 
 def _gate_ctx(tmp_path, findings):
@@ -212,6 +225,18 @@ def test_summarize_reports_checks_gate_and_gate_health(tmp_path):
     _write_trace(tmp_path / "c.jsonl", [base[0] | {"gate": None}] + base[1:] + end)  # no gate: unchanged keys
     s = summarize(tmp_path / "c.jsonl")
     assert s["health"]["ok"] and "gate_ok" not in s["health"] and "gate" not in s
+
+
+def test_summarize_merges_backend_and_page_exposure(tmp_path):
+    from webtester.metrics import summarize
+
+    events = [{"t": 0, "type": "run_start", "run_id": "r", "agent": "b1", "workers": 1, "faults": ["F05", "F09"]},
+              _step(1, 1) | {"faults_exposed": ["F09"]},
+              {"t": 2, "type": "backend_exposure", "faults": ["F05"]},
+              {"t": 3, "type": "run_end", "reasons": ["w1:max_tokens"]}]
+    _write_trace(tmp_path / "t.jsonl", events)
+    s = summarize(tmp_path / "t.jsonl")
+    assert s["faults_exposed"] == ["F05", "F09"] and s["faults_exposed_n"] == 2
 
 
 def test_label_metrics_precision_and_semantic_recall():

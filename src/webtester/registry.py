@@ -58,6 +58,19 @@ def _health(s: dict) -> str:
     return "⚠ " + (", ".join(bits) or "early stop")
 
 
+def _reach(run_dir: Path, faults: list[str]) -> dict | None:
+    from .metrics import load_fault_catalog, reach_from_trace
+
+    cfg_path = run_dir / "config.json"
+    if not cfg_path.exists():
+        return None
+    compose_dir = json.loads(cfg_path.read_text(encoding="utf-8")).get("app", {}).get("compose_dir") or ""
+    catalog_path = REPO_ROOT / compose_dir / "faults" / "faults.toml"
+    if not catalog_path.exists():
+        return None
+    return reach_from_trace(run_dir / "trace.jsonl", faults, load_fault_catalog(catalog_path))
+
+
 def build(runs_dir: Path | None = None) -> Path:
     runs_dir = runs_dir or REPO_ROOT / "runs"
     notes = tomllib.loads(NOTES.read_text(encoding="utf-8")) if NOTES.exists() else {}
@@ -76,6 +89,12 @@ def build(runs_dir: Path | None = None) -> Path:
             fd = s.get("fault_detection")
             s = summarize(d / "trace.jsonl") | ({"fault_detection": fd} if fd else {})
             (d / "summary.json").write_text(json.dumps(s, indent=2), encoding="utf-8")
+        if "fault_reach" not in s and s.get("faults") and (d / "trace.jsonl").exists():
+            # Runs from before the `reach` rules: add the offline trigger analysis (metrics.fault_reach).
+            reach = _reach(d, s["faults"])
+            if reach is not None:
+                s["fault_reach"] = reach
+                (d / "summary.json").write_text(json.dumps(s, indent=2), encoding="utf-8")
         dest = archive / d.name
         dest.mkdir(exist_ok=True)
         for name in ("summary.json", "findings.json", "config.json"):

@@ -6,7 +6,7 @@ import { ArticlePreviewComponent } from "./article-preview.component";
 import { NgClass, NgForOf, NgIf } from "@angular/common";
 import { LoadingState } from "../../../core/models/loading-state.model";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { fault } from "../../../core/agentic-faults";
+import { fault, fired } from "../../../core/agentic-faults";
 
 import { logToServer } from "src/logger";
 
@@ -72,6 +72,7 @@ export class ArticleListComponent {
   setPageTo(pageNumber: number) {
     // [FAULT F09] pagination links do nothing
     if (fault("F09")) {
+      if (pageNumber !== this.currentPage) fired("F09");
       return;
     }
     this.currentPage = pageNumber;

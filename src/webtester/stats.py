@@ -22,6 +22,7 @@ METRICS = [
     ("faults_found_all", "Seeded faults found (all oracles, labelled)", True),
     ("faults_found_confirmed", "Seeded faults found (gate-confirmed)", True),
     ("faults_exposed_n", "Injected faults exposed (fired)", True),
+    ("faults_reached", "Seeded faults reached (trigger attempted, offline)", True),
     ("findings", "Findings (all)", True),
     ("findings_confirmed", "Findings (gate-confirmed)", True),
     ("precision_raw", "Precision, raw candidates", True),
@@ -106,6 +107,8 @@ def load_valid_runs(agent: str, label_contains: str = "", workers: int | None = 
             continue
         fd = s.get("fault_detection") or {}
         s["faults_found"] = sum(1 for v in fd.values() if v["detected"])
+        if "fault_reach" in s:
+            s["faults_reached"] = sum(1 for v in s["fault_reach"].values() if v["reached"])
         f_path = d / "findings.json"
         if f_path.exists():
             findings = json.loads(f_path.read_text(encoding="utf-8"))

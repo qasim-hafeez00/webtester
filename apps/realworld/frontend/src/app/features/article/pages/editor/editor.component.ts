@@ -8,7 +8,7 @@ import {
 } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest } from "rxjs";
-import { fault } from "../../../../core/agentic-faults";
+import { fault, fired } from "../../../../core/agentic-faults";
 import { Errors } from "../../../../core/models/errors.model";
 import { ArticlesService } from "../../services/articles.service";
 import { UserService } from "../../../../core/auth/services/user.service";
@@ -71,6 +71,7 @@ export default class EditorComponent implements OnInit {
     // only add tag if it does not exist yet
     if (tag != null && tag.trim() !== "" && this.tagList.indexOf(tag) < 0) {
       // [FAULT F02] multi-word tags hit an undefined list
+      if (fault("F02") && tag.includes(" ")) fired("F02");
       const target: string[] = fault("F02") && tag.includes(" ") ? (undefined as any) : this.tagList;
       target.push(tag);
     }

@@ -27,6 +27,10 @@ except Exception as e:
 done
 [ "${out:0:2}" = "OK" ] || { echo "key still unavailable, giving up"; exit 1; }
 $PY -m webtester app status || $PY -m webtester app up --faults F01,F02,F03,F04,F05,F06,F07,F08,F09,F10
+# Never run alongside another run started elsewhere (seen 20 Oct: a second agent ran the same
+# items): two runs at once would share the quota and the laptop, and could duplicate an item.
+others() { powershell -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { \$_.CommandLine -match '-m webtester run' }).Count" | tr -d '\r'; }
+while [ "$(others)" != "0" ]; do echo "$(date +%H:%M) another run is in progress, waiting"; sleep 120; done
 for args in "$@"; do
   echo "=== batch: $args"
   PYTHONUNBUFFERED=1 $PY scripts/run_batch.py $args --stop-on-unhealthy || exit 1

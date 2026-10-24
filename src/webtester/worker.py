@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
 from .browser import BrowserSession
 from .budget import Budget
@@ -33,7 +35,8 @@ class RunContext:
     states_seen: set = field(default_factory=set)
     actions_seen: set = field(default_factory=set)
     # Evidence gate (G2): per worker, what each step started from and did, so a
-    # finding can be replayed later in a fresh context. Kept in memory only.
+    # finding can be replayed later in a fresh context. Saved as replay.jsonl so the
+    # gate can be re-run on a finished run (`webtester regate`).
     record_replay: bool = False
     replay_log: dict[int, list["StepRecord"]] = field(default_factory=dict)
     exposed: dict[int, set] = field(default_factory=dict)  # worker -> injected faults it has triggered
@@ -50,6 +53,23 @@ class StepRecord:
     storage: dict  # cookies + localStorage when the step started (the session to replay from)
     actions: list[dict]  # {do, ekey, nth, value} for the actions that ran
     expect: list[dict]  # checks evaluated after the actions (annotated)
+
+
+def save_replay_log(path: Path, log: dict[int, list[StepRecord]]) -> None:
+    """One JSON line per step record. Holds the local test accounts' session tokens: runs/ is gitignored."""
+    with path.open("w", encoding="utf-8") as fh:
+        for worker, records in sorted(log.items()):
+            for r in records:
+                fh.write(json.dumps({"worker": worker, **asdict(r)}, ensure_ascii=False) + "\n")
+
+
+def load_replay_log(path: Path) -> dict[int, list[StepRecord]]:
+    log: dict[int, list[StepRecord]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            d = json.loads(line)
+            log.setdefault(d.pop("worker"), []).append(StepRecord(**d))
+    return log
 
 
 async def run_worker(run: RunContext, session: BrowserSession, policy, worker: int, max_steps: int) -> str:

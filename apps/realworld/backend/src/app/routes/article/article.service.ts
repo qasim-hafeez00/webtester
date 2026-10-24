@@ -4,7 +4,7 @@ import HttpException from '../../models/http-exception.model';
 import profileMapper from '../profile/profile.utils';
 import articleMapper from './article.mapper';
 import { Tag } from '../tag/tag.model';
-import { fault } from '../../../agentic/faults';
+import { fault, fired } from '../../../agentic/faults';
 
 const buildFindAllQuery = (query: any, id: number | undefined) => {
   const queries: any = [];
@@ -43,6 +43,7 @@ const buildFindAllQuery = (query: any, id: number | undefined) => {
   queries.push(authorQuery);
 
   // [FAULT F10] tag filter silently ignored
+  if ('tag' in query && fault('F10')) fired('F10');
   if ('tag' in query && !fault('F10')) {
     queries.push({
       tagList: {
@@ -113,6 +114,7 @@ export const getArticles = async (query: any, id?: number) => {
 };
 
 export const getFeed = async (offset: number, limit: number, id: number) => {
+  if (fault('F08')) fired('F08');
   const articlesCount = await prisma.article.count({
     where: {
       // [FAULT F08] feed shows every author, not only followed ones
@@ -333,6 +335,7 @@ export const updateArticle = async (article: any, slug: string, id: number) => {
   }
 
   // [FAULT F04] tags are dropped when an article is edited
+  if (fault('F04') && Array.isArray(article.tagList) && article.tagList?.length) fired('F04');
   const tagList =
     !fault('F04') && Array.isArray(article.tagList) && article.tagList?.length
       ? article.tagList.map((tag: string) => ({
@@ -403,6 +406,7 @@ export const deleteArticle = async (slug: string, id: number) => {
   }
 
   // [FAULT F07] ownership check skipped on delete
+  if (existingArticle.author.id !== id && fault('F07')) fired('F07');
   if (existingArticle.author.id !== id && !fault('F07')) {
     throw new HttpException(403, {
       message: 'You are not authorized to delete this article',
@@ -479,6 +483,7 @@ export const addComment = async (body: string, slug: string, id: number) => {
 
   // [FAULT F01] comments longer than 280 characters crash the preview builder
   if (fault('F01') && body.length > 280) {
+    fired('F01');
     const preview: any = undefined;
     preview.text = body.slice(0, 280);
   }
@@ -562,6 +567,7 @@ export const deleteComment = async (id: number, userId: number) => {
 
   // [FAULT F06] comment deletion is acknowledged but never performed
   if (fault('F06')) {
+    fired('F06');
     return;
   }
 
@@ -607,6 +613,7 @@ export const favoriteArticle = async (slugPayload: string, id: number) => {
     },
   });
 
+  if (fault('F05')) fired('F05');
   const result = {
     ...article,
     author: profileMapper(article.author, id),

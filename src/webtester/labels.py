@@ -22,7 +22,7 @@ import tomllib
 from pathlib import Path
 
 from .config import REPO_ROOT
-from .metrics import fault_detection, load_fault_catalog
+from .metrics import fault_detection, load_fault_catalog, route_matches
 from .registry import LOG_DIR
 
 LABELS = LOG_DIR / "finding_labels.toml"
@@ -56,15 +56,10 @@ def suggest(f: dict, catalog: dict, enabled: list[str]) -> str:
         cands = []
         for fid in enabled:
             hint = catalog.get(fid, {}).get("hint") or {}
-            if check in hint.get("checks", ()) and any(_route_matches(r, route) for r in hint.get("routes", ())):
+            if check in hint.get("checks", ()) and any(route_matches(r, route) for r in hint.get("routes", ())):
                 cands.append(fid)
         return " / ".join(f"{c}?" for c in cands) or "fp?"
     return ""
-
-
-def _route_matches(pattern: str, route: str) -> bool:
-    """`/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11)."""
-    return route == pattern or (pattern.endswith("/*") and route.startswith(pattern[:-1]))
 
 
 def label_metrics(run_id: str, findings: list[dict], summary: dict, labels: dict) -> dict:

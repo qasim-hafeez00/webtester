@@ -31,3 +31,342 @@ label = ""  # suggest: - | candidate
 ["20261016-142654_realworld_b3v2local_n4_g1rep3"."http_5xx|POST /api/articles/*/comments|500"]
 label = ""  # suggest: F01 | candidate
 
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/login|now|/"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|shows|/login|now|worker04"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/register|now|/"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tag 'test, security, tags' has spaces) | confirmed
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/profile/*|now|/register"]
+label = ""  # suggest: fp: logged-in users are redirected from /register to / (correct) | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/|now|/register"]
+label = ""  # suggest: fp: logged-in users are redirected from /register to / (correct) | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/article/*|now|/editor/*"]
+label = ""  # suggest: F07: 'Edit Article' is offered on dave's article to a non-author and leads nowhere | confirmed | judge bug
+
+["20261024-133035_realworld_b4_n4_g23rep1"."console_error|ERROR {errors: Object}"]
+label = ""  # suggest: U5: missing or renamed article/profile URL gives an uncaught ERROR and redirects home (/editor/1 does not exist) | confirmed
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|changes|/editor/*|now|"]
+label = ""  # suggest: F02: TypeError fired on this step (tags 'tag1, tag2'); rejected because replay depends on in-run state | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|route|/editor/*|now|/article/*"]
+label = ""  # suggest: fp: navigate after editing another author's article went home; not reproduced | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01: comment > 280 chars returns 500; gate rejected it only because the worker's own account (newtester01) was gone after reset (gate bug) | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|shows|/article/*|now|this is a very long comment"]
+label = ""  # suggest: F01 (seen by an inferred check): the > 280-char comment is not shown because POST comments returned 500; rejected for the same state-dependency reason | rejected
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: F09: clicking pagination page '2' on / does nothing (rejected by the gate) | rejected
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld') | confirmed
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|shows|/editor|now|test article title"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02: Publish again with the same tag still blocked by the addTag TypeError | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|shows|/article/*|now|this is a test comment."]
+label = ""  # suggest: fp: short comment not yet rendered when checked (timing); not reproduced | rejected
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
+label = ""  # suggest: fp: comment text still visible right after 'Delete Article' (navigation pending); not reproduced | rejected
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: ? new or fp: Update Settings accepted email 'not-an-email' with the username cleared (U2 ignores empty values; no email format check). Decide if format validation is required | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|route|/editor/*|now|/article/*"]
+label = ""  # suggest: ? edited own article title, Publish stays on /editor/* with no error signal. Check by hand (F04 path?) | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|shows|/editor/*|now|updated brand new test article"]
+label = ""  # suggest: ? same step as the previous entry: edited article title not shown because Publish did not leave the editor | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|changes|/editor/*|now|"]
+label = ""  # suggest: ? same flow: Publish on the edited article does nothing (no error signal) | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: F09: clicking pagination page '2' on / does nothing | confirmed | judge bug
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|shows|/article/*|now|another test comment."]
+label = ""  # suggest: fp: comment not rendered yet at check time (timing); not reproduced | rejected
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|route|/login|now|/"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: fp: clicked page '1' while page 1 was already shown, so no change is correct | confirmed | judge bug
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|shows|/profile/alice/favorites|now|unfollow alice"]
+label = ""  # suggest: fp: worker was logged out, so Follow led to the sign-in page (correct for a guest) | confirmed | judge bug
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|shows|/settings|now|very_long_username_string_to_test_boundaries_1234567890_!@#$"]
+label = ""  # suggest: U5: username with '!@#$' makes the profile URL invalid, profile page fails (renamed-user case) | confirmed | judge bug
+
+["20261024-140256_realworld_b4_n4_g23rep2"."console_error|ERROR {}"]
+label = ""  # suggest: U5?: ERROR {} on navigation (missing/renamed profile pattern) | rejected
+
+["20261024-140256_realworld_b4_n4_g23rep2"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = ""  # suggest: ? new: whitespace-only settings values accepted (like U3, but for the user), then GET /api/profiles/ with an empty username fails | confirmed
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|route|/|now|/login"]
+label = ""  # suggest: fp: logged-in users are redirected from /login to / (correct) | confirmed | judge bug
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|route|/|now|/register"]
+label = ""  # suggest: fp: logged-in users are redirected from /register to / (correct) | confirmed | judge bug
+
+["20261024-140256_realworld_b4_n4_g23rep2"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01: comment > 280 chars returns 500; rejected because the article/user state was created in-run (gate bug) | rejected
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld') | confirmed
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (judge wrongly said wrong_expectation) | confirmed | judge wrong_expectation
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/editor|now|test article title"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02: Publish again with the same tag still blocked by the addTag TypeError | confirmed | judge bug
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/article/*|now|another test comment."]
+label = ""  # suggest: fp: comment typed but never submitted | confirmed | judge wrong_expectation
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|route|/settings|now|/"]
+label = ""  # suggest: fp: Conduit redirects to the profile, not /, after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/settings|/settings|updated bio test"]
+label = ""  # suggest: fp: the bio sits in a textarea value, which page text (innerText) does not include (check limitation) | confirmed | judge bug
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/profile/*|now|updated bio test"]
+label = ""  # suggest: fp: settings form shows the bio in a textarea (not in page text) | confirmed | judge wrong_expectation
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."console_error|ERROR {errors: Object}"]
+label = ""  # suggest: U5: missing or renamed article/profile URL gives an uncaught ERROR and redirects home (article renamed, old slug clicked) | rejected
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: F09: clicking pagination page '2' on / does nothing (rejected by the gate) | rejected
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|route|/settings|now|/profile/*"]
+label = ""  # suggest: fp: not reproduced (update timing) | rejected
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."http_5xx|PUT /api/user|504"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|shows|/settings|now|your settings"]
+label = ""  # suggest: fp: 'Your Settings' heading is gone because the app correctly redirected to the profile | confirmed | judge wrong_expectation
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: fp: clicked page '1' while page 1 was already shown, so no change is correct | confirmed | judge bug
+
+["20261024-145604_realworld_b4_n4_g23rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld') | confirmed
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|route|/article/*|now|/editor/*"]
+label = ""  # suggest: fp: non-author opening another author's editor is sent home (correct) | confirmed | judge bug
+
+["20261024-145604_realworld_b4_n4_g23rep3"."console_error|ERROR {errors: Object}"]
+label = ""  # suggest: U5: missing or renamed article/profile URL gives an uncaught ERROR and redirects home (/editor/new-slug-test does not exist) | confirmed
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|changes|/settings|now|"]
+label = ""  # suggest: fp: not reproduced | rejected
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|route|/|now|/editor/*"]
+label = ""  # suggest: fp: non-existent editor slug redirects home (correct; see U5) | confirmed | judge wrong_expectation
+
+["20261024-145604_realworld_b4_n4_g23rep3"."http_5xx|GET /api/profiles/*|500"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-145604_realworld_b4_n4_g23rep3"."console_error|ERROR \nInvalid `prisma.user.findUnique()` invocation:\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-poo"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|route|/login|now|/"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, conduit') | confirmed
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|shows|/editor|now|test article title"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|not_shows|/article/*|now|test article title"]
+label = ""  # suggest: fp: article still listed right after delete (navigation pending); not reproduced | rejected
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|shows|/settings|now|your settings"]
+label = ""  # suggest: fp: 'Your Settings' heading is gone because the app correctly redirected to the profile | confirmed | judge wrong_expectation
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) (judge said bug) | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: F09: clicking pagination page '2' on / does nothing | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|shows|/editor|now|testing article creation flow"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."oracle_violation|shows|/editor|now|testing article creation api"]
+label = ""  # suggest: fp: title was never filled, so Publish is rejected (correct); not reproduced | rejected
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"."http_5xx|POST /api/articles|504"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: U2?/fp: cleared bio/email ignored (U2), and the redirect to the profile is correct; not reproduced | rejected
+
+["20261024-192558_realworld_b4_n4_g23rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld') | confirmed
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-192558_realworld_b4_n4_g23rep4"."http_5xx|POST /api/articles/*/favorite|500"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce (favorite POST 500) | rejected
+
+["20261024-192558_realworld_b4_n4_g23rep4"."console_error|ERROR {errors: Object}"]
+label = ""  # suggest: U5?: ERROR {errors: Object} opening another author's editor (redirect home pattern) | rejected
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|changes|/editor/*|now|"]
+label = ""  # suggest: F02: TypeError fired on this step (tags 'tag1, tag-2') | rejected
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: fp: clicked page '1' while page 1 was already shown, so no change is correct | confirmed | judge bug
+
+["20261024-192558_realworld_b4_n4_g23rep4"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01: comment > 280 chars returns 500 | confirmed
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|shows|/article/*|now|a very long comment text"]
+label = ""  # suggest: F01 (seen by an inferred check): the > 280-char comment is not shown because POST comments returned 500 | confirmed | judge bug
+
+["20261024-192558_realworld_b4_n4_g23rep4"."console_error|ERROR {}"]
+label = ""  # suggest: U5: missing or renamed article/profile URL gives an uncaught ERROR and redirects home (username renamed to 'worker03!@#') | confirmed
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|route|/settings|now|/settings"]
+label = ""  # suggest: fp: Conduit redirects to the profile after Update Settings (correct behaviour) | confirmed | judge wrong_expectation
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|shows|/settings|now|your settings"]
+label = ""  # suggest: fp: 'Your Settings' heading is gone because the app correctly redirected to the profile | confirmed | judge wrong_expectation
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|shows|/settings|now|email can't be blank"]
+label = ""  # suggest: U2: clearing username/email is silently ignored by updateUser instead of rejected | confirmed | judge bug
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."http_5xx|DELETE /api/profiles/alice/follow|500"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce (unfollow 500 while the DB was unreachable, see next entries) | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."http_5xx|GET /api/tags|500"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."console_error|\nInvalid `prisma.tag.findMany()` invocation:\n\n\nCan't reach database server at `db`:`<n>`\n\nPlease make sure your database server is running at `db`:`<n>`."]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."http_5xx|PUT /api/user|504"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|changes|/profile/alice|now|"]
+label = ""  # suggest: fp: Follow did not visibly change in time; not reproduced | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|route|/login|now|/"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|shows|/login|now|worker04"]
+label = ""  # suggest: fp: Sign in/up stayed disabled at click time (form state); not reproduced | rejected
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|route|/article/*|now|/article/*"]
+label = ""  # suggest: fp: after deleting an article the app goes home (correct) | confirmed | judge wrong_expectation
+
+["20261024-211443_realworld_b4_n4_g23rep5"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: fp: clicked page '1' while page 1 was already shown, so no change is correct | confirmed | judge bug
+
+["20261024-211443_realworld_b4_n4_g23rep5"."oracle_violation|shows|/settings|now|your settings"]
+label = ""  # suggest: fp: 'Your Settings' heading is gone because the app correctly redirected to the profile | confirmed | judge wrong_expectation
+
+["20261024-211443_realworld_b4_n4_g23rep5"."http_5xx|POST /api/articles/*/comments|500"]
+label = ""  # suggest: F01: comment > 280 chars returns 500 | confirmed
+
+["20261024-211443_realworld_b4_n4_g23rep5"."oracle_violation|shows|/article/*|now|lorem ipsum dolor sit amet"]
+label = ""  # suggest: F01 (seen by an inferred check): the > 280-char comment is not shown because POST comments returned 500 | confirmed | judge bug
+
+["20261024-211443_realworld_b4_n4_g23rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld'); flaky 2/3 | flaky
+
+["20261024-211443_realworld_b4_n4_g23rep5"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-211443_realworld_b4_n4_g23rep5"."oracle_violation|route|/|now|/editor/*"]
+label = ""  # suggest: fp: non-author opening another author's editor is sent home (correct) | confirmed | judge bug
+
+["20261024-211443_realworld_b4_n4_g23rep5"."console_error|ERROR {errors: Object}"]
+label = ""  # suggest: U5?: ERROR {errors: Object} opening another author's editor | rejected
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|shows|/editor|now|test article title"]
+label = ""  # suggest: fp: title not filled ('title can't be blank'); not reproduced | rejected
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|changes|/editor|now|"]
+label = ""  # suggest: fp: not reproduced | rejected
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-TM72375S.js:<n>:<n>)\n    at n.submitForm (h"]
+label = ""  # suggest: F02: addTag TypeError (tags 'testing, realworld') | confirmed
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|route|/editor|now|/article/*"]
+label = ""  # suggest: F02 (seen by an inferred check): Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."http_5xx|POST /api/articles|504"]
+label = ""  # suggest: fp: infrastructure (DB connection pool / gateway timeout under load, I19); did not reproduce | rejected
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|shows|/settings|now|your settings"]
+label = ""  # suggest: fp: 'Your Settings' heading is gone because the app correctly redirected to the profile | confirmed | judge wrong_expectation
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|shows|/article/*|now|very long comment text with special characters"]
+label = ""  # suggest: fp: comment typed but never submitted | rejected
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|shows|/editor|now|fresh test article <n>"]
+label = ""  # suggest: fp: title was left blank ('title can't be blank' shown); the tag also had a space (F02), but the check is about the title | confirmed | judge wrong_expectation
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|changes|/|now|"]
+label = ""  # suggest: fp: clicked the home link while already on / | confirmed | judge wrong_expectation
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|shows|/editor|reload|a very long article title"]
+label = ""  # suggest: fp: title had been cleared at step 82, so Publish is correctly rejected | confirmed | judge bug
+

@@ -3,6 +3,7 @@ every condition is measured by the same code."""
 
 from __future__ import annotations
 
+import re
 import tomllib
 from collections import Counter
 from pathlib import Path
@@ -50,6 +51,9 @@ def summarize(trace_path: Path) -> dict:
         if i % 10 == 0 or i == len(steps):
             curve.append((i, round(s["t"] / 60, 2), len(states)))
 
+    for e in events:  # server-side markers read after exploration (appctl.fired_faults)
+        if e["type"] == "backend_exposure":
+            exposed.update(e["faults"])
     findings = [e["finding"] for e in events if e["type"] == "finding"]
     # Run health: an LLM outage or quota stop makes a time-budgeted run incomparable.
     gaps = [b["t"] - a["t"] for a, b in zip(steps, steps[1:])]
@@ -120,6 +124,73 @@ def _g2_g3(events: list[dict], checks: Counter, gate_done: dict | None) -> dict:
 def load_fault_catalog(path: Path) -> dict[str, dict]:
     raw = tomllib.loads(path.read_text(encoding="utf-8"))
     return {f["id"].upper(): f for f in raw.get("fault", [])}
+
+
+def route_matches(pattern: str, route: str) -> bool:
+    """`/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11)."""
+    return route == pattern or (pattern.endswith("/*") and route.startswith(pattern[:-1]))
+
+
+_EL_ID = re.compile(r"^\[(\d+)\]\s*")
+
+
+def _action_matches(cond: dict, a: dict) -> bool:
+    """One action against a `reach` condition: action type, element description (regex, without
+    its [id]), typed value (regex, or minimum length) and an optional ceiling on the element id."""
+    if cond.get("do") and a.get("do") not in cond["do"]:
+        return False
+    el = a.get("el") or ""
+    m = _EL_ID.match(el)
+    if cond.get("id_max") is not None and (m is None or int(m.group(1)) > cond["id_max"]):
+        return False
+    if cond.get("el") and not re.search(cond["el"], el[m.end():] if m else el):
+        return False
+    value = str(a.get("value") or "")
+    if cond.get("value") is not None and not re.search(cond["value"], value):
+        return False
+    return len(value) >= cond.get("min_len", 0)
+
+
+def fault_reach(steps: list[dict], enabled: list[str], catalog: dict[str, dict]) -> dict:
+    """Which enabled faults some worker at least attempted to trigger (offline, from the trace).
+
+    A catalog entry's `reach` rules describe the trigger as one step's actions: a route the
+    step started on, an action matching `el`/`do`/`value`, and optionally other actions in
+    the same step (`with`: one condition or a list, e.g. the long comment typed before Post
+    Comment). A rule without
+    `el` means visiting the route is enough. Separates "never reached" from "reached but not
+    detected" for faults without exposure markers (Conduit); an approximation, not ground truth."""
+    result = {}
+    for fid in enabled:
+        rules = catalog.get(fid, {}).get("reach") or []
+        first = None
+        for s in steps:
+            for r in rules:
+                if r.get("route") and not any(route_matches(p, s["route"]) for p in r["route"]):
+                    continue
+                acts = s.get("actions") or []
+                if not r.get("el") and not r.get("do"):
+                    hit = True
+                else:
+                    withs = r.get("with") or []
+                    withs = [withs] if isinstance(withs, dict) else withs
+                    hit = any(_action_matches(r, a) and all(any(_action_matches(w, b) for b in acts if b is not a)
+                                                            for w in withs) for a in acts)
+                if hit:
+                    first = {"worker": s["worker"], "step": s["step"]}
+                    break
+            if first:
+                break
+        result[fid] = {"reached": first is not None, "first": first, "has_rule": bool(rules)}
+    return result
+
+
+def reach_from_trace(trace_path: Path, enabled: list[str], catalog: dict[str, dict]) -> dict | None:
+    """`fault_reach` over a run's trace, or None when no enabled fault has a `reach` rule."""
+    if not any(catalog.get(fid, {}).get("reach") for fid in enabled):
+        return None
+    steps = [e for e in read_trace(trace_path) if e["type"] == "step"]
+    return fault_reach(steps, enabled, catalog)
 
 
 def fault_detection(findings: list[dict], enabled: list[str], catalog: dict[str, dict]) -> dict:

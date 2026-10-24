@@ -21,11 +21,11 @@ from .crawler import run_crawler
 from .frontier import Frontier, FrontierV2
 from .gate import GateConfig, run_gate
 from .llm import LLMClient
-from .metrics import fault_detection, load_fault_catalog, summarize
+from .metrics import fault_detection, load_fault_catalog, reach_from_trace, summarize
 from .oracles import FindingStore
 from .policies import LLMPolicy, RandomPolicy
 from .trace import Trace
-from .worker import RunContext, run_worker
+from .worker import RunContext, load_replay_log, run_worker, save_replay_log
 
 AGENTS = {
     "b0": "BFS crawler + random form filler (no LLM)",
@@ -89,6 +89,7 @@ async def run(cfg: RunConfig, agent: str, workers: int = 1, reset: bool = True, 
 
     ctx = RunContext(Budget(cfg.budget), trace, FindingStore(), record_replay=gate_on)
     reasons: list[str] = []
+    t_explore = time.time()
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=cfg.headless)
         try:
@@ -118,9 +119,17 @@ async def run(cfg: RunConfig, agent: str, workers: int = 1, reset: bool = True, 
             finally:
                 for s in sessions:
                     await s.close()
+            if ctl and faults:
+                # Read before the gate: its replays fire the same faults again.
+                try:
+                    fired = await asyncio.to_thread(ctl.fired_faults, t_explore, time.time())
+                    trace.event("backend_exposure", faults=fired)
+                except Exception as e:  # noqa: BLE001 - exposure is analysis only, never fatal
+                    trace.event("backend_exposure_error", error=f"{type(e).__name__}: {e}"[:500])
             if gate_on:
                 # Exploration is over (its budget is spent). The gate runs outside that budget
                 # and reports its own cost (replays, minutes, judge tokens).
+                save_replay_log(run_dir / "replay.jsonl", ctx.replay_log)
                 try:
                     await run_gate(browser, cfg, ctx, ctl, llm, gate_cfg)
                 except Exception as e:  # noqa: BLE001 - a gate failure must not lose the run
@@ -141,11 +150,43 @@ async def run(cfg: RunConfig, agent: str, workers: int = 1, reset: bool = True, 
     if faults and catalog_path.exists():
         catalog = load_fault_catalog(catalog_path)
         summary["fault_detection"] = fault_detection(findings, faults, catalog)
+        if (reach := reach_from_trace(run_dir / "trace.jsonl", faults, catalog)) is not None:
+            summary["fault_reach"] = reach
         if gate_on:
             confirmed = [f for f in findings if f["status"] == "confirmed"]
             summary["fault_detection_confirmed"] = fault_detection(confirmed, faults, catalog)
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return run_dir
+
+
+async def regate(cfg: RunConfig, run_dir: Path, gate_cfg: GateConfig) -> dict:
+    """Re-run the evidence gate on a finished run from its replay.jsonl, without new exploration.
+
+    Every finding starts again as a candidate. Results go to findings_regate.json and the gate
+    events to trace_regate.jsonl; the run's own findings.json, trace and summary stay untouched."""
+    from .oracles import Finding
+
+    log_path = run_dir / "replay.jsonl"
+    if not log_path.exists():
+        raise FileNotFoundError(f"{log_path} missing: only runs made after gate v2 saved their replay log")
+    trace = Trace(run_dir / "trace_regate.jsonl", run_dir.name)
+    ctx = RunContext(Budget(cfg.budget), trace, FindingStore(), record_replay=True)
+    ctx.replay_log = load_replay_log(log_path)
+    for d in json.loads((run_dir / "findings.json").read_text(encoding="utf-8")):
+        ctx.findings.by_sig[d["sig"]] = Finding(**{**d, "status": "candidate", "gate": {}, "judge": None})
+    ctl = AppControl(cfg.app) if cfg.app.compose_dir else None
+    llm = LLMClient(cfg.llm) if gate_cfg.judge else None
+    trace.event("regate_start", gate=gate_cfg.__dict__, git=_git_rev())
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=cfg.headless)
+        try:
+            out = await run_gate(browser, cfg, ctx, ctl, llm, gate_cfg)
+        finally:
+            await browser.close()
+    trace.close()
+    (run_dir / "findings_regate.json").write_text(
+        json.dumps([f.to_dict() for f in ctx.findings.all()], indent=2, ensure_ascii=False), encoding="utf-8")
+    return out
 
 
 def run_sync(*args, **kwargs) -> Path:
