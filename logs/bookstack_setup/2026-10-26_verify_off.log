@@ -1,0 +1,22 @@
+enabled faults: none
+reset: 5.46 s; probe row left after reset: 0
+accounts: 16 worker users; worker01 favourites: 4
+login worker01: ok
+login worker02: ok
+login worker03: ok
+login worker04: ok
+BS01 The favourited shelf 'Shelf' is missing from My Favourites   silent
+BS02 'Chapter 2' is missing from Recently Viewed                  silent
+BS03 'Page Template' is missing from Recently Viewed              silent
+BS04 A phantom book card 'Book' (link /books/book-duplicate) is a silent
+BS05 A phantom book 'Custom Book Title' is listed under Recently  silent
+BS06 A phantom chapter 'Custom Chapter Title' is listed under Rec silent
+BS07 A phantom shelf 'Shelf 2' is listed under Recently Created S silent
+BS08 A phantom result 'Some Page' (in 'Some Book') is appended to silent
+BS09 Activity entries about Book1 claim they happened '1 year ago silent
+BS10 Relative timestamps ('N minutes/hours/days ago') in Details  silent
+BS11 The page's relative timestamps read '2 days ago'             silent
+BS12 Its page 'Page 1' is listed as 'Page 3', inconsistent with s silent
+BS13 The 'Create Sort Rule' button is missing                     silent
+
+PASS in 116 s

@@ -1,0 +1,42 @@
+run finished in 12.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261026-002235_bookstack_b4_n4_bspilot
+  run_id                   20261026-002235_bookstack_b4_n4_bspilot
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    73
+  wall_minutes             8.15
+  unique_states            30
+  unique_routes            20
+  actions                  109
+  duplicate_action_rate    0.2844
+  failed_action_rate       0.0092
+  findings                 4
+  findings_by_kind         {'oracle_violation': 4}
+  llm_calls                73
+  llm_retries              0
+  policy_errors            0
+  tokens_total             201317
+  tokens_per_step          2757.8
+  checks                   {'proposed': 52, 'pass': 47, 'violated': 4, 'inconclusive': 0, 'skipped': 1}
+  gate                     {'candidates': 4, 'confirmed': 4, 'replays': 14, 'minutes': 4.4, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 4, 'judge_tokens': 1171}
+  findings_confirmed       4
+  judge_verdicts           {'wrong_expectation': 3, 'bug': 1}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
