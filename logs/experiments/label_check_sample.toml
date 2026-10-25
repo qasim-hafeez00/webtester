@@ -1,0 +1,347 @@
+# Blind check of Claude's labels (D45). Label each entry yourself WITHOUT opening finding_labels.toml.
+# Same vocabulary: F01..F10, U1..U6 (apps/realworld/README.md), "new: <what>" or "fp".
+# Context per entry: the finding message, the step's actions and the gate status. Random 20% (seed 45) of the B4-family entries.
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|shows|/article/*|now|this is a very long comment"]
+# oracle_violation | gate: rejected | worker 1 step 93 on article/Flaky-tests-are-a-smell-20
+# message: "expected: shows 'This is a very long comment' now | text not found; page starts: 'conduit home new article settings newtester01 flaky tests are a smell dave october 11, 2026 edit article delete article flaky tests are a "
+# action: fill [15] textarea label="Write a comment..." form#0 = 'This is a very long comment designed to test boundary conditions and text handl
+# action: click [16] button "Post Comment" form#0 
+label = ""
+
+["20261024-133035_realworld_b4_n4_g23rep1"."oracle_violation|shows|/login|now|worker04"]
+# oracle_violation | gate: rejected | worker 4 step 5 on login
+# message: "expected: shows 'worker04' now | text not found; page starts: 'conduit home sign in sign up sign in need an account? sign in conduit © 2026. an interactive learning project from realworld oss project. code licensed under"
+# action: fill [6] input[text] label="Email" form#0 = 'worker04@conduit.test'
+# action: fill [7] input[password] label="Password" form#0 = 'conduit-test-pw'
+# action: click [8] button "Sign in" disabled form#0 
+label = ""
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|route|/settings|now|/settings"]
+# oracle_violation | gate: confirmed | worker 1 step 33 on settings
+# message: 'expected: ends on route /settings | on /profile/*, expected /settings'
+# action: clear [9] input[email] label="Email" form#0 
+# action: fill [9] input[email] label="Email" form#0 = 'not-an-email'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"."oracle_violation|shows|/editor/*|now|updated brand new test article"]
+# oracle_violation | gate: confirmed | worker 4 step 98 on editor/Brand-New-Test-Article-4
+# message: "expected: shows 'Updated Brand New Test Article' now | text not found; page starts: 'conduit testing publish article conduit © 2026. an interactive learning project from realworld oss project. code licensed under mit.'"
+# action: fill [2] input[text] label="Article Title" value="Brand New Test Article" form#0 = 'Updated Brand New Test Article'
+# action: click [6] button "Publish Article" form#0 
+label = ""
+
+["20261024-140256_realworld_b4_n4_g23rep2"."console_error|ERROR {}"]
+# console_error | gate: rejected | worker 4 step 22 on /
+# message: 'ERROR {}'
+# action: navigate  = '/settings'
+label = ""
+
+["20261024-140256_realworld_b4_n4_g23rep2"."oracle_violation|shows|/settings|now|very_long_username_string_to_test_boundaries_1234567890_!@#$"]
+# oracle_violation | gate: confirmed | worker 4 step 18 on settings
+# message: "expected: shows 'very_long_username_string_to_test_boundaries_1234567890_!@#$' now | text not found; page starts: 'conduit conduit © 2026. an interactive learning project from realworld oss project. code licensed under m"
+# action: fill [9] input[email] label="Email" form#0 = 'very.long.email.address.for.testing.purposes.with.special.chars+test!@example.c
+# action: fill [10] input[password] label="New Password" form#0 = 'VeryLongPassword123!@#$'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|changes|/editor|now|"]
+# oracle_violation | gate: confirmed | worker 4 step 19 on editor
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|route|/settings|now|/"]
+# oracle_violation | gate: confirmed | worker 2 step 30 on settings
+# message: 'expected: ends on route / | on /profile/*, expected /'
+# action: fill [8] textarea label="Short bio about you" form#0 = 'Updated bio text'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|changes|/settings|now|"]
+# oracle_violation | gate: rejected | worker 2 step 54 on settings
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: fill [6] input[password] label="New Password" form#0 = 'verylongpassword1234567890abcdefghijklmnopqrstuvwxyz!'
+# action: click [7] button "Update Settings" form#0 
+label = ""
+
+["20261024-145604_realworld_b4_n4_g23rep3"."oracle_violation|route|/editor|now|/article/*"]
+# oracle_violation | gate: confirmed | worker 3 step 24 on editor
+# message: 'expected: ends on route /article/* | on /editor, expected /article/*'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Markdown content for the test article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261024-192558_realworld_b4_n4_g23rep4"."oracle_violation|changes|/|now|"]
+# oracle_violation | gate: confirmed | worker 4 step 72 on /
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: click [46] button "1" 
+label = ""
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."http_5xx|DELETE /api/profiles/alice/follow|500"]
+# http_5xx | gate: rejected | worker 2 step 69 on profile/alice
+# message: 'DELETE /api/profiles/alice/follow -> 500'
+# action: click [2] button "Unfollow alice" 
+label = ""
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"."oracle_violation|route|/article/*|now|/article/*"]
+# oracle_violation | gate: confirmed | worker 4 step 91 on article/Automated-Test-Article-4
+# message: 'expected: ends on route /article/* | on /, expected /article/*'
+# action: click [13] button "Delete Article" 
+label = ""
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"."oracle_violation|changes|/|now|"]
+# oracle_violation | gate: confirmed | worker 2 step 85 on /
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: click [44] a "conduit" href=/ 
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/article/*|now|/editor/*"]
+# oracle_violation | gate: confirmed | worker 4 step 48 on article/Flaky-tests-are-a-smell-part-two-20
+# message: 'expected: ends on route /editor/* | on /, expected /editor/*'
+# action: click [4] a "Edit Article" href=/editor/Flaky-tests-are-a-smell-part-two-20 
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/editor|now|/article/*"]
+# oracle_violation | gate: rejected | worker 1 step 37 on editor
+# message: 'expected: ends on route /article/* | on /editor, expected /article/*'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Markdown content here'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testtag'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/editor|now|/editor"]
+# oracle_violation | gate: confirmed | worker 1 step 69 on editor
+# message: 'expected: ends on route /editor | on /article/*, expected /editor'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = '   '
+# action: fill [9] input[text] label="Enter tags" form#0 = '   '
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/login|now|/"]
+# oracle_violation | gate: rejected | worker 3 step 58 on login
+# message: 'expected: ends on route / | on /login, expected /'
+# action: fill [6] input[text] label="Email" form#0 = 'worker03@conduit.test'
+# action: fill [7] input[password] label="Password" form#0 = 'conduit-test-pw'
+# action: click [8] button "Sign in" disabled form#0 
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/login|now|/settings"]
+# oracle_violation | gate: confirmed | worker 3 step 50 on login
+# message: 'expected: ends on route /settings | on /, expected /settings'
+# action: navigate  = '/settings'
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|route|/|now|/editor"]
+# oracle_violation | gate: confirmed | worker 2 step 23 on /
+# message: 'expected: ends on route /editor | on /, expected /editor'
+# action: navigate  = '/editor'
+label = ""
+
+["20261025-004138_realworld_b4_n4_h2rep1"."oracle_violation|shows|/profile/alice/favorites|now|unfollow alice"]
+# oracle_violation | gate: confirmed | worker 1 step 11 on profile/alice/favorites
+# message: "expected: shows 'Unfollow alice' now | text not found; page starts: 'conduit home sign in sign up sign in need an account? sign in conduit © 2026. an interactive learning project from realworld oss project. code licensed"
+# action: click [5] button "Follow alice" 
+label = ""
+
+["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|changes|/|now|"]
+# oracle_violation | gate: confirmed | worker 3 step 63 on /
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: click [46] a "testing" 
+label = ""
+
+["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|route|/settings|now|/settings"]
+# oracle_violation | gate: confirmed | worker 3 step 32 on settings
+# message: 'expected: ends on route /settings | on /profile/*, expected /settings'
+# action: fill [6] input[text] label="URL of profile picture" form#0 = 'https://example.com/pic.png'
+# action: fill [8] textarea label="Short bio about you" form#0 = 'This is a test bio.'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-015757_realworld_b4_n4_h2rep2"."http_5xx|PUT /api/user|500"]
+# http_5xx | gate: confirmed | worker 3 step 72 on settings
+# message: 'PUT /api/user -> 500'
+# action: click [11] button "Or click here to logout." 
+label = ""
+
+["20261025-015757_realworld_b4_n4_h2rep2"."oracle_violation|route|/login|now|/"]
+# oracle_violation | gate: confirmed | worker 3 step 92 on login
+# message: 'expected: ends on route / | on /login, expected /'
+# action: fill [6] input[text] label="Email" form#0 = 'worker03@conduit.test'
+# action: fill [7] input[password] label="Password" form#0 = 'conduit-test-pw'
+# action: click [8] button "Sign in" disabled form#0 
+label = ""
+
+["20261025-021544_realworld_b4nog1_n4_h2rep2"."oracle_violation|shows|/editor|now|new article after profile update"]
+# oracle_violation | gate: confirmed | worker 3 step 71 on editor
+# message: "expected: shows 'New Article After Profile Update' now | text not found; page starts: 'conduit home new article settings worker03_updated publish article conduit © 2026. an interactive learning project from realworld oss"
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Content of the new article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'test, conduit'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-032940_realworld_b4_n4_h2rep3"."http_5xx|POST /api/articles/*/comments|500"]
+# http_5xx | gate: confirmed | worker 4 step 69 on article/Flaky-tests-are-a-smell-part-two-20
+# message: 'POST /api/articles/Flaky-tests-are-a-smell-part-two-20/comments -> 500'
+# action: fill [15] textarea label="Write a comment..." form#0 = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
+# action: click [16] button "Post Comment" form#0 
+label = ""
+
+["20261025-032940_realworld_b4_n4_h2rep3"."oracle_violation|changes|/editor|now|"]
+# oracle_violation | gate: confirmed | worker 4 step 16 on editor
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Content in markdown format.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-032940_realworld_b4_n4_h2rep3"."oracle_violation|route|/article/*|now|/editor/*"]
+# oracle_violation | gate: confirmed | worker 4 step 57 on article/Flaky-tests-are-a-smell-part-two-20
+# message: 'expected: ends on route /editor/* | on /, expected /editor/*'
+# action: navigate  = '/editor/Flaky-tests-are-a-smell-part-two-20'
+label = ""
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
+# oracle_violation | gate: confirmed | worker 2 step 33 on article/Test-Article-Title-2
+# message: "expected: does not show 'This is a test comment.' now | found: ...2 october 25, 2026 edit article delete article body can't be blank post comment this is a test comment. worker02october 25, 2026 conduit © 2026. an intera"
+# action: clear [14] textarea label="Write a comment..." value="This is a test comment." form#0 
+# action: click [15] button "Post Comment" form#0 
+label = ""
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|route|/article/*|now|/"]
+# oracle_violation | gate: rejected | worker 2 step 37 on article/Test-Article-Title-2
+# message: 'expected: ends on route / | on /article/*, expected /'
+# action: click [9] button "Delete Article" 
+label = ""
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|route|/settings|now|/settings"]
+# oracle_violation | gate: confirmed | worker 2 step 53 on settings
+# message: 'expected: ends on route /settings | on /profile/*, expected /settings'
+# action: clear [9] input[email] label="Email" form#0 
+# action: fill [9] input[email] label="Email" form#0 = 'notanemail'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|route|/|now|/login"]
+# oracle_violation | gate: rejected | worker 3 step 2 on /
+# message: 'expected: ends on route /login | on /, expected /login'
+# action: click [3] a "Sign in" href=/login 
+label = ""
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|shows|/settings|reload|test bio update"]
+# oracle_violation | gate: rejected | worker 3 step 26 on settings
+# message: "expected: shows 'Test bio update' after reload | text not found; page starts: 'conduit home new article settings worker03 your settings update settings or click here to logout. conduit © 2026. an interactive learning pro"
+# action: fill [8] textarea label="Short bio about you" form#0 = 'Test bio update'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-045812_realworld_b4_n4_h2rep4"."console_error|ERROR {errors: Object}"]
+# console_error | gate: rejected | worker 1 step 62 on editor/Flaky-tests-are-a-smell-part-two-20
+# message: 'ERROR {errors: Object}'
+# action: click [4] a "Edit Article" href=/editor/Flaky-tests-are-a-smell-part-two-20 
+label = ""
+
+["20261025-051133_realworld_b4nog1_n4_h2rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+# console_error | gate: confirmed | worker 2 step 80 on editor
+# message: "ERROR TypeError: Cannot read properties of undefined (reading 'push')\n    at n.addTag (http://127.0.0.1:4100/chunk-BVFSTUM7.js:1:1473)\n    at n.submitForm (http://127.0.0.1:4100/chunk-BVFSTUM7.js:1:1601)\n    at http://12"
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'This is the markdown body of the test article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-051133_realworld_b4nog1_n4_h2rep4"."oracle_violation|changes|/editor|now|"]
+# oracle_violation | gate: confirmed | worker 2 step 80 on editor
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'This is the markdown body of the test article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-051133_realworld_b4nog1_n4_h2rep4"."oracle_violation|changes|/|now|"]
+# oracle_violation | gate: confirmed | worker 2 step 60 on /
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: click [6] a "Your Feed" 
+label = ""
+
+["20261025-051133_realworld_b4nog1_n4_h2rep4"."oracle_violation|shows|/settings|now|worker03_updated"]
+# oracle_violation | gate: rejected | worker 3 step 38 on settings
+# message: "expected: shows 'worker03_updated' now | text not found; page starts: 'conduit home new article settings worker03 your settings update settings or click here to logout. conduit © 2026. an interactive learning project fro"
+# action: fill [7] input[text] label="Username" form#0 = 'worker03_updated'
+# action: fill [8] textarea label="Short bio about you" form#0 = 'Updated short bio text.'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-052705_realworld_b4nog3_n4_h2rep4"."console_error|ERROR {}"]
+# console_error | gate: confirmed | worker 3 step 34 on /
+# message: 'ERROR {}'
+# action: fill [9] input[email] label="Email" form#0 = 'test+special@example.com'
+# action: fill [10] input[password] label="New Password" form#0 = 'pass!@#123'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-062837_realworld_b4_n4_h2rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+# console_error | gate: confirmed | worker 3 step 42 on editor
+# message: "ERROR TypeError: Cannot read properties of undefined (reading 'push')\n    at n.addTag (http://127.0.0.1:4100/chunk-BVFSTUM7.js:1:1473)\n    at n.submitForm (http://127.0.0.1:4100/chunk-BVFSTUM7.js:1:1601)\n    at http://12"
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Markdown content with special chars: <html><body>test</body></html>'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'tag1, tag2'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-062837_realworld_b4_n4_h2rep5"."http_5xx|PUT /api/user|500"]
+# http_5xx | gate: confirmed | worker 3 step 18 on settings
+# message: 'PUT /api/user -> 500'
+# action: fill [9] input[email] label="Email" form#0 = 'worker03@conduit.test'
+# action: fill [10] input[password] label="New Password" form#0 = 'newpassword123'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-062837_realworld_b4_n4_h2rep5"."oracle_violation|route|/editor|now|/article/*"]
+# oracle_violation | gate: confirmed | worker 3 step 42 on editor
+# message: 'expected: ends on route /article/* | on /editor, expected /article/*'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'Markdown content with special chars: <html><body>test</body></html>'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'tag1, tag2'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."http_5xx|POST /api/profiles/*/follow|500"]
+# http_5xx | gate: rejected | worker 2 step 61 on profile/worker03_updated
+# message: 'POST /api/profiles/worker03_updated/follow -> 500'
+# action: click [2] button "Follow worker03_updated" 
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|changes|/editor|now|"]
+# oracle_violation | gate: confirmed | worker 4 step 16 on editor
+# message: 'expected: page changes | URL and visible text unchanged'
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'This is the markdown body of the article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|route|/settings|now|/settings"]
+# oracle_violation | gate: confirmed | worker 4 step 31 on settings
+# message: 'expected: ends on route /settings | on /profile/*, expected /settings'
+# action: fill [8] textarea label="Short bio about you" form#0 = 'Updated bio text for testing settings.'
+# action: click [11] button "Update Settings" form#0 
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/article/*|now|testing article comment feature."]
+# oracle_violation | gate: rejected | worker 1 step 80 on article/Test-Article-Title-3
+# message: "expected: shows 'Testing article comment feature.' now | text not found; page starts: 'conduit test article title worker03_updated october 25, 2026 edit article delete article test article body content testing worker03_u"
+# action: fill [10] textarea label="Write a comment..." form#0 = 'Testing article comment feature.'
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/editor|now|test article title"]
+# oracle_violation | gate: confirmed | worker 4 step 16 on editor
+# message: "expected: shows 'Test Article Title' now | text not found; page starts: 'conduit home new article settings worker04 publish article conduit © 2026. an interactive learning project from realworld oss project. code license"
+# action: fill [8] textarea label="Write your article (in markdown)" form#0 = 'This is the markdown body of the article.'
+# action: fill [9] input[text] label="Enter tags" form#0 = 'testing, realworld'
+# action: click [10] button "Publish Article" form#0 
+label = ""
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/profile/*|now|unfollow worker03_updated"]
+# oracle_violation | gate: rejected | worker 2 step 61 on profile/worker03_updated
+# message: "expected: shows 'Unfollow worker03_updated' now | text not found; page starts: 'conduit worker03_updated this is an updated test bio. follow worker03_updated my posts favorited posts worker03_updated october 25, 2026 0 t"
+# action: click [2] button "Follow worker03_updated" 
+label = ""

@@ -48,6 +48,7 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - 30 files vendored byte-identical (`VENDORED.sha256`), CC BY 4.0 (I21).
 - **Exposure vs detection** (D36, D38): for injected faults, the trace records when a fault *visibly* changed a worker's page (DOM before vs after its effect), separately from whether it was reported. Trigger-only firings (no visible change) are kept apart.
 - **Labelling** (D30, D37): every finding of a B4-family run is labelled by hand (seeded id / U / new / fp). Solo author: a blind 20% re-label gives an intra-rater agreement figure (plan: two raters and κ).
+- **Labelling changed (D45, 25 Oct):** labels were assigned by Claude from checked evidence (`by = "claude"`), rule: the defect without which the finding would not occur, else fp. The user re-labels a blind 20% (49 entries) and the paper reports Cohen's kappa user vs Claude. Must be stated as such in the paper. Unseeded defect list now U1–U6 (U6 = editing creates a new article, I37).
 
 ## 4. Metrics and statistics
 - **Exploration:** unique abstract states, unique routes, duplicate-action rate (same state, element and input class), steps, tokens (`metrics.py`).
@@ -111,6 +112,14 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
     - Of the 4 reached, inferred checks found F07 (1 run) and F09 (4 runs, 2 confirmed). They missed F04 and F05 (reached in 8 and 6 runs) because no check exposing them was proposed.
   - **Gate v1 lost true F01 twice** because replays on a reset DB lack the worker's own account or articles (I32).
 
+- **Harness v2 re-runs complete (25 Oct, `h2rep`):** B3v2, B4, A-G1, A-G3 × 5 valid runs (`logs/experiments/phase2_g23_results.md`, second section).
+  - The observation fix (D43) works: F06, F08 and F10 fire in nearly every run (0 of 40 before). F04 never fires: it is UI-unreachable, because the editor creates a new article instead of updating (upstream U6, I37); F03 is UI-unreachable too (I34).
+  - G1 inside B4 replicates on duplicates (28% vs 56%, p = 0.008) but not on states or routes.
+  - The G3 ablation (A-G3 vs B4) gives 12 vs 2 findings (p = 0.008); the semantic share needs labels.
+  - **Labelled (D45), harness v2:** B4 vs A-G3 true findings/run 5 vs 2 (p = 0.040, Â12 0.92), distinct defects 4 vs 2 (p = 0.048), semantic seeded faults (F05–F10) 1 vs 0 per run (p = 0.048), precision gate-confirmed 50% vs 100%. A-G1 vs B4: no labelled difference. Judge called all 4 F08 hits `wrong_expectation`. G3 failure funnel: F05 never got a `count` check, F06 got 33 'gone now' checks (UI hides it; only a reload check would expose it), F10 needs a check the language cannot express. Details: `phase2_g23_results.md`.
+  - G3 still costs steps: B4 94 vs B3v2 115 (p = 0.008), states 26 vs 34 (p = 0.087).
+  - Gate v2: real F01 confirmed once and lost once (cross-worker); two '/comments 500' candidates were not F01, by the exposure markers (I36).
+
 ## 7. Run accounting (all runs, as of 24 Oct)
 - **75 runs with a summary:** 40 valid, 4 pilots, 7 smoke, 24 invalid. The 24 Oct batch had 13 valid runs and 4 invalid (2 stalls, 1 × 403 I17, 1 × 429 on key 4), plus the 20 Oct Copilot-loop B4 rep 1 (stall). Two more attempts have no summary and are not counted: a cold-Docker crash before step 1 (I31) and a run killed by Modern Standby.
 
@@ -137,6 +146,7 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
 - **Oracle expressiveness:** the single-page check language cannot express the relational consistency the base paper's oracles check (I22).
 - **Benchmark fidelity:** client-side injected faults, not source faults; 5 of 18 are unreachable without the spec; the benchmark was revised after the paper (fact sheet 01). Two scripts cannot fire on the page their own test case is about in BookStack 25.2.1 (I27). Some effects need data a fresh worker lacks (I23).
 - **Labelling:** a single labeller (D30).
+- **Labels by the LLM-based assistant (D45):** risk of shared bias with the system's own LLM judgements; mitigated by evidence-based rules, the user's blind 20% check (kappa) and the label rule written down. F03 and F04 are UI-unreachable (I34, I37), so seeded-fault recall is over 8 faults.
 - **State abstraction v0:** keeps `/profile/alice` and `/profile/bob` apart (I11). The same abstraction is used for every condition.
 - **Unseeded real bugs found:**
   - U1 (PUT /api/user 500 on a username collision) and U5 (uncaught error on a missing article or profile).

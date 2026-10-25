@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Wait for the Gemini daily quota reset (midnight Pacific = 12:00 PKT), confirm the
 # primary key answers, then run the next batch.
-# Usage: scripts/after_reset.sh [--next-reset] "<run_batch args>" ...
+# Usage: scripts/after_reset.sh [--next-reset | --now] "<run_batch args>" ...
 #   --next-reset: today's reset is already used up, wait for tomorrow's.
+#   --now: the key has quota now (e.g. a fresh key), do not wait for any reset.
 set -u
 cd "$(dirname "$0")/.."
 PY=.venv/Scripts/python
 day=today
 [ "${1:-}" = "--next-reset" ] && { shift; [ "$(date +%s)" -ge "$(date -d 'today 12:05' +%s)" ] && day=tomorrow; }
 target=$(date -d "$day 12:05" +%s); now=$(date +%s)
+[ "${1:-}" = "--now" ] && { shift; target=$now; }
 [ "$now" -lt "$target" ] && { echo "waiting $(( (target-now)/60 )) min for the quota reset"; sleep $((target-now)); }
 for i in $(seq 1 12); do
   out=$($PY -c "

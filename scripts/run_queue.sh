@@ -31,7 +31,7 @@ for day in $(seq 1 "$MAX_DAYS"); do
   [ ${#batches[@]} -eq 0 ] && { echo "$(date '+%F %H:%M') queue done"; exit 0; }
   echo "$(date '+%F %H:%M') window $day: ${#batches[@]} run(s) left"
   if [ "$day" = "1" ] && [ "${FIRST_WINDOW_NOW:-0}" = "1" ]; then
-    bash scripts/after_reset.sh "${batches[@]}"
+    bash scripts/after_reset.sh --now "${batches[@]}"
   else
     bash scripts/after_reset.sh --next-reset "${batches[@]}"
   fi

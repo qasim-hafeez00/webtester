@@ -29,7 +29,6 @@ max_output_tokens = 800
 json_mode = true
 min_interval_s = 6.5   # free tier is ~10 requests/minute
 key_fallback = true
-api_key_env = "GEMINI_API_KEY_6"   # 25 Oct, user: key 6, rotate to 7, 8, ... when out of quota (D41); remove to go back to the primary
 price_in = 0.0
 price_out = 0.0
 
