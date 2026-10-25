@@ -1,5 +1,5 @@
 # Finding labels (ground truth for precision and semantic-fault recall). See src/webtester/labels.py.
-# label = seeded fault id (F01..), U1-U5 (known upstream defect), "new: <what>" or "fp".
+# label = seeded fault id (F01..), U1-U7 (known upstream defect, apps/realworld/README.md), "new: <what>" or "fp".
 
 ["20261016-135850_realworld_b3v2local_n4_g1rep1"."console_error|ERROR {}"]
 label = "U5"  # suggest: U5? | candidate
@@ -818,7 +818,7 @@ label = "F09"  # suggest: F09: page '2' click under the 'testing' tag filter doe
 by = "claude"
 
 ["20261025-040315_realworld_b4nog3_n4_h2rep3"."http_5xx|POST /api/profiles/*/follow|500"]
-label = "new: following a user who no longer exists returns 500, not 404"  # suggest: new: following a user who no longer exists returns 500, not 404 (followUser has no existence check); 'newuser04-special' had been renamed by worker04 (to 'u') 2 s earlier | rejected
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: following a user who no longer exists returns 500, not 404 (followUser has no existence check); 'newuser04-special' had been renamed by worker04 (to 'u') 2 s earlier | rejected
 by = "claude"
 
 ["20261025-040315_realworld_b4nog3_n4_h2rep3"."console_error|ERROR {}"]
@@ -978,7 +978,7 @@ label = "fp"  # suggest: fp: clicking an article preview opens the article, whic
 by = "claude"
 
 ["20261025-064127_realworld_b4nog1_n4_h2rep5"."http_5xx|POST /api/profiles/*/follow|500"]
-label = "new: following a user who no longer exists returns 500, not 404"  # suggest: new: following a user who no longer exists returns 500, not 404 (followUser has no existence check); 'worker03_updated' had been renamed by worker03 itself (back to 'worker03') 18 s earlier | rejected
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: following a user who no longer exists returns 500, not 404 (followUser has no existence check); 'worker03_updated' had been renamed by worker03 itself (back to 'worker03') 18 s earlier | rejected
 by = "claude"
 
 ["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/profile/*|now|unfollow worker03_updated"]
@@ -1015,5 +1015,633 @@ by = "claude"
 
 ["20261025-065726_realworld_b4nog3_n4_h2rep5"."console_error|ERROR {errors: Object}"]
 label = "U5"  # suggest: U5?: ERROR {errors: Object} opening another author's editor; not reproduced | rejected
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|shows|/settings|now|your settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|shows|/article/*|now|body can't be blank"]
+label = "U3"  # suggest: U3: whitespace-only comment accepted (no 'body can't be blank') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|shows|/article/*|now|this is a very long comment text intended to test"]
+label = "fp"  # suggest: fp: comment typed but never submitted | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|changes|/|now|"]
+label = "F09"  # suggest: F09: page '2' click under the tag filter does nothing (rejected by the gate) | rejected
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|not_shows|/article/*|reload|<h>"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (twin) | confirmed | judge bug
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-132615_realworld_b4_n4_h3rep1"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: username '!@#$' makes the profile URL invalid | confirmed
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."http_5xx|GET /api/articles?limit&offset|500"]
+label = "fp"  # suggest: fp: infrastructure: GET /api/articles 500, DB connection pool timeout (I19); not reproduced | rejected
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."console_error|ERROR \nInvalid `prisma.article.count()` invocation:\n\n\nTimed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool "]
+label = "fp"  # suggest: fp: infrastructure: Prisma connection pool timeout (I19) | rejected
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/editor|now|test article title"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/editor|reload|this is the body of the test article written in markdown."]
+label = "F02"  # suggest: F02: Publish blocked by F02, so the body is on no page after reload | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|not_shows|/article/*|reload|this is a test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|not_shows|/article/*|now|test article title"]
+label = "fp"  # suggest: fp: other workers' articles share the title 'Test Article Title' (check limitation); rejected | rejected
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|not_shows|/article/*|reload|this is a test comment by worker03."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|changes|/|now|"]
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed; with F08 Your Feed lists the same articles, so clicking it changes nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/editor|now|special chars test: !@#$%^&*()_+-=[]{}|;':\",./<>?"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (tags 'special, chars') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/editor|now|testing special characters in title and inputs"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/editor|now|automated test article title"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (tags 'testing, automation'; the old 'title can't be blank' stays) | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|route|/editor|now|/article/*"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|not_shows|/editor|now|can't be blank"]
+label = "fp"  # suggest: fp: Publish clicked on an empty form; 'title can't be blank' is correct | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"."oracle_violation|shows|/settings|now|your settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-135835_realworld_b4nog3_n4_h3rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-135835_realworld_b4nog3_n4_h3rep1"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: username 'worker04_special#!' makes the profile URL invalid | confirmed
+by = "claude"
+
+["20261025-135835_realworld_b4nog3_n4_h3rep1"."http_5xx|POST /api/profiles/*/follow|500"]
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: worker04 renamed itself 16 s before worker03 followed it (race; not reproducible on reset) | rejected
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|shows|/register|now|worker03"]
+label = "fp"  # suggest: fp: registering an existing user is correctly rejected ('email has already been taken') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|route|/register|now|/"]
+label = "fp"  # suggest: fp: registering an existing user is correctly rejected (route) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|shows|/settings|now|your settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|not_shows|/editor|now|publish article"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor ('Publish Article' still shown) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|not_shows|/article/*|reload|!@#$%^&*()_+ special characters test"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (twin; judge said wrong_expectation) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # suggest: new: whitespace username accepted, then GET /api/profiles/ fails | confirmed
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|route|/article/*|now|/editor/*"]
+label = "F07"  # suggest: F07: 'Edit Article' offered on dave's article to a non-author (the redirect home itself is correct) | confirmed | judge bug
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|shows|/article/*|now|publish article"]
+label = "F07"  # suggest: F07: same click: 'Edit Article' offered to a non-author, the editor never opens | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-161401_realworld_b4_n4_h3rep2"."oracle_violation|not_shows|/article/*|now|<script>alert(<n>)</script>"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (unverified) | unverified
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|shows|/editor|now|test article title"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|shows|/editor|reload|test article title"]
+label = "F02"  # suggest: F02: Publish blocked by F02 (reload check) | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|not_shows|/article/*|reload|this is a test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|not_shows|/article/*|now|test article title"]
+label = "fp"  # suggest: fp: other workers' articles share the title 'Test Article Title' (check limitation); rejected | rejected
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|shows|/settings|now|updated short bio for testing."]
+label = "fp"  # suggest: fp: bio typed into the field but never saved; typed field text is not page text on 'now' checks | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|shows|/settings|now|your settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|changes|/|now|"]
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed; with F08 Your Feed lists the same articles, so clicking it changes nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|not_shows|/article/*|reload|great article, testing comments!"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|not_shows|/article/*|reload|a brand new test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"."oracle_violation|not_shows|/article/*|reload|another test comment from worker03."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"."console_error|ERROR {errors: Object}"]
+label = "U5"  # suggest: U5: ERROR {errors: Object} opening another author's editor | rejected
+by = "claude"
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # suggest: new: whitespace username accepted, then GET /api/profiles/ fails | confirmed
+by = "claude"
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: profile worker04 gone (worker04 renamed itself to '   ' at step 72) | confirmed
+by = "claude"
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"."http_5xx|DELETE /api/profiles/*/follow|500"]
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: unfollow of a user renamed 44 s earlier by worker02 (race) | unverified
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|route|/editor|now|/article/*"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (tags 'tag1, tag-two, ...') | confirmed | judge bug
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."http_5xx|DELETE /api/profiles/*/follow|500"]
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: unfollow of worker04, renamed 46 s earlier (race) | rejected
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: username 'worker04_special_!@#' set at step 36 | confirmed
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|shows|/profile/*|now|no articles are here... yet."]
+label = "fp"  # suggest: fp: wrong expectation about worker04's favorites; rejected | rejected
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|changes|/profile/*/favorites|now|"]
+label = "fp"  # suggest: fp: Unfollow of a renamed user failed, so nothing changed; with a 404 nothing would change either | unverified
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|route|/article/*|now|/editor/*"]
+label = "F07"  # suggest: F07: 'Edit Article' offered on dave's article to a non-author | confirmed | judge bug
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|shows|/article/*|now|edit article"]
+label = "F07"  # suggest: F07: same click; the editor never opens | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|route|/|now|/register"]
+label = "fp"  # suggest: fp: logged-in users are redirected from /register to / (correct) | confirmed | judge bug
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|shows|/|now|sign up"]
+label = "fp"  # suggest: fp: same redirect (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-173350_realworld_b4_n4_h3rep3"."oracle_violation|route|/login|now|/"]
+label = "fp"  # suggest: fp: worker04 had changed its own email and password (step 40), so the seeded credentials correctly fail | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|now|article title"]
+label = "fp"  # suggest: fp: Publish on an empty form; 'title can't be blank' is correct | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|not_shows|/article/*|reload|this is a test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/article/*|now|special chars !@#$%^&*()_+ and very long comment text to verify comment submission handling."]
+label = "fp"  # suggest: fp: comment typed but never submitted | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|changes|/article/*|now|"]
+label = "fp"  # suggest: fp: comment typed but never submitted (no visible change expected) | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|not_shows|/article/*|reload|test article title"]
+label = "fp"  # suggest: fp: other workers' articles share the title 'Test Article Title' (check limitation); rejected | rejected
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|not_shows|/article/*|reload|special chars !@#$%^&*()_+ and very long comment text to verify"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|route|/settings|now|/settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/settings|now|your settings"]
+label = "U2"  # suggest: U2: cleared username ignored by updateUser instead of rejected | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|changes|/|now|"]
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed; with F08 Your Feed lists the same articles, so clicking it changes nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|not_shows|/article/*|reload|testing comment from worker01."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (unverified) | unverified
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|now|test article title <n>"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|now|content of the test article in markdown format."]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|reload|test article title <n>"]
+label = "F02"  # suggest: F02: Publish blocked by F02 (reload check) | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish again still blocked by the addTag TypeError | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|now|automated test article"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (tags 'testing automation') | confirmed | judge bug
+by = "claude"
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"."oracle_violation|shows|/editor|reload|this is the body of the automated test article."]
+label = "F02"  # suggest: F02: Publish blocked by F02 (reload check) | confirmed | judge bug
+by = "claude"
+
+["20261025-184718_realworld_b4nog3_n4_h3rep3"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: registered as 'test!@#$'; the profile URL is invalid after Update Settings | confirmed
+by = "claude"
+
+["20261025-184718_realworld_b4nog3_n4_h3rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-184718_realworld_b4nog3_n4_h3rep3"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # suggest: new: whitespace username accepted, then GET /api/profiles/ fails | confirmed
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/editor|now|special chars test !@#$%^&*()_+"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/article/*|now|special chars"]
+label = "fp"  # suggest: fp: 100-character comment not shown; no server error, could not replay | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/profile/*|now|unfollow worker02"]
+label = "fp"  # suggest: fp: follow state timing; rejected | rejected
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|route|/editor/*|now|/article/*"]
+label = "U6"  # suggest: U6: editing an article POSTs a new one (U6), so the edit does not land on the article | confirmed | judge bug
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/editor/*|now|test article title <n> updated"]
+label = "U6"  # suggest: U6: same edit (U6) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
+label = "fp"  # suggest: fp: the checked comment belongs to worker02, not the one deleted | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|not_shows|/article/*|reload|valid short comment"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (unverified) | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # suggest: F01: 293-character comment returns 500 (F01 marker in this run) | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|changes|/editor/*|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (edit form, tags 'long-tag-one, ...') | confirmed | judge bug
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/editor/*|now|this is a very long article title"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|not_shows|/article/*|now|<h>"]
+label = "fp"  # suggest: fp: the trash icon clicked was not on the checked comment; could not replay | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: worker02 renamed itself at step 65; the old profile link fails | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|route|/article/*|now|/profile/*"]
+label = "U5"  # suggest: U5: same stale profile link redirects home | unverified
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|route|/settings|now|/settings"]
+label = "U2"  # suggest: U2: all settings fields cleared, ignored instead of rejected | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-191444_realworld_b4_n4_h3rep4"."oracle_violation|shows|/article/*|now|special chars: !@#$%^&*()_+"]
+label = "F01"  # suggest: F01: 444-character comment not shown because POST comments returned 500 (seen by an inferred check) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|route|/|now|/editor"]
+label = "fp"  # suggest: fp: New Article clicked right after sign-in (timing); rejected | rejected
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/editor|now|test article title"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|not_shows|/article/*|reload|this is a test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|not_shows|/article/*|reload|valid test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (flaky) | flaky | judge bug
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."console_error|ERROR {errors: Object}"]
+label = "U5"  # suggest: U5: stale link to Test-Article-Title-4, deleted 39 s earlier by worker04: uncaught ERROR, redirect home | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/|now|about this test article"]
+label = "fp"  # suggest: fp: expected the preview text on the article page; a correct app would not show it either | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|changes|/|now|"]
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed; with F08 Your Feed lists the same articles, so clicking it changes nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."http_5xx|POST /api/articles/*/favorite|500"]
+label = "new: favorite of a deleted article returns 500, not 404"  # suggest: new: favorite of Test-Article-Title-4, deleted 39 s earlier by worker04 (race; favoriteArticle has no existence check) | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|changes|/profile/*|now|"]
+label = "fp"  # suggest: fp: favorite on a deleted article failed (500); with a 404 nothing would change either | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/profile/*|now|test article title"]
+label = "fp"  # suggest: fp: clicked a deleted article's preview; a correct app would not show its title either | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: deleting a comment on an article deleted 25 s earlier: uncaught ERROR {} | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/settings|now|email must be valid"]
+label = "new: email format not validated"  # suggest: new: settings accepted 'notanemail' as email | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."http_5xx|POST /api/articles/*/comments|500"]
+label = "new: POST comment on a deleted article returns 500, not 404"  # suggest: new: comment on Test-Article-Title-4, deleted 5 s earlier by worker04 (race) | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/article/*|now|a brand new comment to test"]
+label = "fp"  # suggest: fp: comment on a deleted article would not show with a 404 either | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
+label = "fp"  # suggest: fp: the checked comment belongs to worker04, not the one deleted | unverified
+by = "claude"
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"."oracle_violation|shows|/settings|now|email can't be blank"]
+label = "U2"  # suggest: U2: cleared email ignored by updateUser instead of rejected | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-201539_realworld_b4nog3_n4_h3rep4"."http_5xx|POST /api/profiles/*/follow|500"]
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: follow of a user renamed to '123' 18 s earlier (race) | unverified
+by = "claude"
+
+["20261025-201539_realworld_b4nog3_n4_h3rep4"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: profile of the renamed user fails: uncaught ERROR {} | confirmed
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|shows|/editor|now|test article #$%"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|changes|/editor|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|not_shows|/article/*|reload|comment with special chars !@#$%^&*()"]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) (unverified) | unverified
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|changes|/|now|"]
+label = "F09"  # suggest: F09: page '2' click does nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."http_5xx|DELETE /api/profiles/*/follow|500"]
+label = "new: follow or unfollow of a user who no longer exists returns 500, not 404"  # suggest: new: unfollow of worker02, renamed 4 s earlier (race); rejected | rejected
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|shows|/profile/*/favorites|reload|follow worker02"]
+label = "fp"  # suggest: fp: after the failed unfollow of a renamed user a correct app would not show 'Follow worker02' either | rejected
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|route|/|now|/register"]
+label = "fp"  # suggest: fp: logged-in users are redirected from /register to / (correct) | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|shows|/|now|sign up"]
+label = "fp"  # suggest: fp: same redirect (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."console_error|ERROR {errors: Object}"]
+label = "U5"  # suggest: U5: ERROR {errors: Object} opening another author's editor | confirmed
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|changes|/editor/*|now|"]
+label = "F02"  # suggest: F02: Publish with a tag containing a space hits the addTag TypeError, so the page stays on the editor (tags 'tag1, tag2') | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."console_error|ERROR {}"]
+label = "U5"  # suggest: U5: mistyped/renamed profile URL: uncaught ERROR {} | confirmed
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|route|/|now|/login"]
+label = "fp"  # suggest: fp: logged-in users are redirected from /login to / (correct) | confirmed | judge bug
+by = "claude"
+
+["20261025-204124_realworld_b4_n4_h3rep5"."oracle_violation|shows|/|now|sign in"]
+label = "fp"  # suggest: fp: same redirect (correct) | confirmed | judge bug
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|route|/|now|/editor"]
+label = "fp"  # suggest: fp: New Article clicked right after sign-in (timing); rejected | rejected
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/article/*|now|this is a test comment."]
+label = "fp"  # suggest: fp: comment not rendered at check time (timing); rejected | rejected
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
+label = "fp"  # suggest: fp: Post Comment on an empty box shows 'body can't be blank' (correct); the comment shown was posted at step 21 | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|not_shows|/article/*|reload|this is a test comment."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/settings|now|email can't be blank"]
+label = "U2"  # suggest: U2: cleared email ignored by updateUser instead of rejected | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|changes|/|now|"]
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed; with F08 Your Feed lists the same articles, so clicking it changes nothing | confirmed | judge bug
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/editor|now|test article title"]
+label = "fp"  # suggest: fp: 'title must be unique' is the app's explicit rule (another worker's article has that title) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|route|/editor|now|/article/*"]
+label = "fp"  # suggest: fp: same rule (route) | confirmed | judge bug
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/|now|no articles are here... yet."]
+label = "F08"  # suggest: F08: the worker follows nobody, yet Your Feed lists articles | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|not_shows|/article/*|reload|valid test comment content."]
+label = "F06"  # suggest: F06: deleted comment is back after reload (delete acknowledged, not performed) | confirmed | judge bug
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."http_5xx|POST /api/articles/*/comments|500"]
+label = "new: POST comment on a deleted article returns 500, not 404"  # suggest: new: comment on My-Test-Article-Title-2, deleted 15 s earlier by worker02 (race) | unverified
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/article/*|now|a brand new automated test comment."]
+label = "fp"  # suggest: fp: comment on a deleted article would not show with a 404 either | unverified
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/article/*|reload|a brand new automated test comment."]
+label = "fp"  # suggest: fp: same, after reload | unverified
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|shows|/settings|now|your settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"."oracle_violation|route|/settings|now|/settings"]
+label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Settings (correct) (route) | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261025-222542_realworld_b4nog3_n4_h3rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # suggest: F02: addTag TypeError | confirmed
+by = "claude"
+
+["20261025-222542_realworld_b4nog3_n4_h3rep5"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # suggest: F01: 445-character comment returns 500 (F01 marker in this run) | confirmed
 by = "claude"
 

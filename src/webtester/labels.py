@@ -8,7 +8,7 @@ logs/experiments/finding_labels.toml:
 
     ["<run id>"."<finding signature>"]
     label = "F06"   # a seeded/injected fault id enabled in that run, a known upstream defect
-                    # (U1-U5 for Conduit), "new: <what>" (a real bug we did not seed), or "fp"
+                    # (U1-U7 for Conduit, apps/realworld/README.md), "new: <what>" (a real bug we did not seed), or "fp"
 
 Suggestions (catalog `detect` rules, injected faults the worker had already
 triggered, `hint` routes/checks, known upstream patterns) are shown to speed
@@ -131,7 +131,7 @@ def triage(arg: str, write: bool = True) -> str:
     if write and new_entries:
         header = "" if LABELS.exists() else (
             "# Finding labels (ground truth for precision and semantic-fault recall). See src/webtester/labels.py.\n"
-            "# label = seeded fault id (F01..), U1-U5 (known upstream defect), \"new: <what>\" or \"fp\".\n\n")
+            "# label = seeded fault id (F01..), U1-U7 (known upstream defect, apps/realworld/README.md), \"new: <what>\" or \"fp\".\n\n")
         with LABELS.open("a", encoding="utf-8") as fh:
             fh.write(header + "\n".join(new_entries) + "\n")
         lines += ["", f"appended {len(new_entries)} blank label(s) to {LABELS.relative_to(REPO_ROOT)}"]

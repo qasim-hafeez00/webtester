@@ -229,3 +229,59 @@ F06-type findings ("deleted comment still shown after reload", `not_shows|/artic
 | A-G3 | 3→2/1/0, 5→3/1/1, 3→3/0/0, 2→1/0/1, 2→2/0/0 | 0.5–2.5 |
 
 `rejected` is now rare (1–3 per run); findings the replay could not rebuild go to `unverified` (D46 fix 7).
+
+## Labelled results, harness v3 (labels by Claude, D45; 157 findings, blind 20% check pending)
+
+All 157 findings of the 15 valid gated `h3rep` runs labelled (`by = "claude"`), same rule as v2: the defect without which the finding would not have happened, else fp. Split: fp 47, F02 40, F06 18, U5 13, new 12, F08 11, F07 4, U2 4, F01 3, F09 2, U6 2, U3 1. v2 labels updated where v3 checks changed the picture (I38) and the follow race renamed to cover unfollow.
+
+### Per run (medians, n = 5)
+
+| Metric | A-G3 (implicit only) | A-G1 (no frontier) | B4 (full system) |
+|---|---|---|---|
+| True findings | 3 | 11 | 8 |
+| Distinct defects (seeded + unseeded) | 3 | 4 | 5 |
+| Seeded faults found | 1 | 3 | 3 |
+| Semantic seeded faults (F05–F10) | 0 | 2 | 2 |
+| Precision, raw | 100% | 69% | 70% |
+| Precision, gate-confirmed | 100% | 83% | 67% |
+| Precision, confirmed minus judge `wrong_expectation` | 100% | 91% | 100% |
+| Confirmed false alarms | 0 | 2 | 3 |
+
+Pooled over 5 runs: B4 62 findings, 43 real (69%); confirmed 46, 34 real (**74%**); minus judge 22/27 (81%), but the judge discards 12 real confirmed findings. A-G1: 65% → 78% → 92%. Gate cost: judge 1.2–1.8% of exploration tokens; gate 4–13 min per run.
+
+### G3 ablation (B4 vs A-G3)
+
+| Metric | A-G3 | B4 | p | Â12 |
+|---|---|---|---|---|
+| True findings | 3 | 8 | 0.016 | 0.98 |
+| Gate-confirmed true findings | 2 | 7 | 0.008 | 1.00 |
+| Distinct defects | 3 | 5 | 0.016 | 0.98 |
+| Seeded faults | 1 | 3 | 0.008 | 1.00 |
+| Semantic seeded faults | 0 | 2 | 0.008 | 1.00 |
+
+Seeded faults found by B4 over 5 runs: F01 (1 run), F02 (4), **F06 (4)**, F07 (2), **F08 (3)**, F09 (2). A-G1: F02 (4), **F06 (5)**, **F08 (5)**. A-G3: F01 (1), F02 (4). Over the 6 UI-reachable semantic faults (F05–F10; F03, F04 are UI-unreachable), B4 found 4 (67%) across runs, 2 (33%) per run; implicit oracles alone found none.
+
+### G1 (B4 vs A-G1), labelled
+True findings 8 vs 11 (p = 0.421), distinct defects 5 vs 4 (p = 0.246), semantic 2 vs 2 (p = 1.0). The frontier changes exploration (duplicates, routes), not what is found.
+
+### D47 outcome: v3's check changes are kept for BookStack
+B4 v3 vs B4 v2 (labelled): semantic seeded faults per run 2 vs 1 ([3,2,2,2,2] vs [1,1,1,0,1], p = 0.008); confirmed false alarms per run 3 vs 4. The rule (semantic not lower, false alarms at most +2) holds. A-G1 also gained: semantic [2,2,2,2,2] vs [1,1,2,1,0], gate-confirmed precision 83% vs 57%.
+
+### Unseeded defects found by the agents (v2 + v3), confirmed by code reading
+- Follow/unfollow of a user who no longer exists returns 500 (`followUser`/`unfollowUser` update without an existence check): 7 race instances (another worker renamed the user 4–46 s earlier).
+- Comment on a deleted article returns 500 (`addComment`): 3 instances.
+- Favorite of a deleted article returns 500 (`favoriteArticle`): 1 instance.
+- Whitespace-only profile values accepted (username, email, password): several runs.
+- Email format not validated (sign-up and settings).
+Plus upstream U1, U2, U3, U5, U6 hits. The race defects are visible only because several workers act at once, and the gate cannot confirm them on a reset app (they end `unverified`/`rejected`).
+
+### KPI check (plan §3, provisional KPIs; Conduit = development app)
+
+| Gap | KPI | v3 result | Met? |
+|---|---|---|---|
+| G1 | ≥ 30% lower duplicate-action rate | 31% vs 60% (−48% relative), p = 0.008 | yes (at N = 4, not N = 8) |
+| G1 | ≥ 15% more unique states, significant | 28 vs 22 (+27%), p = 0.175 | no (not significant) |
+| G2 | gate-confirmed precision ≥ 0.90 | 74% pooled (81% minus judge) | no |
+| G2 | recall loss ≤ 10 points | 21% of real findings not confirmed (mostly unverified: cross-worker data and races) | no |
+| G2 | gate cost ≤ 25% of tokens | judge 1.2% of tokens (+ 4–13 min of replay) | yes |
+| G3 | inferred oracles find ≥ 40% of the semantic faults implicit oracles miss | 4/6 = 67% across runs (2/6 per run); implicit-only 0/6 | yes across runs, no per run |

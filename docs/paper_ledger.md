@@ -121,7 +121,17 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - G3 still costs steps: B4 94 vs B3v2 115 (p = 0.008), states 26 vs 34 (p = 0.087).
   - Gate v2: real F01 confirmed once and lost once (cross-worker); two '/comments 500' candidates were not F01, by the exposure markers (I36).
 
+- **Harness v3 runs complete (25 Oct, `h3rep`, D46; final system for Conduit, labelled with D45):** B3v2, B4, A-G1, A-G3 × 5 valid (`logs/experiments/phase2_g23_results.md`, v3 sections).
+  - **G1:** duplicates B4 31% vs A-G1 60% (p = 0.008), routes 9 vs 7 (p = 0.048), states 28 vs 22 (ns). Duplicates replicate on v1, v2 and v3. Labelled: no difference in what is found (true findings 8 vs 11, p = 0.421).
+  - **G3:** B4 vs A-G3 per run: true findings 8 vs 3 (p = 0.016), distinct defects 5 vs 3 (p = 0.016), seeded faults 3 vs 1 (p = 0.008), semantic seeded 2 vs 0 (p = 0.008, Â12 = 1.00). Over 5 runs B4 found F06, F07, F08, F09 (4 of 6 UI-reachable semantic faults); implicit-only found none.
+  - **F06 caught by the after-reload twin** (gate-confirmed in 5/5 A-G1, 2/5 B4 runs; v2: 0). F05 still never gets a count check; F10 needs a relational check.
+  - **G2:** B4 pooled precision raw 69% → gate-confirmed 74% → minus judge 81%; A-G1 65% → 78% → 92%. The judge discards 12 real confirmed B4 findings. 21% of B4's real findings end unverified/rejected (cross-worker data, races). Judge cost 1.2–1.8% of tokens.
+  - **D47 met:** B4 v3 vs v2 semantic seeded faults per run 2 vs 1 (p = 0.008), confirmed false alarms 3 vs 4: v3 checks kept for BookStack.
+  - **Unseeded defects found:** 3 race defects (follow/unfollow of a missing user, comment on and favorite of a deleted article: all 500 instead of 404), whitespace-only profile values, no email format check; plus U1, U2, U3, U5, U6.
+  - **KPIs (plan §3):** met: G1 duplicates (−48%), G2 cost, G3 (67% across runs). Not met: G1 states (ns), G2 precision ≥ 0.90 (74%), G2 recall loss ≤ 10 points (21%).
+
 ## 7. Run accounting (all runs, as of 24 Oct)
+- **As of 25 Oct, 22:40:** 125 runs with a summary. Harness v3 (`h3rep`): 25 with a summary, 20 valid, 5 invalid (3 quota, 1 primary-key 403/429, 1 stall), plus 4 attempts with no summary (process tree ended, I39). Harness v2 (`h2rep`): 20 valid, 3 invalid. Keys per run in each `config.json` (D41).
 - **75 runs with a summary:** 40 valid, 4 pilots, 7 smoke, 24 invalid. The 24 Oct batch had 13 valid runs and 4 invalid (2 stalls, 1 × 403 I17, 1 × 429 on key 4), plus the 20 Oct Copilot-loop B4 rep 1 (stall). Two more attempts have no summary and are not counted: a cold-Docker crash before step 1 (I31) and a run killed by Modern Standby.
 
 ## 7a. Run accounting as of 16 Oct (kept for the record)
@@ -150,6 +160,9 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
 - **Labels by the LLM-based assistant (D45):** risk of shared bias with the system's own LLM judgements; mitigated by evidence-based rules, the user's blind 20% check (kappa) and the label rule written down. F03 and F04 are UI-unreachable (I34, I37), so seeded-fault recall is over 8 faults.
 - **Development on the test app (D46):** harness v3 was designed after seeing Conduit's labelled v2 results, so Conduit v3 numbers are development results. BookStack is the held-out test. Unseeded Conduit defects now U1–U7 (U6 edit creates a new article, I37; U7 settings form never loads saved values, I38).
 - **State abstraction v0:** keeps `/profile/alice` and `/profile/bob` apart (I11). The same abstraction is used for every condition.
+- **Judge reliability:** the LLM judge called all F08 hits and many F06 twins `wrong_expectation`; filtering by the judge raises precision but drops real findings (12 of 34 real confirmed B4 findings in v3). Report precision both with and without it.
+- **Gate and parallel-only bugs:** race defects (another worker renamed or deleted the target seconds earlier) cannot be reproduced on a reset app; they end `unverified`/`rejected`. The gate under-reports exactly the bugs parallelism exposes.
+- **Memory pressure on the run machine (I39):** 4 v3 attempts died with their process tree; re-run, never counted.
 - **Unseeded real bugs found:**
   - U1 (PUT /api/user 500 on a username collision) and U5 (uncaught error on a missing article or profile).
   - A possible new one, I20 (tag `!@#$` → 504/500), not yet reproduced.

@@ -1,6 +1,6 @@
 # Research Plan: Coordinated, Evidence-Gated LLM Exploration for Web Application Testing
 
-Status: v1 foundation, 10 Oct 2026. This is our internal planning document. It is not text for the course submission: the course runs a Turnitin AI-writing check, so the literature review, proposal and paper must be written by the group.
+Status: v1 foundation, 10 Oct 2026; progress update 25 Oct 2026: Conduit experiments complete on harness v3 (D46), labelled; KPI check in `logs/experiments/phase2_g23_results.md` (G1 duplicates and G3 met, G2 precision 74% vs target 90% not met); BookStack held-out runs next. This is our internal planning document. It is not text for the course submission: the course runs a Turnitin AI-writing check, so the literature review, proposal and paper must be written by the group.
 
 ---
 

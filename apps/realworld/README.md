@@ -56,7 +56,7 @@ Only F01 and F02 are visible to implicit oracles (HTTP 5xx and JS errors). The o
 
 ## Known pre-existing defects (unseeded)
 
-These are upstream behaviours, not seeded. If an agent reports them, they are true positives for "unseeded bugs" and are labelled as such.
+These are upstream behaviours, not seeded. If an agent reports them, they are true positives for "unseeded bugs" and are labelled as such. U1–U5 were documented before the runs; U6 and U7 were found during Phase 2 (I37, I38).
 
 | Id | Behaviour |
 |---|---|
@@ -67,3 +67,17 @@ These are upstream behaviours, not seeded. If an agent reports them, they are tr
 | U5 | Opening an article or profile that does not exist (deleted article, renamed user, mistyped URL) silently redirects home with no message, and the component re-throws the HTTP error, which is logged as an uncaught `ERROR {}` / `ERROR {errors: Object}` |
 | U6 | Editing an article creates a new one: the editor always calls `create` (POST `/api/articles`), also on `/editor/<slug>`, so the original stays unchanged and the update endpoint is never reached from the UI (found 25 Oct from run traces, verified by a scripted edit; I37). This makes seeded F04 (in `updateArticle`) UI-unreachable |
 | U7 | The settings form never shows the user's saved values: `settings.component.ts` passes `userService.getCurrentUser()` (an Observable) to `patchValue`, so every field starts empty. Saving then relies on U2 (empty values ignored) to keep the old data (found 25 Oct in a live probe; I38) |
+
+## Defects found by the agents (not seeded, not in the list above)
+
+Found by the Phase 2 runs (25 Oct) and confirmed by reading the code. In `finding_labels.toml` they are labelled `new: ...`.
+
+| Defect | Cause | Found |
+|---|---|---|
+| Follow or unfollow of a user who no longer exists returns 500, not 404 | `followUser`/`unfollowUser` call `prisma.user.update` without an existence check | 7 times, each right after another worker renamed the user (4–46 s earlier) |
+| Comment on a deleted article returns 500, not 404 | `addComment` reads `article.id` of a missing article | 3 times, 3–15 s after another worker deleted the article |
+| Favorite of a deleted article returns 500, not 404 | `favoriteArticle` calls `prisma.article.update` without an existence check | once, 39 s after another worker deleted the article |
+| Whitespace-only profile values accepted (username, email, password) | `updateUser` checks presence without trimming (like U3) | several runs; the profile is then unreachable (`GET /api/profiles/` fails) |
+| Email format not validated | no format check in sign-up or settings | `67890` and `notanemail` accepted |
+
+The three race defects only show when several users act at once. A replay on a reset app cannot rebuild the race, so the evidence gate leaves them `unverified` or `rejected`.
