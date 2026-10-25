@@ -18,9 +18,9 @@ never disturb its page. On freshly loaded pages (reload, /path) page text includ
 the values of visible text fields, which then come from the app, not from typing.
 
 Harness v3 (D46) adds a persistence twin: after a step that clicked a control
-(not a link or tab), every passed "now" shows/not_shows check is re-run after
-reload, so a change the UI shows but never saved is caught without the model
-having to ask. A failed check becomes an `oracle_violation` signal,
+(not a link or tab), a passed "now" not_shows check, or a passed "now" shows check
+of text typed in that step, is re-run after reload, so a change the UI shows but
+never saved is caught without the model having to ask. A failed check becomes an `oracle_violation` signal,
 which the FindingStore deduplicates like any implicit signal, and which the
 evidence gate (G2) replays like any other finding.
 """
@@ -203,19 +203,23 @@ def twin_eligible(clicked: list[Element | None]) -> bool:
     return any(el is not None and el.tag != "a" and el.role not in ("link", "tab") for el in clicked)
 
 
-def persistence_twins(expects: list[dict], results: list[CheckResult | None], inner_text: str) -> list[dict]:
+def persistence_twins(expects: list[dict], results: list[CheckResult | None], inner_text: str,
+                      typed: list[str]) -> list[dict]:
     """For each passed shows/not_shows check on the current page, the same check after reload,
-    unless the model already asked for it. A `shows` needle found only in a field value (typed,
-    maybe never saved) gets no twin: its absence after reload would not be a bug."""
+    unless the model already asked for it. Persistence is about data: something removed stays
+    removed (not_shows), and text the worker typed in this step and now sees on the page stays
+    (shows). Other shown text gets no twin: messages like "can't be blank" are meant to vanish."""
     asked = {(e["check"], norm_text(e.get("text", ""))) for e in expects if e.get("where") == "reload"}
     hay = norm_text(inner_text)
+    typed_n = [norm_text(t) for t in typed if t and t.strip()]
     out = []
     for e, r in zip(expects, results):
         if e["check"] not in ("shows", "not_shows") or e.get("where") != "now" or r is None or r.status != "pass":
             continue
         if (e["check"], norm_text(e["text"])) in asked:
             continue
-        if e["check"] == "shows" and norm_text(e["text"]) not in hay:
+        needle = norm_text(e["text"])
+        if e["check"] == "shows" and (needle not in hay or not any(needle in t for t in typed_n)):
             continue
         out.append({"check": e["check"], "text": e["text"], "where": "reload", "twin": True})
     return out

@@ -142,7 +142,8 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
                 results.append(r)
             # Persistence twins (D46): passed "now" checks again after reload, after a data-changing click.
             if ran_all and twin_eligible(clicked):
-                twins = persistence_twins(expects, results, await session.page.evaluate(INNER_TEXT_JS))
+                typed = [d["value"] for d in done if d["do"] in ("fill", "select") and d["value"]]
+                twins = persistence_twins(expects, results, await session.page.evaluate(INNER_TEXT_JS), typed)
                 for t in twins:
                     expects.append(t)
                     results.append(await check(session, t, obs))

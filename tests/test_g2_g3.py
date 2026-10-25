@@ -315,14 +315,18 @@ def test_v3_persistence_twins():
     assert twin_eligible([btn]) and twin_eligible([icon]) and not twin_eligible([link]) and not twin_eligible([tab])
     expects = [{"check": "not_shows", "text": "My comment", "where": "now"},
                {"check": "shows", "text": "Saved bio", "where": "now"},  # only in a field value: no twin
-               {"check": "shows", "text": "Title A", "where": "now"},
+               {"check": "shows", "text": "Title A", "where": "now"},  # failed now: no twin
                {"check": "shows", "text": "Title B", "where": "reload"},  # already asked by the model
                {"check": "shows", "text": "Title B", "where": "now"},
+               {"check": "shows", "text": "can't be blank", "where": "now"},  # a message, not typed data
+               {"check": "shows", "text": "Title C", "where": "now"},  # typed and shown: twin
                {"check": "route", "route": "/x"}]
     passed = CheckResult("pass")
-    results = [passed, passed, CheckResult("violated", "x"), passed, passed, passed]
-    twins = persistence_twins(expects, results, inner_text="Home Title A Title B")
-    assert twins == [{"check": "not_shows", "text": "My comment", "where": "reload", "twin": True}]
+    results = [passed, passed, CheckResult("violated", "x"), passed, passed, passed, passed, passed]
+    twins = persistence_twins(expects, results, inner_text="Home Title A Title B Title C body can't be blank",
+                              typed=["Saved bio", "Title B", "Title C, with more"])
+    assert twins == [{"check": "not_shows", "text": "My comment", "where": "reload", "twin": True},
+                     {"check": "shows", "text": "Title C", "where": "reload", "twin": True}]
     assert oracle_signature(twins[0], "http://h/article/a-1").startswith("oracle_violation|not_shows|/article/*|reload|")
 
 
