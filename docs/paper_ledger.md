@@ -30,6 +30,7 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - Minimal-suffix replay (1 step, then 4) from the worker's recorded steps, in a fresh context restored to the worker's session, with a DB reset before every replay.
   - k = 3 replays. Labels: confirmed 3/3, flaky 1–2, rejected 0, unverified (20-min cap).
   - An LLM judge gives a second opinion on reproduced oracle violations and never changes the label.
+- **Harness v3** (D46, 25 Oct; final system for Conduit `h3rep` and BookStack): settle waits for in-flight requests; `active` controls marked, and no-op checks on them are inconclusive; field values count as page text on freshly loaded pages (not on `now` checks); a logged-out line in the prompt; checks prompt v3 (≤ 3 checks: effect, after reload, numbers; route checks only for requested navigation) plus an automatic after-reload twin for passed checks after a button click; gate `unverified` for findings no replay could run (a judge-context change was tried and dropped: no gain); implicit fault detection requires the fault's marker. D47 pre-registers whether the check changes stay for BookStack. Conduit = development app from here on.
 - **Conditions** (D29, plan section 6):
   - B0 crawler, B1 one LLM worker, B2 N independent workers, B3 v1/v2 shared frontier, B3v2-local.
   - B4 = B3 v2 + G3 + G2.
@@ -147,6 +148,7 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
 - **Benchmark fidelity:** client-side injected faults, not source faults; 5 of 18 are unreachable without the spec; the benchmark was revised after the paper (fact sheet 01). Two scripts cannot fire on the page their own test case is about in BookStack 25.2.1 (I27). Some effects need data a fresh worker lacks (I23).
 - **Labelling:** a single labeller (D30).
 - **Labels by the LLM-based assistant (D45):** risk of shared bias with the system's own LLM judgements; mitigated by evidence-based rules, the user's blind 20% check (kappa) and the label rule written down. F03 and F04 are UI-unreachable (I34, I37), so seeded-fault recall is over 8 faults.
+- **Development on the test app (D46):** harness v3 was designed after seeing Conduit's labelled v2 results, so Conduit v3 numbers are development results. BookStack is the held-out test. Unseeded Conduit defects now U1–U7 (U6 edit creates a new article, I37; U7 settings form never loads saved values, I38).
 - **State abstraction v0:** keeps `/profile/alice` and `/profile/bob` apart (I11). The same abstraction is used for every condition.
 - **Unseeded real bugs found:**
   - U1 (PUT /api/user 500 on a username collision) and U5 (uncaught error on a missing article or profile).

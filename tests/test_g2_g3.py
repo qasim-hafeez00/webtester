@@ -26,7 +26,7 @@ def test_sanitize_expectations_normalises_aliases_and_drops_bad_checks():
                                           {"check": "count", "id": "7", "delta": 1}]
     assert sanitize_expectations({"check": "gone", "text": "hello", "where": "after_reload"}) == \
         [{"check": "not_shows", "text": "hello", "where": "reload"}]
-    assert len(sanitize_expectations([{"check": "changes"}] * 5)) == 2  # at most 2 per step
+    assert len(sanitize_expectations([{"check": "changes"}] * 5)) == 3  # at most 3 per step (v3, D46)
     assert sanitize_expectations([{"check": "shows", "text": "abc", "where": "settings"}]) == []
     assert sanitize_expectations("junk") == [] and sanitize_expectations(None) == []
 
@@ -291,3 +291,114 @@ def test_compare_shows_g2_g3_rows_only_with_data():
     assert "| Seeded faults found (all oracles, labelled) | 1 [1–1] | 3 [3–3] |" in table  # B3V2 falls back
     assert "Precision" not in table and "gate-confirmed" not in table  # only one side has them
     assert "| Precision, raw candidates | 50% [50%–50%] | 50% [50%–50%] |" in compare(b4, b4, "B4", "A-G1")
+
+
+# ---------- harness v3 (D46) ----------
+def test_v3_active_controls_and_no_false_no_op():
+    from webtester.inferred import check, clicked_active
+
+    page1 = Element(id="3", tag="a", text="1", active=True)
+    page2 = Element(id="4", tag="a", text="2")
+    assert "active" in page1.describe() and page1.key() == Element(id="9", tag="a", text="1").key()  # key unchanged
+    assert clicked_active([page1]) and not clicked_active([page1, page2]) and not clicked_active([])
+    assert not clicked_active([None])
+    r = asyncio.run(check(None, {"check": "changes"}, _obs("http://h/"), active_click=True))
+    assert r.status == "inconclusive"
+
+
+def test_v3_persistence_twins():
+    from webtester.inferred import persistence_twins, twin_eligible
+
+    btn, link, tab = Element(id="1", tag="button", text="Delete"), Element(id="2", tag="a", text="Home"), \
+        Element(id="3", tag="li", role="tab", text="Feed")
+    icon = Element(id="4", tag="i", label="ion-trash-a")
+    assert twin_eligible([btn]) and twin_eligible([icon]) and not twin_eligible([link]) and not twin_eligible([tab])
+    expects = [{"check": "not_shows", "text": "My comment", "where": "now"},
+               {"check": "shows", "text": "Saved bio", "where": "now"},  # only in a field value: no twin
+               {"check": "shows", "text": "Title A", "where": "now"},
+               {"check": "shows", "text": "Title B", "where": "reload"},  # already asked by the model
+               {"check": "shows", "text": "Title B", "where": "now"},
+               {"check": "route", "route": "/x"}]
+    passed = CheckResult("pass")
+    results = [passed, passed, CheckResult("violated", "x"), passed, passed, passed]
+    twins = persistence_twins(expects, results, inner_text="Home Title A Title B")
+    assert twins == [{"check": "not_shows", "text": "My comment", "where": "reload", "twin": True}]
+    assert oracle_signature(twins[0], "http://h/article/a-1").startswith("oracle_violation|not_shows|/article/*|reload|")
+
+
+def test_v3_gate_unverified_when_nothing_could_replay(tmp_path, monkeypatch):
+    from webtester import gate
+
+    assert gate.label(0, 3, True, ran=False) == "unverified" and gate.label(0, 3, True, ran=True) == "rejected"
+
+    async def missing(browser, cfg, ctl, window, finding):
+        return {"reproduced": False, "missing": 1, "failed": 0, "reason": "missing elements", "seconds": 0.1}
+
+    monkeypatch.setattr(gate, "replay", missing)
+    ctx = _gate_ctx(tmp_path, [("A", "http_5xx", 6)])
+    asyncio.run(gate.run_gate(None, None, ctx, None, None, gate.GateConfig(k=3, windows=(1, 4, 0))))
+    f = ctx.findings.all()[0]
+    assert f.status == "unverified" and f.gate["reason"] == "could not replay"
+
+
+def test_v3_session_line_and_prompt():
+    from webtester.policies import ORACLE_PROMPT, session_line
+
+    assert "logged OUT" in session_line(_obs("http://h/", Element(id="1", tag="a", text="Sign in")))
+    assert session_line(_obs("http://h/", Element(id="1", tag="a", text="Sign in to comment"))) == ""
+    assert session_line(_obs("http://h/", Element(id="1", tag="button", text="Log In"))) != ""
+    assert "at most 3 checks" in ORACLE_PROMPT and "route check only for navigation you asked for" in ORACLE_PROMPT
+    assert "F0" not in ORACLE_PROMPT  # generic wording, no seeded fault ids
+
+
+def test_v3_fault_detection_needs_the_marker_when_markers_exist():
+    from webtester.metrics import fault_detection
+
+    catalog = {"F01": {"id": "F01", "class": "crash", "detect": {"kind": "http_5xx", "contains": "/comments"}}}
+    findings = [{"kind": "http_5xx", "sig": "http_5xx|POST /api/articles/*/comments|500"}]
+    assert fault_detection(findings, ["F01"], catalog)["F01"]["detected"]  # no markers: signature rule
+    assert not fault_detection(findings, ["F01"], catalog, fired=set())["F01"]["detected"]  # 500, F01 never ran
+    assert fault_detection(findings, ["F01"], catalog, fired={"F01"})["F01"]["detected"]
+
+
+def test_v3_settle_waits_for_in_flight_requests():
+    import time
+
+    from webtester.browser import BrowserSession
+
+    s = BrowserSession.__new__(BrowserSession)
+    s._pending, s._last_net = {"req"}, time.monotonic()
+
+    async def go():
+        async def finish():
+            await asyncio.sleep(0.4)
+            s._pending.clear()
+            s._last_net = time.monotonic()
+        t0 = time.monotonic()
+        await asyncio.gather(s.wait_quiet(quiet_s=0.2, max_s=3), finish())
+        return time.monotonic() - t0
+
+    took = asyncio.run(go())
+    assert 0.55 <= took < 1.5  # waited for the request (0.4 s) plus the quiet period (0.2 s)
+    s._pending, s._last_net = {"stuck"}, time.monotonic()
+    t0 = time.monotonic()
+    asyncio.run(s.wait_quiet(quiet_s=0.2, max_s=0.5))
+    assert time.monotonic() - t0 < 1.0  # never waits past max_s
+
+
+def test_v3_now_checks_ignore_typed_field_values():
+    """A failed save leaves the typed text in its field: 'shows <typed text> now' must still fail."""
+    from webtester.browser import INNER_TEXT_JS
+    from webtester.inferred import check
+
+    class _Page:
+        url = "http://h/editor"
+
+        async def evaluate(self, js):
+            return "Publish Article" if js == INNER_TEXT_JS else "Publish Article\nMy typed title"
+
+    class _Session:
+        page = _Page()
+
+    r = asyncio.run(check(_Session(), {"check": "shows", "text": "My typed title", "where": "now"}, _obs("http://h/editor")))
+    assert r.status == "violated"

@@ -149,12 +149,13 @@ async def run(cfg: RunConfig, agent: str, workers: int = 1, reset: bool = True, 
     catalog_path = REPO_ROOT / (cfg.app.compose_dir or "") / "faults" / "faults.toml"
     if faults and catalog_path.exists():
         catalog = load_fault_catalog(catalog_path)
-        summary["fault_detection"] = fault_detection(findings, faults, catalog)
+        fired = set(summary.get("faults_exposed") or ()) if summary.get("exposure_markers") else None
+        summary["fault_detection"] = fault_detection(findings, faults, catalog, fired)
         if (reach := reach_from_trace(run_dir / "trace.jsonl", faults, catalog)) is not None:
             summary["fault_reach"] = reach
         if gate_on:
             confirmed = [f for f in findings if f["status"] == "confirmed"]
-            summary["fault_detection_confirmed"] = fault_detection(confirmed, faults, catalog)
+            summary["fault_detection_confirmed"] = fault_detection(confirmed, faults, catalog, fired)
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return run_dir
 

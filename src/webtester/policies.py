@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import string
 from collections import Counter
 from dataclasses import dataclass, field
@@ -79,22 +80,39 @@ Up to 6 actions per reply, e.g. fill several fields and then click submit. Put c
 may change after a click, and element ids are only valid for the page shown below."""
 
 # G3: appended to SYSTEM_PROMPT for the B4 conditions only. The examples are generic
-# CRUD invariants, not the seeded faults (see logs/decisions.md D27).
+# CRUD invariants, not the seeded faults (see logs/decisions.md D27). Harness v3 (D46) asks
+# for up to 3 checks from three angles and discourages guessing post-save navigation.
 ORACLE_PROMPT = """
 
-CHECKS: there is no specification, so you are also the oracle. When your actions should have a visible effect, add the optional key "expect" to your reply: a list of at most 2 checks of what MUST be true afterwards if the app works correctly. Each check is one of:
+CHECKS: there is no specification, so you are also the oracle. When your actions should have a visible effect, add the optional key "expect" to your reply: a list of at most 3 checks of what MUST be true afterwards if the app works correctly. Each check is one of:
 - {"check": "shows", "text": "<exact text>", "where": "now"|"reload"|"/path"}: that text is on the page
 - {"check": "not_shows", "text": "<exact text>", "where": "now"|"reload"|"/path"}: that text is NOT on the page
 - {"check": "count", "id": "<element id>", "delta": 1}: the number shown in that element changes by delta
 - {"check": "changes"}: the page (URL or visible text) changes after your actions
 - {"check": "route", "route": "/path"}: your actions end on this route (use * for an id segment)
-"now" checks the current page right after your actions; "reload" opens the same URL again in a new tab (did the change persist?); "/path" opens that page in a new tab. Typical checks: something you created appears where such things are listed; something you deleted is gone after reload; a saved change is still there after reload; a counter or toggle moves by one; rejected input keeps you on the form. Only state what any correct app must do, with text you typed or saw on the page. A failed check comes back to you as an error signal: it may be a bug, so investigate it."""
+"now" checks the current page right after your actions; "reload" opens the same URL again in a new tab (did the change persist?); "/path" opens that page in a new tab.
+When your actions change data (create, edit, delete, save, toggle, follow, like, add or remove), cover three angles:
+1. the immediate effect: what the page now shows, or no longer shows;
+2. persistence: the same check after "reload", or on the page that lists such items;
+3. numbers: if a number on the page should move (a counter, a total, a count on a button), a count check on that element.
+Prefer checks on content over route checks: where an app goes after a save is its own design choice, so use a route check only for navigation you asked for (a link you clicked or a path you opened). Only state what any correct app must do, with text you typed or saw on the page. A failed check comes back to you as an error signal: it may be a bug, so investigate it."""
+
+_LOGIN_CONTROL = re.compile(r"^(sign in|log in|login)$", re.I)
+
+
+def session_line(obs: Observation) -> str:
+    """Say when the worker looks logged out: workers that lost their session kept testing as a
+    guest without noticing (D46). Generic tell: a visible 'Sign in' / 'Log in' control."""
+    if any(_LOGIN_CONTROL.match((e.text or e.label).strip()) for e in obs.elements):
+        return "Session: you appear to be logged OUT (a 'Sign in' / 'Log in' control is shown).\n"
+    return ""
 
 
 def build_user_prompt(obs: Observation, mem: Memory, account: Account, step: int, max_steps: int,
                       frontier: "Frontier | None" = None, worker: int = 0, sid: str = "",
                       suggestion: str | None = None) -> str:
-    """Without a frontier this is exactly the Phase 1 (B1) prompt. With one, the
+    """Without a frontier this is the Phase 1 (B1) prompt (plus, from harness v3, the session
+    line: D46). With one, the
     route list comes from the map, elements carry done/taken marks, and a
     coordination note is added (B3 shared, B3-local per worker)."""
     recent = "\n".join(mem.history[-10:]) or "(none yet)"
@@ -122,6 +140,7 @@ def build_user_prompt(obs: Observation, mem: Memory, account: Account, step: int
     return (
         f"Step {step} of at most {max_steps}.\n"
         f"Test account: email={account.email} password={account.password} (username {account.username})\n"
+        f"{session_line(obs)}"
         f"{seen}"
         f"{coord}"
         f"Your recent steps:\n{recent}\n\n"

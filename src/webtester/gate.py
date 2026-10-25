@@ -10,8 +10,10 @@ session that worker had, with the app's data reset before every replay:
    from its first step: the only window that rebuilds data the worker created
    earlier (its own account, articles), which the reset wipes (gate v2, I32).
 2. Confirm: replay the minimal trace until there are `k` replays in total.
-3. Label: confirmed (k/k), flaky (1..k-1 of k), rejected (no replay reproduced
-   it), unverified (gate time ran out first).
+3. Label: confirmed (k/k), flaky (1..k-1 of k), rejected (replays ran to the
+   end and none reproduced it), unverified (gate time ran out first, or no replay
+   could even run its actions: elements missing on a reset app, e.g. data another
+   worker created; harness v3, D46).
 
 "Reproduced" means the same finding signature again: the same implicit signal
 (HTTP 5xx, JS error, ...) anywhere in the replay, or for an inferred-oracle
@@ -30,7 +32,7 @@ import time
 from dataclasses import dataclass
 
 from .browser import BrowserSession, Observation
-from .inferred import CheckResult, check, describe, oracle_signature
+from .inferred import CheckResult, check, clicked_active, describe, oracle_signature
 from .oracles import Finding, signature
 from .worker import RunContext, StepRecord
 
@@ -50,11 +52,13 @@ class GateConfig:
     judge: bool = True
 
 
-def label(reproduced: int, k: int, tried: bool) -> str:
+def label(reproduced: int, k: int, tried: bool, ran: bool = True) -> str:
+    """`ran`: at least one replay ran all its actions. A finding no replay could run is
+    unverified, not rejected: the gate has no evidence against it (D46)."""
     if not tried:
         return "unverified"
     if reproduced == 0:
-        return "rejected"
+        return "rejected" if ran else "unverified"
     return "confirmed" if reproduced >= k else "flaky"
 
 
@@ -99,8 +103,11 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                 await s.goto(rec.url)
                 obs = await s.observe()
             ran_all = True
+            clicked = []
             for a in rec.actions:
                 el = locate(obs, a["ekey"], a["nth"])
+                if a["do"] == "click":
+                    clicked.append(el)
                 if a["ekey"] and el is None:
                     missing += 1
                     ran_all = False
@@ -111,7 +118,7 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                     ran_all = False
                     break
             if i == len(window) - 1 and finding.kind == "oracle_violation":
-                reproduced = ran_all and await _violated_again(s, finding, rec, obs)
+                reproduced = ran_all and await _violated_again(s, finding, rec, obs, clicked_active(clicked))
         if finding.kind != "oracle_violation":
             reproduced = any(signature(sig) == finding.sig for sig in s.drain_signals())
     finally:
@@ -122,14 +129,15 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
             "seconds": round(time.monotonic() - t0, 1)}
 
 
-async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation) -> bool:
+async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation,
+                          active_click: bool = False) -> bool:
     exp = dict(finding.detail["expect"])
     if exp["check"] == "count":  # the element id of the original page means nothing here
         el = locate(obs, exp.get("_ekey"), exp.get("_nth", 0))
         if el is None:
             return False
         exp["id"] = el.id
-    r: CheckResult = await check(s, exp, obs)
+    r: CheckResult = await check(s, exp, obs, active_click)
     return r.status == "violated" and oracle_signature(exp, rec.url) == finding.sig
 
 
@@ -161,9 +169,12 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
                 attempts.append({"steps": len(minimal), **r})
                 run.trace.event("gate_replay", sig=f.sig, steps=len(minimal), **r)
                 hits += r["reproduced"]
-        f.status = label(hits, gcfg.k, tried=bool(wins))
+        ran = any(a.get("reason", "ran, not reproduced") in ("reproduced", "ran, not reproduced") for a in attempts)
+        f.status = label(hits, gcfg.k, tried=bool(wins), ran=ran)
         f.gate = {"reproduced": hits, "k": gcfg.k, "minimal_steps": len(minimal) if minimal else None,
-                  "attempts": attempts, **({} if wins else {"reason": "no step record to replay"})}
+                  "attempts": attempts,
+                  **({} if wins else {"reason": "no step record to replay"}),
+                  **({"reason": "could not replay"} if wins and not ran else {})}
         run.trace.event("gate_result", sig=f.sig, kind=f.kind, status=f.status, gate=f.gate)
 
     judge_usage = {"calls": 0, "tokens": 0}

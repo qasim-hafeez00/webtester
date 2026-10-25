@@ -8,9 +8,9 @@ import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from .browser import BrowserSession
+from .browser import INNER_TEXT_JS, BrowserSession
 from .budget import Budget
-from .inferred import annotate, check, violation_signal
+from .inferred import annotate, check, clicked_active, persistence_twins, twin_eligible, violation_signal
 from .oracles import FindingStore
 from .policies import Memory
 from .state import action_key, route_shape, state_id
@@ -110,9 +110,11 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             continue
         errors = 0
 
-        done = []
+        done, clicked = [], []
         for a in decision.actions:
             el = obs.element(a["id"]) if a["id"] else None
+            if a["do"] == "click":
+                clicked.append(el)
             akey = action_key(sid, a["do"], el.key() if el else None, a["value"])
             dup = akey in run.actions_seen
             run.actions_seen.add(akey)
@@ -133,8 +135,18 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
         checks, violations = [], []
         if expects:
             ran_all = len(done) == len(decision.actions) and all(d["ok"] for d in done)
+            active = clicked_active(clicked[:len(done)])
+            results = []
             for e in expects:
-                r = await check(session, e, obs) if ran_all else None
+                r = await check(session, e, obs, active) if ran_all else None
+                results.append(r)
+            # Persistence twins (D46): passed "now" checks again after reload, after a data-changing click.
+            if ran_all and twin_eligible(clicked):
+                twins = persistence_twins(expects, results, await session.page.evaluate(INNER_TEXT_JS))
+                for t in twins:
+                    expects.append(t)
+                    results.append(await check(session, t, obs))
+            for e, r in zip(expects, results):
                 checks.append({**e, "status": r.status if r else "skipped", "evidence": r.evidence[:200] if r else ""})
                 if r and r.status == "violated":
                     violations.append(violation_signal(e, r, obs.url))
@@ -194,3 +206,4 @@ def _history_line(step: int, url: str, thought: str, done: list[dict], signals) 
     moved = f" -> {route_shape(end)}" if end and route_shape(end) != route_shape(url) else ""
     sig = f" [!] {len(signals)} error signal(s): {signals[0].message[:80]}" if signals else ""
     return f"s{step} @{route_shape(url)}: {acts}{moved}{sig}"
+

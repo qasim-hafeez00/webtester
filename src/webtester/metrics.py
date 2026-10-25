@@ -27,6 +27,7 @@ def summarize(trace_path: Path) -> dict:
     prompt_tok = completion_tok = calls = retries = 0
     checks: Counter = Counter()
     exposed: set[str] = set()
+    markers = False  # the run read server-side exposure markers (D44)
     silent: set[str] = set()
     for i, s in enumerate(steps, 1):
         exposed.update(s.get("faults_exposed") or ())
@@ -54,6 +55,7 @@ def summarize(trace_path: Path) -> dict:
     for e in events:  # server-side markers read after exploration (appctl.fired_faults)
         if e["type"] == "backend_exposure":
             exposed.update(e["faults"])
+            markers = True
     findings = [e["finding"] for e in events if e["type"] == "finding"]
     # Run health: an LLM outage or quota stop makes a time-budgeted run incomparable.
     gaps = [b["t"] - a["t"] for a, b in zip(steps, steps[1:])]
@@ -86,6 +88,7 @@ def summarize(trace_path: Path) -> dict:
         "failed_action_rate": round(failed_actions / actions, 4) if actions else 0.0,
         "findings": len(findings),
         "findings_by_kind": dict(by_kind),
+        "exposure_markers": markers,
         "llm_calls": calls,
         "llm_retries": retries,
         "policy_errors": sum(1 for e in events if e["type"] == "policy_error"),
@@ -193,19 +196,24 @@ def reach_from_trace(trace_path: Path, enabled: list[str], catalog: dict[str, di
     return fault_reach(steps, enabled, catalog)
 
 
-def fault_detection(findings: list[dict], enabled: list[str], catalog: dict[str, dict]) -> dict:
+def fault_detection(findings: list[dict], enabled: list[str], catalog: dict[str, dict],
+                    fired: set[str] | None = None) -> dict:
     """Which enabled faults were revealed by at least one finding.
 
     A catalog entry's `detect` table holds the implicit-oracle signature it
     produces: `kind` plus a substring that must appear in the finding signature.
     Faults whose class needs a semantic oracle have no `detect` entry and can
-    only be found by inferred oracles (G3) or by manual triage."""
+    only be found by inferred oracles (G3) or by manual triage.
+
+    `fired`: the faults whose exposure markers fired in the run (runs with markers, D44).
+    Given, a signature match counts only if that fault actually fired: a 500 on /comments
+    is not F01 unless the F01 branch ran (I36, D46). None keeps the signature-only rule."""
     result = {}
     for fid in enabled:
         spec = catalog.get(fid, {})
         rule = spec.get("detect")
         hit = None
-        if rule:
+        if rule and (fired is None or fid in fired):
             kinds = rule["kind"] if isinstance(rule["kind"], list) else [rule["kind"]]
             for f in findings:
                 if (f["kind"] in kinds and rule.get("contains", "") in f["sig"]

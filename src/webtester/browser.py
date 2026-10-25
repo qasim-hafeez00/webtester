@@ -23,6 +23,26 @@ from playwright.async_api import Browser, BrowserContext, Error as PWError, Page
 from .config import REPO_ROOT, Account, RunConfig
 
 FAULT_MARKER = "[wt-fault] "  # console line an injected fault logs when it first fires (exposure)
+NET_TYPES = ("xhr", "fetch", "document")  # requests `settle` waits for
+QUIET_S, QUIET_MAX_S = 0.3, 3.0
+
+# Page text of a freshly loaded page for inferred checks (reload, /path): innerText plus the values
+# of visible text fields, which innerText leaves out (a saved bio shown back in its textarea, D46).
+# Not used for 'now' checks, where a field may still hold typed text. Passwords are skipped.
+TEXT_JS = r"""() => {
+  if (!document.body) return '';
+  const vals = [];
+  for (const el of document.querySelectorAll('input, textarea, select')) {
+    const t = (el.getAttribute('type') || '').toLowerCase();
+    if (['password', 'hidden', 'checkbox', 'radio', 'submit', 'button', 'file'].includes(t)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const v = el.tagName === 'SELECT' ? (el.selectedOptions[0] ? el.selectedOptions[0].text : '') : el.value;
+    if (v && v.trim()) vals.push(v);
+  }
+  return document.body.innerText + (vals.length ? '\n' + vals.join('\n') : '');
+}"""
+INNER_TEXT_JS = "() => document.body ? document.body.innerText : ''"
 
 # Runs in the page. Tags visible interactive elements with data-wt-id and
 # returns their descriptors, plus a skeleton of the visible DOM in which text
@@ -68,7 +88,13 @@ OBSERVE_JS = r"""
     let options = [];
     if (tag === 'select') options = Array.from(el.options).slice(0, 15).map((o) => clean(o.text, 30));
     const form = el.form || el.closest('form');
+    // Already-selected control (current page number, open tab): ARIA state or a Bootstrap-style
+    // 'active' class on the element or its parent. Clicking it is not expected to change anything (D46).
+    const isActive = (e) => !!e && e !== document.body && (
+      (e.getAttribute('aria-current') || 'false') !== 'false' || e.getAttribute('aria-selected') === 'true' ||
+      e.getAttribute('aria-pressed') === 'true' || e.classList.contains('active'));
     els.push({
+      active: isActive(el) || isActive(el.parentElement),
       id, tag,
       type: (el.getAttribute('type') || '').toLowerCase(),
       role: el.getAttribute('role') || '',
@@ -126,6 +152,7 @@ class Element:
     disabled: bool = False
     options: list[str] = field(default_factory=list)
     form: int = -1
+    active: bool = False  # already-selected control (D46); not part of key()
 
     def key(self) -> str:
         """Position-independent identity, used to recognise 'the same action' across visits."""
@@ -150,6 +177,8 @@ class Element:
             parts.append("options=" + "|".join(self.options))
         if self.disabled:
             parts.append("disabled")
+        if self.active:
+            parts.append("active")
         if self.form >= 0:
             parts.append(f"form#{self.form}")
         return " ".join(parts)
@@ -203,6 +232,8 @@ class BrowserSession:
         self.injector_errors: list[str] = []  # written to the trace by the worker
         self.silent_triggers: list[str] = []  # injected faults whose trigger held but changed nothing
         self.last_in_scope_url = cfg.app.base_url
+        self._pending: set = set()  # in-flight xhr/fetch/document requests (settle waits for them, D46)
+        self._last_net = 0.0
 
     # ---------- lifecycle ----------
     async def start(self, storage_state: dict | None = None) -> None:
@@ -239,6 +270,19 @@ class BrowserSession:
         page.on("console", self._on_console)
         page.on("response", self._on_response)
         page.on("requestfailed", self._on_request_failed)
+        page.on("request", self._on_request)
+        page.on("requestfinished", self._on_request_done)
+        page.on("requestfailed", self._on_request_done)
+
+    def _on_request(self, req) -> None:
+        if req.resource_type in NET_TYPES:
+            self._pending.add(req)
+            self._last_net = time.monotonic()
+
+    def _on_request_done(self, req) -> None:
+        if req in self._pending:
+            self._pending.discard(req)
+            self._last_net = time.monotonic()
 
     def _on_console(self, msg) -> None:
         text = msg.text
@@ -298,7 +342,19 @@ class BrowserSession:
             await self.page.wait_for_load_state("networkidle", timeout=2500)
         except PWError:
             pass
+        await self.wait_quiet()
         await asyncio.sleep(self.cfg.settle_ms / 1000)
+
+    async def wait_quiet(self, quiet_s: float = QUIET_S, max_s: float = QUIET_MAX_S) -> None:
+        """In a single-page app `networkidle` is reached once at load and returns at once after
+        a click, so wait until no xhr/fetch/document request has been in flight for `quiet_s`
+        (at most `max_s`). Without this, checks ran before the app answered (D46)."""
+        await asyncio.sleep(0.05)  # let a click's requests start
+        deadline = time.monotonic() + max_s
+        while time.monotonic() < deadline:
+            if not self._pending and time.monotonic() - self._last_net >= quiet_s:
+                return
+            await asyncio.sleep(0.05)
 
     async def observe(self) -> Observation:
         for attempt in range(3):
@@ -329,7 +385,7 @@ class BrowserSession:
             except PWError:
                 pass
             await asyncio.sleep(self.cfg.settle_ms / 1000)
-            return await page.evaluate("() => document.body ? document.body.innerText : ''")
+            return await page.evaluate(TEXT_JS)
         except PWError:
             return None
         finally:

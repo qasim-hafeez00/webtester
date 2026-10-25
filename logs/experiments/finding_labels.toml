@@ -218,11 +218,11 @@ label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Setti
 by = "claude"
 
 ["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/settings|/settings|updated bio test"]
-label = "fp"  # suggest: fp: the bio sits in a textarea value, which page text (innerText) does not include (check limitation) | confirmed | judge bug
+label = "fp"  # suggest: fp: the bio sits in a textarea value, which page text (innerText) does not include (check limitation) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge bug
 by = "claude"
 
 ["20261024-143711_realworld_b4nog1_n4_g23rep2"."oracle_violation|shows|/profile/*|now|updated bio test"]
-label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text) | confirmed | judge wrong_expectation
+label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge wrong_expectation
 by = "claude"
 
 ["20261024-143711_realworld_b4nog1_n4_g23rep2"."console_error|ERROR {errors: Object}"]
@@ -562,11 +562,11 @@ label = "F08"  # suggest: F08: the worker follows nobody (seed, and no Follow ea
 by = "claude"
 
 ["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|shows|/profile/*|now|updated bio text for testing."]
-label = "fp"  # suggest: fp: 'Edit Profile Settings' opens the settings form, where the bio is a textarea value, not page text (check limitation) | confirmed | judge wrong_expectation
+label = "fp"  # suggest: fp: 'Edit Profile Settings' opens the settings form, where the bio is a textarea value, not page text (check limitation) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge wrong_expectation
 by = "claude"
 
 ["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|shows|/|now|updated bio text for testing."]
-label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text) | confirmed | judge wrong_expectation
+label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge wrong_expectation
 by = "claude"
 
 ["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|changes|/|now|"]
@@ -574,7 +574,7 @@ label = "fp"  # suggest: fp: tag 'testing' was already selected at step 55, so c
 by = "claude"
 
 ["20261025-010045_realworld_b4nog1_n4_h2rep1"."oracle_violation|shows|/|now|new bio testing persistence."]
-label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text); this text may never have been saved | confirmed | judge wrong_expectation
+label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text); this text may never have been saved [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge wrong_expectation
 by = "claude"
 
 ["20261025-011515_realworld_b4nog3_n4_h2rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
@@ -762,7 +762,7 @@ label = "fp"  # suggest: fp: comment not rendered yet at check time (timing); no
 by = "claude"
 
 ["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|shows|/settings|reload|test bio update"]
-label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text); not reproduced | rejected
+label = "fp"  # suggest: fp: settings form shows the bio in a textarea (not in page text); not reproduced [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | rejected
 by = "claude"
 
 ["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|not_shows|/article/*|now|this is a test comment."]
@@ -794,7 +794,7 @@ label = "fp"  # suggest: fp: worker was logged out, so Favorite led to the sign-
 by = "claude"
 
 ["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|shows|/settings|/settings|this is an updated bio for testing settings."]
-label = "fp"  # suggest: fp: the bio sits in a textarea value, which page text (innerText) does not include (check limitation) | confirmed | judge bug
+label = "fp"  # suggest: fp: the bio sits in a textarea value, which page text (innerText) does not include (check limitation) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge bug
 by = "claude"
 
 ["20261025-034306_realworld_b4nog1_n4_h2rep3"."oracle_violation|shows|/|now|worker02"]
@@ -882,7 +882,7 @@ label = "U2"  # suggest: U2: the cleared username is ignored by updateUser inste
 by = "claude"
 
 ["20261025-051133_realworld_b4nog1_n4_h2rep4"."oracle_violation|changes|/|now|"]
-label = "fp"  # suggest: fp: the logged-in home page already shows Your Feed, so clicking it again changes nothing | confirmed | judge bug
+label = "F08"  # suggest: F08: logged-in home opens on Global Feed (upstream init order); with F08 Your Feed lists the same articles, so clicking it changes nothing visible. Without F08 the feed is empty (the worker follows nobody). Corrected 25 Oct after a live check | confirmed | judge bug
 by = "claude"
 
 ["20261025-051133_realworld_b4nog1_n4_h2rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
@@ -970,7 +970,7 @@ label = "fp"  # suggest: fp: Conduit redirects to the profile after Update Setti
 by = "claude"
 
 ["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/profile/*|now|updated bio text for testing settings"]
-label = "fp"  # suggest: fp: 'Edit Profile Settings' opens the settings form, where the bio is a textarea value, not page text (check limitation) | confirmed | judge wrong_expectation
+label = "fp"  # suggest: fp: 'Edit Profile Settings' opens the settings form, where the bio is a textarea value, not page text (check limitation) [also: the settings form never loads saved values (U7, I38), so the field is empty; under the v2 page text the check fails on a correct app too] | confirmed | judge wrong_expectation
 by = "claude"
 
 ["20261025-064127_realworld_b4nog1_n4_h2rep5"."oracle_violation|shows|/|now|about this test article"]
