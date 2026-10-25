@@ -396,3 +396,7 @@ note = "A-G1 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped
 ["20261025-065726_realworld_b4nog3_n4_h2rep5"]
 status = "valid"
 note = "A-G3 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped, 125 steps, 31 states, 10 routes, 33% duplicates. Faults fired (markers): F01, F02, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F01, F02. Gate v2: 6 candidates, 2 confirmed, 4 rejected, 2.28 min; confirmed faults: F02; judge {}. F01 was real (2,510-char comment, backend marker) but every replay window, the full prefix included, hit missing elements: probably a cross-worker dependency (I32/I36)."
+
+["20261025-130539_realworld_b4_n2_h3pilot"]
+status = "pilot"
+note = "Harness v3 pilot (D46), not counted: B4, 2 workers, 5 min / 60k tokens, primary key. Healthy, 28 steps, median step 12.7 s (v2 pilot 13.1 s). 9 automatic after-reload twins ran; one twin re-checked the message \"body can't be blank\" after reload, which is meant to vanish, so the twin rule was narrowed before the counted runs: shows twins only for text typed in that step (D46). F08 found again ('No articles are here... yet.' expected on Your Feed), and the judge again said wrong_expectation. Gate: 1 confirmed, 3 unverified (could not replay). Markers: F06, F08, F09, F10."
