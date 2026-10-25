@@ -1,0 +1,5 @@
+2026-10-25 13:13 window 1: 20 run(s) left
+13:13 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b3v2 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label h3rep
+=== b3v2 n=4 h3rep1 ===
