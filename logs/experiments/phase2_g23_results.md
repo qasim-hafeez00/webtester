@@ -173,3 +173,59 @@ The explorer reaches these faults but proposes the wrong check (F05), the right 
 - **Whitespace-only profile values:** `PUT /api/user` accepts `"   "` for username, email and password (scripted check).
 - **The untraced `PUT /api/user` 500 (B4 rep 2) is U1:** an email collision between two accounts the same worker used. `regate --no-judge` reproduced the original gate result exactly (3/3, minimal 18 steps).
 - Two unseeded race defects, exposed only by parallel workers: a comment on a just-deleted article and a follow of a just-renamed user both return 500, not 404.
+
+---
+
+# Harness v3 runs (25 Oct, label `h3rep`, D46): exploration and gate (labels pending)
+
+Harness v3 (D46), commits `7784d6c`/`d6094ef`. n = 5 valid runs each, N = 4, 190k tokens, 30-min cap, all 10 faults on, `gemini-3.5-flash-lite`. Keys: primary → 4 → 5 → 6 → 7 (D41). 25 runs with summaries (20 valid, 5 invalid: 3 quota, 1 primary-key 403/429, 1 stall) plus 4 attempts killed with no summary (I39: process tree ended; probable cause the memory commit limit). Generated with `compare <a> <b> --workers 4 --label-contains h3rep` and `gate-report`.
+
+**Status:** exploration and gate rows final; fault and precision rows need labels (next step, D45 process), then the D47 rule.
+
+## G1 inside the full system: A-G1 vs B4
+
+| Metric | A-G1 | B4 | p | Â12 (B4 > A-G1) |
+|---|---|---|---|---|
+| Duplicate-action rate | 60% [49%–62%] | 31% [29%–32%] | 0.008 | 0.00 (large) |
+| Unique routes | 7 [7–7] | 9 [9–9] | 0.048 | 0.88 (large) |
+| Unique states | 22 [18–27] | 28 [27–31] | 0.175 | 0.78 (large) |
+| Steps | 102 [102–104] | 91 [90–91] | 0.008 | 0.00 (large) |
+
+The duplicate-action effect replicates a third time (v1, v2, v3). The route gain is back (v1: p = 0.008, v2: p = 0.524, v3: p = 0.048); states not significant.
+
+## G3 ablation: A-G3 vs B4
+
+| Metric | A-G3 | B4 | p | Â12 (B4 > A-G3) |
+|---|---|---|---|---|
+| Findings (all) | 3 [2–3] | 13 [10–14] | 0.008 | 1.00 (large) |
+| Findings (gate-confirmed) | 2 [2–3] | 10 [9–10] | 0.008 | 1.00 (large) |
+| Unique states | 34 [31–37] | 28 [27–31] | 0.143 | 0.20 |
+| Steps | 114 [112–118] | 91 [90–91] | 0.008 | 0.00 (large) |
+
+## Cost of G3: B3v2 vs B4
+
+| Metric | B3v2 | B4 | p | Â12 (B4 > B3v2) |
+|---|---|---|---|---|
+| Steps | 115 [113–117] | 91 [90–91] | 0.008 | 0.00 (large) |
+| Unique states | 31 [26–31] | 28 [27–31] | 0.849 | 0.44 |
+| Duplicate-action rate | 38% [36%–40%] | 31% [29%–32%] | 0.032 | 0.08 (large) |
+
+## What v3 changed for the semantic faults (checks at trigger steps, B4 + A-G1 valid runs)
+
+| Fault | v2 (`h2rep`) | v3 (`h3rep`) |
+|---|---|---|
+| F06 comment delete | 33 × "gone now" passed, 0 failing checks | 25 × "gone now" passed, **24 automatic after-reload twins failed** + 2 model reload checks failed |
+| F05 favorite count | no `count` check | still no `count` check (3 `changes` checks) |
+| F10 tag filter | no content check | unchanged (needs a relational check, I22) |
+
+F06-type findings ("deleted comment still shown after reload", `not_shows|/article/*|reload`): **gate-confirmed in 5/5 A-G1 runs and 2/5 B4 runs** (2 more B4 unverified); the judge said bug for 13 of 15 confirmed. To be confirmed by labels (the F06 backend marker fired in every v3 run).
+
+## Gate v3, per run (candidates → confirmed / rejected / unverified)
+
+| Condition | Per run | Gate minutes |
+|---|---|---|
+| B4 | 7→6/1/0, 10→9/0/1, 13→10/2/1, 18→10/1/7, 14→11/2/1 | 4.0–8.9 |
+| A-G1 | 16→13/3/0, 13→12/1/0, 17→15/1/1, 19→8/1/9 (+1 flaky), 15→10/2/3 | 5.0–12.8 |
+| A-G3 | 3→2/1/0, 5→3/1/1, 3→3/0/0, 2→1/0/1, 2→2/0/0 | 0.5–2.5 |
+
+`rejected` is now rare (1–3 per run); findings the replay could not rebuild go to `unverified` (D46 fix 7).

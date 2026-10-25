@@ -400,3 +400,103 @@ note = "A-G3 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped
 ["20261025-130539_realworld_b4_n2_h3pilot"]
 status = "pilot"
 note = "Harness v3 pilot (D46), not counted: B4, 2 workers, 5 min / 60k tokens, primary key. Healthy, 28 steps, median step 12.7 s (v2 pilot 13.1 s). 9 automatic after-reload twins ran; one twin re-checked the message \"body can't be blank\" after reload, which is meant to vanish, so the twin rule was narrowed before the counted runs: shows twins only for text typed in that step (D46). F08 found again ('No articles are here... yet.' expected on Your Feed), and the judge again said wrong_expectation. Gate: 1 confirmed, 3 unverified (could not replay). Markers: F06, F08, F09, F10."
+
+["20261025-131331_realworld_b3v2_n4_h3rep1"]
+status = "valid"
+note = "B3v2 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 113 steps, 31 states, 8 routes, 40% duplicates. Faults fired (markers): F05, F06, F09, F10. Implicit-rule faults (marker-checked, D46): none."
+
+["20261025-132615_realworld_b4_n4_h3rep1"]
+status = "valid"
+note = "B4 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 92 steps, 24 states, 9 routes, 35% duplicates. Faults fired (markers): F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 7 candidates, 6 confirmed, 0 flaky, 1 rejected, 0 unverified, 4.0 min; judge {'wrong_expectation': 4, 'bug': 1}. Persistence twins: 9 run, 1 violated."
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"]
+status = "valid"
+note = "A-G1 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 106 steps, 18 states, 7 routes, 62% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 16 candidates, 13 confirmed, 0 flaky, 3 rejected, 0 unverified, 5.0 min; judge {'bug': 9, 'wrong_expectation': 3}. Persistence twins: 18 run, 4 violated."
+
+["20261025-135835_realworld_b4nog3_n4_h3rep1"]
+status = "valid"
+note = "A-G3 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 120 steps, 31 states, 9 routes, 45% duplicates. Faults fired (markers): F02, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 3 candidates, 2 confirmed, 0 flaky, 1 rejected, 0 unverified, 0.84 min."
+
+["20261025-160106_realworld_b3v2_n4_h3rep2"]
+status = "valid"
+note = "B3v2 rep 2, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 117 steps, 36 states, 8 routes, 31% duplicates. Faults fired (markers): F01, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01. Re-run of 20261025-141239, 20261025-150022 and 20261025-152933 (all browser pages crashed / process tree ended mid-run, no summary; I39)."
+
+["20261025-161401_realworld_b4_n4_h3rep2"]
+status = "valid"
+note = "B4 rep 2, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 91 steps, 31 states, 9 routes, 32% duplicates. Faults fired (markers): F02, F05, F06, F08, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 10 candidates, 9 confirmed, 0 flaky, 0 rejected, 1 unverified, 4.53 min; judge {'wrong_expectation': 6, 'bug': 1}. Persistence twins: 10 run, 1 violated."
+
+["20261025-162853_realworld_b4nog1_n4_h3rep2"]
+status = "invalid"
+note = "A-G1 rep 2, harness v3 (D46), primary key. Primary key: 403 \"project has been denied access\" from about step 92, then 429 on probing; workers stopped (policy_unavailable). Re-run on key 4 as 20261025-164711."
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"]
+status = "valid"
+note = "A-G1 rep 2, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 100 steps, 16 states, 7 routes, 62% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 13 candidates, 12 confirmed, 0 flaky, 1 rejected, 0 unverified, 5.23 min; judge {'bug': 9, 'wrong_expectation': 2}. Persistence twins: 24 run, 6 violated. Re-run of 20261025-162853 (primary key: 403 project denied, then 429)."
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"]
+status = "valid"
+note = "A-G3 rep 2, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 112 steps, 37 states, 9 routes, 32% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 5 candidates, 3 confirmed, 0 flaky, 1 rejected, 1 unverified, 2.54 min."
+
+["20261025-171907_realworld_b3v2_n4_h3rep3"]
+status = "valid"
+note = "B3v2 rep 3, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 115 steps, 26 states, 8 routes, 38% duplicates. Faults fired (markers): F01, F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02."
+
+["20261025-173350_realworld_b4_n4_h3rep3"]
+status = "valid"
+note = "B4 rep 3, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 91 steps, 27 states, 8 routes, 31% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 13 candidates, 10 confirmed, 0 flaky, 2 rejected, 1 unverified, 8.85 min; judge {'wrong_expectation': 3, 'bug': 5}. Persistence twins: 4 run, 0 violated."
+
+["20261025-175301_realworld_b4nog1_n4_h3rep3"]
+status = "invalid"
+note = "A-G1 rep 3, harness v3 (D46), key 4. Key 4 out of daily quota: 20 x 429, 63 steps. Re-run on key 5 as 20261025-182745."
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"]
+status = "valid"
+note = "A-G1 rep 3, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 104 steps, 22 states, 7 routes, 60% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 17 candidates, 15 confirmed, 0 flaky, 1 rejected, 1 unverified, 7.8 min; judge {'wrong_expectation': 4, 'bug': 10}. Persistence twins: 20 run, 4 violated. Re-run of 20261025-175301 (key 4 out of quota) and 20261025-182403 (browser crash 2 min in, no summary; I39)."
+
+["20261025-184718_realworld_b4nog3_n4_h3rep3"]
+status = "valid"
+note = "A-G3 rep 3, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 118 steps, 27 states, 9 routes, 40% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 3 candidates, 3 confirmed, 0 flaky, 0 rejected, 0 unverified, 0.91 min."
+
+["20261025-190116_realworld_b3v2_n4_h3rep4"]
+status = "valid"
+note = "B3v2 rep 4, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 122 steps, 31 states, 9 routes, 40% duplicates. Faults fired (markers): F02, F05, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02."
+
+["20261025-191444_realworld_b4_n4_h3rep4"]
+status = "valid"
+note = "B4 rep 4, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 90 steps, 33 states, 9 routes, 28% duplicates. Faults fired (markers): F01, F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02. Gate: 18 candidates, 10 confirmed, 0 flaky, 1 rejected, 7 unverified, 8.39 min; judge {'bug': 4, 'wrong_expectation': 5}. Persistence twins: 10 run, 1 violated."
+
+["20261025-193304_realworld_b4nog1_n4_h3rep4"]
+status = "invalid"
+note = "A-G1 rep 4, harness v3 (D46), key 5. Key 5 out of daily quota: 20 x 429, 24 steps. Re-run on key 6 as 20261025-195417."
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"]
+status = "valid"
+note = "A-G1 rep 4, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 102 steps, 27 states, 9 routes, 44% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 19 candidates, 8 confirmed, 1 flaky, 1 rejected, 9 unverified, 9.4 min; judge {'bug': 5, 'wrong_expectation': 3}. Persistence twins: 17 run, 2 violated. Re-run of 20261025-193304 (key 5 out of quota)."
+
+["20261025-201539_realworld_b4nog3_n4_h3rep4"]
+status = "valid"
+note = "A-G3 rep 4, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 111 steps, 34 states, 8 routes, 33% duplicates. Faults fired (markers): F06, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 2 candidates, 1 confirmed, 0 flaky, 0 rejected, 1 unverified, 0.93 min."
+
+["20261025-202853_realworld_b3v2_n4_h3rep5"]
+status = "valid"
+note = "B3v2 rep 5, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 112 steps, 25 states, 8 routes, 36% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02."
+
+["20261025-204124_realworld_b4_n4_h3rep5"]
+status = "valid"
+note = "B4 rep 5, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 90 steps, 28 states, 9 routes, 29% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 14 candidates, 11 confirmed, 0 flaky, 2 rejected, 1 unverified, 5.31 min; judge {'bug': 7, 'wrong_expectation': 1}. Persistence twins: 8 run, 1 violated."
+
+["20261025-205644_realworld_b4nog1_n4_h3rep5"]
+status = "invalid"
+note = "A-G1 rep 5, harness v3 (D46), key 6. Key 6 out of daily quota: 19 x 429 + 1 connection error, 69 steps. Re-run on key 7 (20261025-213520, then 20261025-220122)."
+
+["20261025-213520_realworld_b4nog1_n4_h3rep5"]
+status = "invalid"
+note = "A-G1 rep 5, harness v3 (D46), key 7. Stall rule (D20): 98.7 s without any step (one LLM call 49.7 s with 2 retries on key 7, API slowdown); budget-stopped otherwise. Re-run as 20261025-220122."
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"]
+status = "valid"
+note = "A-G1 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 102 steps, 32 states, 7 routes, 49% duplicates. Faults fired (markers): F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 15 candidates, 10 confirmed, 0 flaky, 2 rejected, 3 unverified, 12.76 min; judge {'wrong_expectation': 6, 'bug': 4}. Persistence twins: 20 run, 4 violated. Re-run of 20261025-205644 (key 6 out of quota) and 20261025-213520 (98.7 s stall, API slowdown)."
+
+["20261025-222542_realworld_b4nog3_n4_h3rep5"]
+status = "valid"
+note = "A-G3 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 114 steps, 38 states, 8 routes, 24% duplicates. Faults fired (markers): F01, F02, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02. Gate: 2 candidates, 2 confirmed, 0 flaky, 0 rejected, 0 unverified, 0.53 min."
