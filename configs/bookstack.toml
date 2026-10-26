@@ -39,7 +39,7 @@ max_output_tokens = 800
 json_mode = true
 min_interval_s = 6.5
 key_fallback = true
-api_key_env = "GEMINI_API_KEY_9"   # 26 Oct Night 2 (bsrep): pin one key, rotate on 429 (D41): _9 -> _10 -> _OLD -> _7; all reset 12:05 PKT
+api_key_env = "GEMINI_API_KEY_10"   # 26 Oct Night 2 (bsrep): key 10 from 03:53 (key 9 out of quota); pin one key, rotate on 429 (D41): _9 -> _10 -> _OLD -> _7; all reset 12:05 PKT
 price_in = 0.0
 price_out = 0.0
 

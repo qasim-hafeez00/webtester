@@ -60,7 +60,7 @@ Switch LLM provider with `--provider groq --model llama-3.3-70b-versatile` or in
 
 Harness versions (all conditions re-run on each): v1 (24 Oct), v2 (D42–D44: observation fix, full-prefix gate, exposure markers), **v3 (D46: settle on network idle, active controls, after-reload twin checks, `unverified` gate label; current)**. Results: [phase2_g23_results.md](logs/experiments/phase2_g23_results.md); every fact for the paper: [docs/paper_ledger.md](docs/paper_ledger.md). Findings are labelled in `logs/experiments/finding_labels.toml` (D45: labels by Claude, `by = "claude"`, user blind-checks 20% in `label_check_sample.toml`).
 
-**Status 25 Oct:** Conduit (development app) complete on harness v3. Next: BookStack held-out runs (B0, B3v2, B4 × 5).
+**Status 26 Oct:** Conduit (development app) complete on harness v3. BookStack held-out runs complete (B0, B3v2, B4 × 5, `bsrep`, labelled): no condition found any of the injected faults, although all were reached ([results](logs/experiments/phase2_bookstack_results.md)).
 
 Phase 2 run order and commands: [docs/phase2_runbook.md](docs/phase2_runbook.md).
 

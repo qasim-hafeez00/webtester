@@ -1,0 +1,11 @@
+| Metric | B0 median [IQR] (n=5) | B3V2 median [IQR] (n=5) | p (MWU, exact) | Â12 (B3V2 > B0) |
+|---|---|---|---|---|
+| Unique states | 112 [110–114] | 46 [43–52] | 0.008 | 0.00 (large) |
+| Unique routes | 13 [13–13] | 28 [26–30] | 0.008 | 1.00 (large) |
+| Duplicate-action rate | 80% [79%–80%] | 20% [19%–24%] | 0.008 | 0.00 (large) |
+| Seeded faults found | 0 [0–0] | 0 [0–0] | 1.000 | 0.50 (negligible) |
+| Seeded faults found (all oracles, labelled) | 0 [0–0] | 0 [0–0] | 1.000 | 0.50 (negligible) |
+| Injected faults exposed (fired) | 13 [13–13] | 10 [9–10] | 0.008 | 0.00 (large) |
+| Findings (all) | 0 [0–0] | 0 [0–0] | 1.000 | 0.60 (small) |
+| Steps | 2,042 [1,931–2,048] | 86 [84–87] | 0.008 | 0.00 (large) |
+| Tokens | 0 [0–0] | 198,862 [198,819–199,627] | 0.008 | 1.00 (large) |

@@ -500,3 +500,75 @@ note = "A-G1 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 102 
 ["20261025-222542_realworld_b4nog3_n4_h3rep5"]
 status = "valid"
 note = "A-G3 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 114 steps, 38 states, 8 routes, 24% duplicates. Faults fired (markers): F01, F02, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02. Gate: 2 candidates, 2 confirmed, 0 flaky, 0 rejected, 0 unverified, 0.53 min."
+
+["20261026-002235_bookstack_b4_n4_bspilot"]
+status = "smoke"
+note = "BookStack pilot (harness v3, 8 min cap, 4 workers): runs end to end; 5 persistence twins, no injector errors, 4 findings all gate-confirmed. Nothing changed after it."
+
+["20261026-003614_bookstack_b0_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-010635_bookstack_b3v2_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-011617_bookstack_b4_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-012706_bookstack_b0_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-015722_bookstack_b3v2_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-020708_bookstack_b4_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-022253_bookstack_b0_n4_bsrep3"]
+status = "invalid"
+note = "All 4 workers crashed at login 24 s after the reset: /login still loading (I40). Re-run as 20261026-025239."
+
+["20261026-025239_bookstack_b0_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-032252_bookstack_b3v2_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-033158_bookstack_b4_n4_bsrep3"]
+status = "invalid"
+note = "Key 9 out of daily quota (20 x 429 from step 13). Re-run on key 10 as 20261026-035308 (D41)."
+
+["20261026-035308_bookstack_b4_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-040751_bookstack_b0_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-043805_bookstack_b3v2_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-044724_bookstack_b4_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-050332_bookstack_b0_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-053349_bookstack_b3v2_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-054319_bookstack_b4_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."

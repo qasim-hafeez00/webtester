@@ -566,3 +566,65 @@ label = ""
 # action: fill [9] input[text] label="Enter tags" form#0 = 'tag1, tag2'
 # action: click [10] button "Publish Article" form#0 
 label = ""
+
+# BookStack (bsrep, 26 Oct): random 20% (seed 46) of the 40 B4/B3v2 findings. Vocabulary: BS01..BS18
+# (apps/bookstack/faults/faults.toml), "env: <what>" (a failure caused by the test deployment, not the app), "new: <what>" or "fp".
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/|now|/settings"]
+# oracle_violation | gate: confirmed | worker 2 step 47 on /
+# message: "expected: ends on route /settings | on /settings/features, expected /settings"
+# action: click [10] a "Settings" href=http://127.0.0.1:4200/settings = ''
+label = ""
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/users/create|now|new test user"]
+# oracle_violation | gate: confirmed | worker 4 step 56 on /settings/users/create
+# message: "expected: shows 'New Test User' now | text not found; page starts: 'skip to main content could not create user since invite email failed to send bookstack shelves books settings worker 04 settings maintenance audit log users roles webhooks "
+# action: fill [18] input[text] label="Name" form#3 = 'New Test User'
+# action: fill [19] input[text] label="Email" form#3 = 'newtestuser@example.com'
+# action: click [29] button "Save" form#3 = ''
+label = ""
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|shows|/password/email|now|we have e-mailed your password reset link"]
+# oracle_violation | gate: confirmed | worker 1 step 6 on /password/email
+# message: "expected: shows 'We have e-mailed your password reset link' now | text not found; page starts: 'skip to main content bookstack log in an error occurred an unknown error occurred return to home back to top'"
+# action: fill [7] input[text] label="Email" form#0 = 'worker01@bookstack.test'
+# action: click [8] button "Send Reset Link" form#0 = ''
+label = ""
+
+["20261026-011617_bookstack_b4_n4_bsrep1"."oracle_violation|shows|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[created_by]&filters[is_restricted]&filters[not_viewed_by_me]&filters[owned_by]&filters[updated_after]&filters[updated_before]&filters[updated_by]&filters[viewed_by_me]&search&tags[]&types[]|now|tagvalue"]
+# oracle_violation | gate: confirmed | worker 4 step 59 on /search?search=Book1+modified&types%5B%5D=page&types%5B%5D=chapter&types%5B%5D=book&types%5B%5D=bookshelf&exact%5B%5D=Test%21%40%23&exact%5B%5D=AnotherTest&exact%5B%5D=&tags%5B%5D=&filters%5Bviewed_by_me%5D=true&filters%5Bnot_viewed_by_me%5D=true&filters%5Bis_restricted%5D=true&filters%5Bcreated_by%5D=me&filters%5Bupdated_by%5D=me&filters%5Bowned_by%5D=me&filters%5Bupdated_after%5D=&filters%5Bupdated_before%5D=&filters%5Bcreated_after%5D=&filters%5Bcreated_before%5D=&extras=
+# message: "expected: shows 'TagValue' now | text not found; page starts: 'skip to main content bookstack shelves books settings worker 04 advanced search search terms content type page chapter book shelf exact matches add tag searches add options view"
+# action: fill [21] input[text] label="exact[]" form#3 = 'TagValue'
+# action: click [35] button "Update Search" form#3 = ''
+label = ""
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/features|now|settings successfully saved"]
+# oracle_violation | gate: confirmed | worker 4 step 68 on /settings/features
+# message: "expected: shows 'Settings successfully saved' now | text not found; page starts: 'skip to main content bookstack view all search shelves books settings worker 04 my favourites view profile my account dark mode logout settings maintenance au"
+# action: check [25] span(checkbox) form#3 = ''
+# action: click [28] button "Save Settings" form#3 = ''
+label = ""
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/users?search|now|create user"]
+# oracle_violation | gate: confirmed | worker 4 step 52 on /settings/users?search=Worker+04
+# message: "expected: shows 'Create User' now | text not found; page starts: 'skip to main content bookstack shelves books settings worker 04 settings maintenance audit log users roles webhooks add new user user details set a display name and an email "
+# action: click [18] a "Add New User" href=http://127.0.0.1:4200/settings/users/create = ''
+label = ""
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|shows|/books/*/page/*|now|edit page"]
+# oracle_violation | gate: confirmed | worker 4 step 37 on /books/test-book-name-123/page/test-page-1
+# message: "expected: shows 'Edit Page' now | text not found; page starts: 'skip to main content bookstack shelves books settings worker 04 back editing page set changelog save page paragraph'"
+# action: click [15] a "Edit" href=http://127.0.0.1:4200/books/test-book-name-123/page = ''
+label = ""
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/user/admin|now|/settings"]
+# oracle_violation | gate: confirmed | worker 4 step 12 on /user/admin
+# message: "expected: ends on route /settings | on /settings/features, expected /settings"
+# action: click [10] a "Settings" href=http://127.0.0.1:4200/settings = ''
+label = ""
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/books/*|now|create new page"]
+# oracle_violation | gate: confirmed | worker 1 step 17 on /books/test-book-name
+# message: "expected: shows 'Create New Page' now | text not found; page starts: 'skip to main content bookstack shelves books settings worker 01 back editing draft set changelog save page paragraph'"
+# action: click [14] a "New Page" href=http://127.0.0.1:4200/books/test-book-name/crea = ''
+label = ""

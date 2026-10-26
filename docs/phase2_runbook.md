@@ -1,6 +1,6 @@
 # Phase 2 runbook: what to run, in order
 
-Status 25 Oct 2026. Conduit is finished: G1 at n = 5 ([results](../logs/experiments/phase2_g1_results.md)); B4 and its ablations (A-G1, A-G3) plus B3v2 at n = 5 on harness v1, v2 and **v3** (D46, current), all labelled ([results](../logs/experiments/phase2_g23_results.md)). D47 kept v3's check changes for BookStack. Still to run: BookStack (section 7; D31–D37), B0, B3v2 and B4 × 5, on harness v3, with no tuning on BookStack (I22).
+Status 26 Oct 2026. BookStack held-out runs done (B0, B3v2, B4 × 5, `bsrep`, labelled; [results](../logs/experiments/phase2_bookstack_results.md)): 0 injected faults found by any condition; B4 gated precision 19%. Conduit is finished: G1 at n = 5 ([results](../logs/experiments/phase2_g1_results.md)); B4 and its ablations (A-G1, A-G3) plus B3v2 at n = 5 on harness v1, v2 and **v3** (D46, current), all labelled ([results](../logs/experiments/phase2_g23_results.md)). D47 kept v3's check changes for BookStack. Still to run: BookStack (section 7; D31–D37), B0, B3v2 and B4 × 5, on harness v3, with no tuning on BookStack (I22).
 
 On a nearly full disk the runs can die from the memory commit limit (I39): close memory-heavy apps before a queue.
 

@@ -1645,3 +1645,179 @@ by = "claude"
 label = "F01"  # suggest: F01: 445-character comment returns 500 (F01 marker in this run) | confirmed
 by = "claude"
 
+["20261026-011617_bookstack_b4_n4_bsrep1"."oracle_violation|route|/login|now|/"]
+label = "fp"  # fp: checked before the login redirect finished (timing); rejected | rejected
+by = "claude"
+
+["20261026-011617_bookstack_b4_n4_bsrep1"."oracle_violation|shows|/settings/features|now|settings successfully updated"]
+label = "fp"  # fp: no success text after Save Settings at check time; rejected | rejected
+by = "claude"
+
+["20261026-011617_bookstack_b4_n4_bsrep1"."oracle_violation|route|/books/*|now|/books/*/*"]
+label = "fp"  # fp: 'New Page' opens /books/*/draft/* (verified by a scripted probe on the same book name); checked before the navigation finished | confirmed | judge bug
+by = "claude"
+
+["20261026-011617_bookstack_b4_n4_bsrep1"."oracle_violation|shows|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[created_by]&filters[is_restricted]&filters[not_viewed_by_me]&filters[owned_by]&filters[updated_after]&filters[updated_before]&filters[updated_by]&filters[viewed_by_me]&search&tags[]&types[]|now|tagvalue"]
+label = "fp"  # fp: text typed into a search filter field is not page text; wrong guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-015722_bookstack_b3v2_n4_bsrep2"."http_5xx|POST /password/email|500"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: POST /password/email -> 500 (Laravel log: SMTP 530) | candidate
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."http_5xx|POST /password/email|500"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: POST /password/email -> 500 (Laravel log: SMTP 530) | confirmed
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|shows|/password/email|now|we have e-mailed your password reset link"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: reset link not sent: 'an unknown error occurred' (SMTP 530) | confirmed | judge bug
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/user/admin|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/books/*|now|/books/*/*"]
+label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge bug
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|shows|/books/*|now|new page"]
+label = "fp"  # fp: 'New Page' opens the page editor, which has no such text (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/tags|now|/tags"]
+label = "fp"  # fp: a tag search adds ?search to /tags (correct); route shapes include query keys | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/tags?search|now|/tags"]
+label = "fp"  # fp: a tag search adds ?search to /tags (correct); route shapes include query keys | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|route|/tags|now|/tags*"]
+label = "fp"  # fp: the model's '*' is not a wildcard in route-shape comparison (harness limitation, I41); the app is correct ('/tags*') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|shows|/settings/features|now|settings successfully saved"]
+label = "fp"  # fp: the app says 'Settings successfully updated'; wrong wording guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-020708_bookstack_b4_n4_bsrep2"."oracle_violation|shows|/books/*|now|create page"]
+label = "fp"  # fp: 'New Page' opens the page editor, which has no such text (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."http_5xx|POST /password/email|500"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: POST /password/email -> 500 (Laravel log: SMTP 530) | confirmed
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/password/email|now|we have emailed your password reset link"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: reset link not sent: 'an unknown error occurred' (SMTP 530) | confirmed | judge bug
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|route|/user/admin|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|route|/books/*|now|/books/*/*"]
+label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge bug
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/books/*|now|create new page"]
+label = "fp"  # fp: 'New Page' opens the page editor, which has no such text (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/users?search|now|create user"]
+label = "fp"  # fp: 'Add New User' opens a form titled 'Add New User' (correct); wrong text guess | confirmed | judge bug
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|route|/settings/users/create|now|/settings/users"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: user not created, the form stays: 'could not create user since invite email failed to send' | confirmed | judge bug
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/users/create|now|new test user"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: 'could not create user since invite email failed to send' | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|route|/tags|now|/search?term*"]
+label = "fp"  # fp: the model's '*' is not a wildcard in route-shape comparison (harness limitation, I41); the app is correct ('/search?term*') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-035308_bookstack_b4_n4_bsrep3"."oracle_violation|shows|/settings/features|now|settings successfully saved"]
+label = "fp"  # fp: the app says 'Settings successfully updated'; wrong wording guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|shows|/login|now|worker04"]
+label = "fp"  # fp: the display name is 'Worker 04', not 'worker04' (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/user/admin|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/books/*/*|now|/books/*/*"]
+label = "fp"  # fp: saving a chapter opens the chapter page /books/*/chapter/* (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/books/*/chapter/*|now|/books/*/chapter/*/*"]
+label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|shows|/books/*/page/*|now|edit page"]
+label = "fp"  # fp: 'Edit' opens the page editor, which has no 'Edit Page' text (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/tags?search|now|/tags"]
+label = "fp"  # fp: a tag search adds ?search to /tags (correct); route shapes include query keys | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-044724_bookstack_b4_n4_bsrep4"."oracle_violation|route|/books/*/chapter/*/copy|now|/books/*/*"]
+label = "fp"  # fp: Copy Chapter opens the copied chapter, /books/*/chapter/* (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|route|/user/admin|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|shows|/settings/features|now|settings successfully saved"]
+label = "fp"  # fp: the app says 'Settings successfully updated'; wrong wording guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|shows|/books/*/chapter/*|now|create new page"]
+label = "fp"  # fp: 'New Page' opens the page editor, which has no such text (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|route|/books/*/chapter/*|now|/books/*/chapter/*/*"]
+label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge bug
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|changes|/settings/users/create|now|"]
+label = "env: no mail server configured (BookStack's default SMTP host smtp.mailgun.org rejects, 530); password reset and user invites fail"  # env: Save on Add New User leaves the form unchanged: the invite email failed (Laravel log 00:46:33, 00:46:59 UTC) | confirmed | judge bug
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|route|/tags|now|/search?term*"]
+label = "fp"  # fp: the model's '*' is not a wildcard in route-shape comparison (harness limitation, I41); the app is correct ('/search?term*') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-054319_bookstack_b4_n4_bsrep5"."oracle_violation|route|/books/*|now|/books/*/page/*"]
+label = "fp"  # fp: the model's '*' is not a wildcard in route-shape comparison (harness limitation, I41); the app is correct ('/books/*/page/*' vs the page slug 'page') | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-002235_bookstack_b4_n4_bspilot"."oracle_violation|shows|/books/*|now|create chapter"]
+label = "fp"  # fp: 'New Chapter' opens a form titled 'Create New Chapter' (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-002235_bookstack_b4_n4_bspilot"."oracle_violation|shows|/tags|now|tags"]
+label = "fp"  # fp: the worker typed into the header search, which opens /search (correct); wrong text guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-002235_bookstack_b4_n4_bspilot"."oracle_violation|route|/user/admin|now|/settings"]
+label = "fp"  # fp: Settings opens /settings/features (correct); wrong route guess | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261026-002235_bookstack_b4_n4_bspilot"."oracle_violation|route|/books/*/chapter/*|now|/books/*/chapter/*/*"]
+label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge bug
+by = "claude"
+

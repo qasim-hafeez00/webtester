@@ -2,7 +2,7 @@
 
 **Notes for synthesis, not submission text.** The course runs a Turnitin AI-writing check, so all paper prose is written by the author. This file only collects verified facts, numbers, decisions and threats, each with its source, so nothing has to be reconstructed later. Update it whenever a decision, result or issue is logged. IDs: D = [logs/decisions.md](../logs/decisions.md), I = [logs/issues.md](../logs/issues.md), runs = [run_registry.md](../logs/experiments/run_registry.md).
 
-Last updated: 2026-10-16 (after the BookStack verification runs).
+Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
 
 ---
 
@@ -130,7 +130,15 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - **Unseeded defects found:** 3 race defects (follow/unfollow of a missing user, comment on and favorite of a deleted article: all 500 instead of 404), whitespace-only profile values, no email format check; plus U1, U2, U3, U5, U6.
   - **KPIs (plan §3):** met: G1 duplicates (−48%), G2 cost, G3 (67% across runs). Not met: G1 states (ns), G2 precision ≥ 0.90 (74%), G2 recall loss ≤ 10 points (21%).
 
+- **BookStack held-out runs (26 Oct, `bsrep`, harness v3 frozen, nothing tuned; `logs/experiments/phase2_bookstack_results.md`):** B0, B3v2, B4 × 5 valid (N = 4, 190k tokens; LLM runs end on the token budget at 8–9.5 min, about 2,750 tokens per step).
+  - **Injected faults found: 0 in every condition.** Exposed (fired) per run: B0 13 of 13 reachable, B3v2 10, B4 10. All "reached but not noticed".
+  - **Coverage:** routes B0 13, B3v2 28, B4 25 (B0 vs B3v2 p = 0.008); duplicate actions 80% / 20% / 22%; states B3v2 46 vs B4 38 (p = 0.016).
+  - **B4 findings:** 39 (8 per run), 7 `env` (no mail server: password reset 500, user invite fails; I42, D48), 32 fp, 0 app defects. Precision raw 18% → gated 19% → minus judge 55%. Gate: 37 confirmed, 2 rejected, 0 unverified (wrong expectations about deterministic behaviour replay perfectly). The judge flagged 25 of 30 confirmed false alarms and 1 of 5 judged true findings.
+  - **False alarms:** 21 of 32 are route checks (Settings → /settings/features, 'New Page' → draft editor, ?search, model `*` not a wildcard (I41)); 12 text guesses (headings the form lacks, wording). Route checks are 41% of 288 checks despite prompt v3; no `count` check was proposed; 24 persistence twins, all passed.
+  - **Why G3 found nothing:** B4's content checks test the effect of its own action; BookStack's faults are wrong content on arrival (missing favourite or recently-viewed item, phantom entries, timestamps), needing an expectation about what a page should already show. B4 took 50 steps from the dashboard while BS02 was showing, with 6 content checks, none about Recently Viewed. G3 does not replicate on the held-out app.
+
 ## 7. Run accounting (all runs, as of 24 Oct)
+- **As of 26 Oct, 06:30:** BookStack `bsrep`: 17 runs with a summary, 15 valid, 2 invalid (1 crash at login I40, 1 quota on key 9); pilot `20261026-002235` (smoke). Keys 9 then 10 (D41).
 - **As of 25 Oct, 22:40:** 125 runs with a summary. Harness v3 (`h3rep`): 25 with a summary, 20 valid, 5 invalid (3 quota, 1 primary-key 403/429, 1 stall), plus 4 attempts with no summary (process tree ended, I39). Harness v2 (`h2rep`): 20 valid, 3 invalid. Keys per run in each `config.json` (D41).
 - **75 runs with a summary:** 40 valid, 4 pilots, 7 smoke, 24 invalid. The 24 Oct batch had 13 valid runs and 4 invalid (2 stalls, 1 × 403 I17, 1 × 429 on key 4), plus the 20 Oct Copilot-loop B4 rep 1 (stall). Two more attempts have no summary and are not counted: a cold-Docker crash before step 1 (I31) and a run killed by Modern Standby.
 
@@ -166,6 +174,9 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
 - **Unseeded real bugs found:**
   - U1 (PUT /api/user 500 on a username collision) and U5 (uncaught error on a missing article or profile).
   - A possible new one, I20 (tag `!@#$` → 504/500), not yet reproduced.
+
+- **Held-out result (26 Oct):** G3 found 4 of 6 Conduit semantic faults across runs but 0 of 13 reachable BookStack faults. The two fault sets differ in kind (Conduit: an action's effect is wrong; BookStack, WebTestPilot's injected faults: displayed content is wrong on arrival), so the Conduit G3 result is specific to action-effect faults. BookStack faults are client-side DOM mutations (D32), not source faults.
+- **Environment gaps found by the agents (BookStack):** no mail server (I42); route-shape comparison is literal (I41); slow first page after a reset (I40).
 
 ## 9. Artifact
 - **Repo layout:** `src/webtester` (harness), `apps/realworld`, `apps/bookstack`, `configs/`, `scripts/run_batch.py`, `tests/` (offline and live), `logs/` (progress, decisions, issues, registry, notes, labels).
