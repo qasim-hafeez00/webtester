@@ -1,0 +1,1 @@
+cd /c/Users/Seraphindra/Desktop/agenticproject && bash scripts/resweep_d54b.sh > logs/experiments/v4dev/resweep_d54b.log 2>&1

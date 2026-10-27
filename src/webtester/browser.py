@@ -106,6 +106,7 @@ OBSERVE_JS = r"""
       disabled: !!el.disabled,
       options,
       form: form ? Array.from(document.querySelectorAll('form')).indexOf(form) : -1,
+      cls: (el.getAttribute('class') || '').slice(0, 80),
     });
   }
   const SKIP = new Set(['script', 'style', 'noscript', 'svg', 'link', 'meta', 'template', 'br']);
@@ -153,6 +154,7 @@ class Element:
     options: list[str] = field(default_factory=list)
     form: int = -1
     active: bool = False  # already-selected control (D46); not part of key()
+    cls: str = ""  # class names (v4: lets memory classify icon controls, e.g. 'ion-heart'); not in key() or describe()
 
     def key(self) -> str:
         """Position-independent identity, used to recognise 'the same action' across visits."""
@@ -234,6 +236,7 @@ class BrowserSession:
         self.last_in_scope_url = cfg.app.base_url
         self._pending: set = set()  # in-flight xhr/fetch/document requests (settle waits for them, D46)
         self._last_net = 0.0
+        self.mutations: list[dict] = []  # same-origin write requests (method != GET) and their status (v4, D49)
 
     # ---------- lifecycle ----------
     async def start(self, storage_state: dict | None = None) -> None:
@@ -310,6 +313,10 @@ class BrowserSession:
         self._signals.append(Signal("console_error", text[:300], self.page.url if self.page else "", {"source": loc.get("url", "")}))
 
     def _on_response(self, resp) -> None:
+        req = resp.request
+        if req.method not in ("GET", "HEAD", "OPTIONS") and req.resource_type in NET_TYPES and self.in_scope(resp.url):
+            self.mutations.append({"method": req.method, "path": urlsplit(resp.url).path, "status": resp.status})
+            del self.mutations[:-50]
         if resp.status >= 500 and self.in_scope(resp.url):
             req = resp.request
             self._signals.append(Signal(
@@ -476,12 +483,19 @@ class BrowserSession:
         recipe = self.cfg.app.login
         if not recipe:
             return False
-        await self.goto(recipe.path)
         vals = {"email": account.email, "password": account.password, "username": account.username}
-        for label, template in recipe.fields.items():
-            loc = self.page.get_by_placeholder(label).or_(self.page.get_by_label(label)).first
-            await loc.fill(template.format(**vals))
-        await self.page.get_by_role("button", name=recipe.submit).first.click()
+        for attempt in range(2):  # right after a reset the login page can load slowly (I40)
+            await self.goto(recipe.path)
+            try:
+                for label, template in recipe.fields.items():
+                    loc = self.page.get_by_placeholder(label).or_(self.page.get_by_label(label)).first
+                    await loc.fill(template.format(**vals))
+                await self.page.get_by_role("button", name=recipe.submit).first.click()
+                break
+            except PWError:
+                if attempt:
+                    raise
+                await asyncio.sleep(5)
         await self.settle()
         self.drain_signals()
         return not self.page.url.rstrip("/").endswith(recipe.path.rstrip("/"))

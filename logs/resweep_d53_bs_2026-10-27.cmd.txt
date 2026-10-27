@@ -1,0 +1,1 @@
+cd /c/Users/Seraphindra/Desktop/agenticproject && SKIP_CONDUIT=1 bash scripts/resweep_both.sh > logs/experiments/v4dev/resweep_bs.log 2>&1

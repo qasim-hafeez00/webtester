@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
 from urllib.parse import urljoin
 
 from .browser import INNER_TEXT_JS, Element, Observation, Signal
@@ -141,9 +142,41 @@ def eval_count(before: int | None, after: int | None, delta: int) -> tuple[str, 
 
 
 def eval_route(expected: str, url_after: str) -> tuple[bool, str]:
+    """A '*' the model writes is a wildcard (v4: fixes I41, where '/tags*' never matched)."""
     want = route_shape(urljoin("http://x/", expected))
     got = route_shape(url_after)
-    return want == got, f"on {got}, expected {want}"
+    return want == got or fnmatchcase(got, want), f"on {got}, expected {want}"
+
+
+def ground_expectations(expects: list[dict], obs: Observation, actions: list[dict], typed: list[str],
+                        seen: list[str]) -> list[dict]:
+    """v4 (D49): keep only checks about facts, never guesses about design (I43).
+    route: only for navigation the model asked for; the expected route becomes the clicked
+    link's href or the navigated path. shows / not_shows: only text typed in this run or seen
+    on a page (now or earlier), so a guessed heading or wording is dropped."""
+    out = []
+    hay = [norm_text(obs.text)] + [norm_text(t) for t in seen]
+    typed_n = [norm_text(t) for t in typed if t]
+    for e in expects:
+        c = e["check"]
+        if c == "route":
+            last = actions[-1] if actions else None
+            target = None
+            if last and last["do"] == "navigate" and last.get("value"):
+                target = last["value"]
+            elif last and last["do"] == "click":
+                m = re.search(r"href=(\S+)", last.get("el") or "")
+                if m and not m.group(1).startswith(("#", "javascript:")):
+                    target = m.group(1)
+            if target:
+                out.append({**e, "route": target, "grounded": "href"})
+        elif c in ("shows", "not_shows"):
+            n = norm_text(e["text"])
+            if any(n in t for t in typed_n) or any(n in h for h in hay):
+                out.append(e)
+        else:
+            out.append(e)
+    return out
 
 
 def eval_changes(url_before: str, text_before: str, url_after: str, text_after: str) -> tuple[bool, str]:

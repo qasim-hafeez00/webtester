@@ -94,14 +94,16 @@ def test_only_b4_policies_see_the_oracle_prompt_and_return_checks():
 
 
 def test_condition_table_keeps_g1_conditions_and_defines_b4_family():
-    from webtester.frontier import Frontier, FrontierV2
-    from webtester.runner import AGENTS, FRONTIERS, GATED, INFERRED, LLM_AGENTS
+    from webtester.frontier import Frontier, FrontierV2, FrontierV3
+    from webtester.runner import AGENTS, CONSISTENCY, FRONTIERS, GATED, INFERRED, LLM_AGENTS
 
     assert FRONTIERS["b3"] == (Frontier, True) and FRONTIERS["b3local"] == (Frontier, False)
     assert FRONTIERS["b3v2"] == (FrontierV2, True) and FRONTIERS["b3v2local"] == (FrontierV2, False)
     assert "b1" not in FRONTIERS and "b4nog1" not in FRONTIERS  # no frontier: B2 and A-G1
-    assert FRONTIERS["b4"] == FRONTIERS["b4nog3"] == (FrontierV2, True)
-    assert INFERRED == {"b4", "b4nog1"} and GATED == {"b4", "b4nog1", "b4nog3"}
+    # harness v4 (D49): the B4 family explores like b3v3
+    assert FRONTIERS["b4"] == FRONTIERS["b4nog3"] == FRONTIERS["b4det"] == FRONTIERS["b3v3"] == (FrontierV3, True)
+    assert INFERRED == {"b4", "b4nog1"} and CONSISTENCY == {"b4", "b4det", "b4nog1"}
+    assert GATED == {"b4", "b4det", "b4nog1", "b4nog3"}
     assert set(GATED) <= set(LLM_AGENTS) <= set(AGENTS)
 
 

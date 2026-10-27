@@ -22,6 +22,10 @@ services:
       # No persistent cache: a cached setting would survive the DB reset between runs.
       - CACHE_DRIVER=array
       - CACHE_STORE=array
+      # I42 (harness v4, D49): mail goes to the log, so password reset and user invites work
+      # and nothing connects out to BookStack's default smtp.mailgun.org.
+      - MAIL_DRIVER=log
+      - MAIL_MAILER=log
     ports:
       - "127.0.0.1:4200:8080"
     volumes:

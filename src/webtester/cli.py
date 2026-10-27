@@ -10,6 +10,8 @@
   python -m webtester triage runs/<run_id>                  list findings, add blank labels to finding_labels.toml
   python -m webtester gate-report b4 --workers 4            G2 per run: raw vs gate-confirmed (A-G2)
   python -m webtester regate runs/<run_id>                  re-run the evidence gate on a finished run
+  python -m webtester resweep runs/<run_id> [--clean]       v4 oracles over a gated run's recorded actions (no LLM)
+  python -m webtester graph runs/<run_id> [--mermaid out]   state-graph summary, optional Mermaid export
 """
 
 from __future__ import annotations
@@ -82,6 +84,16 @@ def main(argv: list[str] | None = None) -> int:
     rg.add_argument("--gate-k", type=int, default=3)
     rg.add_argument("--gate-minutes", type=float, default=20.0)
     rg.add_argument("--no-judge", action="store_true")
+    rg.add_argument("--findings", default="findings.json",
+                    help="findings file in the run folder to gate, e.g. findings_resweep.json (v4 development)")
+
+    rs = sub.add_parser("resweep", help="replay a gated run's actions with the v4 consistency oracles (no LLM)")
+    rs.add_argument("run_dir")
+    rs.add_argument("--clean", action="store_true", help="BookStack: replay without the injected client-side faults")
+
+    gp = sub.add_parser("graph", help="summary of a run's abstract state graph (graph.json)")
+    gp.add_argument("run_dir")
+    gp.add_argument("--mermaid", help="write a page-level Mermaid flowchart to this file")
 
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
@@ -151,7 +163,27 @@ def main(argv: list[str] | None = None) -> int:
         from .runner import regate
 
         gate_cfg = GateConfig(k=args.gate_k, max_minutes=args.gate_minutes, judge=not args.no_judge)
-        print(json.dumps(asyncio.run(regate(cfg, Path(args.run_dir), gate_cfg)), indent=2))
+        print(json.dumps(asyncio.run(regate(cfg, Path(args.run_dir), gate_cfg, args.findings)), indent=2))
+        return 0
+
+    if args.cmd == "resweep":
+        import asyncio
+
+        from .runner import resweep
+
+        print(json.dumps(asyncio.run(resweep(cfg, Path(args.run_dir), client_faults=not args.clean)), indent=2))
+        return 0
+
+    if args.cmd == "graph":
+        from .stategraph import load_graph, mermaid
+
+        g = load_graph(Path(args.run_dir) / "graph.json")
+        print(json.dumps(g["stats"], indent=2))
+        for p in sorted(g["pages"], key=lambda p: -p["visits"])[:40]:
+            print(f"  {p['visits']:5}  {p['route']:40} {p['name'] or ''}  ({len(p['states'])} states)")
+        if args.mermaid:
+            Path(args.mermaid).write_text(mermaid(g), encoding="utf-8")
+            print(f"wrote {args.mermaid}")
         return 0
 
     if args.cmd == "report":

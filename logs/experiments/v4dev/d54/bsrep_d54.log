@@ -1,0 +1,13 @@
+resweeping 5 runs
+done logs/experiments/v4dev/resweep_on_20261026-011617_bookstack_b4_n4_bsrep1.json
+done logs/experiments/v4dev/resweep_on_20261026-020708_bookstack_b4_n4_bsrep2.json
+done logs/experiments/v4dev/resweep_on_20261026-035308_bookstack_b4_n4_bsrep3.json
+done logs/experiments/v4dev/resweep_on_20261026-044724_bookstack_b4_n4_bsrep4.json
+done logs/experiments/v4dev/resweep_on_20261026-054319_bookstack_b4_n4_bsrep5.json
+done logs/experiments/v4dev/resweep_off_20261026-011617_bookstack_b4_n4_bsrep1.json
+done logs/experiments/v4dev/resweep_off_20261026-020708_bookstack_b4_n4_bsrep2.json
+done logs/experiments/v4dev/resweep_off_20261026-035308_bookstack_b4_n4_bsrep3.json
+done logs/experiments/v4dev/resweep_off_20261026-044724_bookstack_b4_n4_bsrep4.json
+done logs/experiments/v4dev/resweep_off_20261026-054319_bookstack_b4_n4_bsrep5.json
+resweep done
+down

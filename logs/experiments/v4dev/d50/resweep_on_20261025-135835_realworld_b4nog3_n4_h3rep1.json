@@ -1,0 +1,44 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 172, in main
+    print(json.dumps(asyncio.run(resweep(cfg, Path(args.run_dir), client_faults=not args.clean)), indent=2))
+                     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 720, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 246, in resweep
+    async with async_playwright() as pw:
+               ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\async_api\_context_manager.py", line 46, in __aenter__
+    playwright = AsyncPlaywright(next(iter(done)).result())
+                                 ~~~~~~~~~~~~~~~~~~~~~~~^^
+Exception: Connection closed while reading from the driver
+Task exception was never retrieved
+future: <Task finished name='Task-4' coro=<Connection.run.<locals>.init() done, defined at C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_connection.py:309> exception=Exception('Connection.init: Connection closed while reading from the driver')>
+Traceback (most recent call last):
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 310, in init
+    self.playwright_future.set_result(await self._root_object.initialize())
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 251, in initialize
+    await self._channel.send(
+    ...<5 lines>...
+    )
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+Exception: Connection.init: Connection closed while reading from the driver

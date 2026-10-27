@@ -1,0 +1,53 @@
+{
+  "run": "20261026-054319_bookstack_b4_n4_bsrep5",
+  "faults": [
+    "BS01",
+    "BS02",
+    "BS03",
+    "BS04",
+    "BS05",
+    "BS06",
+    "BS07",
+    "BS08",
+    "BS09",
+    "BS10",
+    "BS11",
+    "BS12",
+    "BS13",
+    "BS14",
+    "BS15",
+    "BS16",
+    "BS17",
+    "BS18"
+  ],
+  "steps_replayed": 73,
+  "missing_elements": 6,
+  "minutes": 5.7,
+  "findings": 6,
+  "by_rule": {
+    "R10": 1,
+    "R08": 1,
+    "R02": 1,
+    "R03": 1,
+    "R04": 1,
+    "R09": 1
+  },
+  "probes": 67,
+  "link_checks": 79,
+  "access_probes": 8,
+  "reloads": 26,
+  "mutation_forms": 2,
+  "mutation_submits": 6,
+  "events": {
+    "login:verified": 4,
+    "create:verified": 5,
+    "edit:verified": 6,
+    "search:verified": 10,
+    "favourite:unknown": 1,
+    "view:verified": 6,
+    "create:unknown": 1,
+    "delete:unknown": 1,
+    "edit:unknown": 1
+  },
+  "file": "findings_resweep.json"
+}

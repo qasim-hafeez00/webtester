@@ -92,7 +92,15 @@ class AppControl:
         if not self.app.reset_compose_args:
             raise AppControlError(f"app {self.app.name!r} has no reset_compose_args")
         t0 = time.monotonic()
-        self._compose(*self.app.reset_compose_args, timeout=120)
+        # Docker Desktop occasionally stalls one `exec` (26 Oct: a reset hung for 120 s and the next
+        # took 0.5 s); the reset is idempotent, so a stalled one is retried.
+        for attempt in range(3):
+            try:
+                self._compose(*self.app.reset_compose_args, timeout=90)
+                break
+            except subprocess.TimeoutExpired:
+                if attempt == 2:
+                    raise
         return time.monotonic() - t0
 
     def wait_healthy(self, timeout_s: float = 180) -> None:

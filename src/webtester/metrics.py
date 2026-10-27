@@ -70,6 +70,9 @@ def summarize(trace_path: Path) -> dict:
     healthy = bool(steps) and llm_failures == 0 and not stalled and gate_ok and all(
         r.endswith(("max_minutes", "max_steps", "max_tokens")) for r in reasons)
     by_kind = Counter(f["kind"] for f in findings)
+    cons = [f for f in findings if f["kind"] == "consistency"]
+    graph = next((e for e in events if e["type"] == "graph"), None)
+    sweep = next((e for e in events if e["type"] == "sweep"), None)
     tokens = prompt_tok + completion_tok
     return {
         "run_id": start.get("run_id"),
@@ -101,6 +104,11 @@ def summarize(trace_path: Path) -> dict:
         "health": {"ok": healthy, "llm_failures": llm_failures, "max_step_gap_s": max_gap, "stalled": stalled,
                    **({"gate_ok": gate_ok} if gate_expected else {})},
         **_g2_g3(events, checks, gate_done),
+        **({"consistency_by_tier": dict(Counter(f["detail"].get("tier") for f in cons)),
+            "consistency_by_rule": dict(Counter(f["detail"].get("rule") for f in cons))} if cons else {}),
+        **({"graph": {k: v for k, v in graph.items() if k not in ("t", "type")}} if graph else {}),
+        **({"travels": sum(1 for e in events if e["type"] == "travel" and e.get("ok"))} if graph else {}),
+        **({"sweep": {k: v for k, v in sweep.items() if k not in ("t", "type")}} if sweep else {}),
         **({"faults_exposed": sorted(exposed), "faults_exposed_n": len(exposed)} if exposed else {}),
         # trigger held but never with a visible change (e.g. a literal-dependent fault without its literal)
         **({"faults_triggered_silent_only": sorted(silent - exposed)} if silent - exposed else {}),

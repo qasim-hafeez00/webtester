@@ -1,0 +1,1 @@
+cd /c/Users/Seraphindra/Desktop/agenticproject && bash scripts/pilots_v4.sh

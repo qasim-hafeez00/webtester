@@ -1,0 +1,4 @@
+resweeping 15 runs
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+      0 [main] bash 473 dofork: child -1 - forked process 13148 died unexpectedly, retry 0, exit code 0xC000026B, errno 11
+scripts/resweep_dev.sh: fork: retry: Resource temporarily unavailable

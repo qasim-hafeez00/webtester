@@ -50,7 +50,8 @@ def suggest(f: dict, catalog: dict, enabled: list[str]) -> str:
     if f["kind"] == "http_5xx" and "PUT /api/user" in sig:
         return "U1?"
     if f.get("exposed"):  # injected faults (BookStack): those this worker had already triggered
-        return " / ".join(f"{fid}?" for fid in f["exposed"]) + (" / fp?" if f["kind"] == "oracle_violation" else "")
+        return " / ".join(f"{fid}?" for fid in f["exposed"]) + \
+            (" / fp?" if f["kind"] in ("oracle_violation", "consistency") else "")
     if f["kind"] == "oracle_violation":
         _, check, route, *_ = sig.split("|")
         cands = []
@@ -69,7 +70,7 @@ def label_metrics(run_id: str, findings: list[dict], summary: dict, labels: dict
     lab = {f["sig"]: label_of(labels, run_id, f["sig"]) for f in findings}
     enabled = set(summary.get("faults") or [])
     gated = any(f.get("status", "candidate") != "candidate" for f in findings)
-    has_g3 = any(f["kind"] == "oracle_violation" for f in findings) or run_id in labels
+    has_g3 = any(f["kind"] in ("oracle_violation", "consistency") for f in findings) or run_id in labels
     out: dict = {"labels_missing": sum(1 for v in lab.values() if not v)}
 
     def seeded(fs: list[dict], rule_key: str) -> int:

@@ -138,7 +138,9 @@ class OracleScriptedLLM(ScriptedLLM):
         data, u = await super().complete_json(system, user)
         if "Your Feed" in user or "/profile/worker01" in user:  # logged in: nav bar shows the profile link
             data = {"thought": "check home", "actions": [{"do": "navigate", "value": "/"}],
-                    "expect": [{"check": "shows", "text": "zz-never-present-zz"},
+                    # v4 grounding (D49) keeps only checks on typed or seen text, so the failing
+                    # check is a grounded one that a correct page contradicts
+                    "expect": [{"check": "not_shows", "text": "conduit"},
                                {"check": "shows", "text": "conduit", "where": "reload"}]}
         return data, u
 
@@ -152,7 +154,7 @@ def test_b4_checks_gate_and_judge_live(monkeypatch):
                           gate_cfg=GateConfig(k=2, windows=(1,), max_minutes=5))
     events = read_trace(out / "trace.jsonl")
     checks = [c for e in events if e["type"] == "step" for c in e.get("checks", [])]
-    assert any(c["text"] == "zz-never-present-zz" and c["status"] == "violated" for c in checks)
+    assert any(c["check"] == "not_shows" and c["text"] == "conduit" and c["status"] == "violated" for c in checks)
     assert any(c["text"] == "conduit" and c["status"] == "pass" for c in checks)
     findings = json.loads((out / "findings.json").read_text(encoding="utf-8"))
     oracle = [f for f in findings if f["kind"] == "oracle_violation"]

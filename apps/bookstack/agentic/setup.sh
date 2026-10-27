@@ -6,7 +6,9 @@ set -euo pipefail
 MYSQL=(mysql -h db -uroot -proot)
 
 echo "[agentic] waiting for BookStack"
-until curl -s http://webapp:8080/ 2>/dev/null | grep -q "Redirecting to"; do
+# Any 200/302 means it serves pages; the last run may have left public access on, so "/" need
+# not redirect to the login page (27 Oct, I47).
+until curl -s -o /dev/null -w "%{http_code}" http://webapp:8080/ 2>/dev/null | grep -qE "^(200|302)$"; do
     sleep 3
 done
 

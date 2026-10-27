@@ -17,7 +17,11 @@ session that worker had, with the app's data reset before every replay:
 
 "Reproduced" means the same finding signature again: the same implicit signal
 (HTTP 5xx, JS error, ...) anywhere in the replay, or for an inferred-oracle
-finding the same check failing again after the last step's actions.
+finding the same check failing again after the last step's actions. A v4
+consistency finding (D49) is reproduced when a fresh Sweeper, fed the replayed
+steps (and the recorded intents), raises the same rule on the same subject: the
+memory it needs is rebuilt by the replay itself, so short windows usually miss
+and the full-prefix window (0) is what reproduces memory-based rules.
 
 Replays need no LLM: they repeat recorded actions, locating each element by its
 position-independent key plus its ordinal among same-key elements. The only LLM
@@ -32,6 +36,7 @@ import time
 from dataclasses import dataclass
 
 from .browser import BrowserSession, Observation
+from .consistency import SweepState, Sweeper
 from .inferred import CheckResult, check, clicked_active, describe, oracle_signature
 from .oracles import Finding, signature
 from .worker import RunContext, StepRecord
@@ -42,6 +47,15 @@ were replayed on a freshly reset app. Decide whether this reveals a BUG in the a
 the tester (it expected other wording, a feature the app does not have, or behaviour a correct app need not \
 have). Reply with one JSON object and nothing else:
 {"verdict": "bug" | "wrong_expectation" | "unsure", "reason": "<at most 30 words>"}"""
+
+# v4 (D49): consistency findings are not predictions, so the judge is asked about the conflict.
+JUDGE_CONSISTENCY = """You review a possible bug reported by an automated web-app tester. It compared what a web \
+app showed with itself and with what the tester did, and found the conflict below. It happened again every time \
+the tester's actions were replayed on a freshly reset app. Decide whether a CORRECT app could show this (for \
+example: the list is only a preview, the item was changed by another user, the wording differs but the meaning \
+agrees) or whether it reveals a BUG. Reply with one JSON object and nothing else:
+{"verdict": "bug" | "wrong_expectation" | "unsure", "reason": "<at most 30 words>"}
+("wrong_expectation" = a correct app can show this.)"""
 
 
 @dataclass(frozen=True)
@@ -95,6 +109,8 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
     await s.start(storage_state=window[0].storage)
     missing = failed = 0
     reproduced = False
+    sw = Sweeper(SweepState(), finding.worker, cfg.app.account(finding.worker)) \
+        if finding.kind == "consistency" else None
     try:
         await s.goto(window[0].url)
         for i, rec in enumerate(window):
@@ -103,7 +119,11 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                 await s.goto(rec.url)
                 obs = await s.observe()
             ran_all = True
-            clicked = []
+            clicked, done = [], []
+            if sw is not None:
+                plan = [{"do": a["do"], "id": (el.id if (el := locate(obs, a["ekey"], a["nth"])) else None),
+                         "value": a["value"]} for a in rec.actions]
+                await sw.before(s, obs, plan)
             for a in rec.actions:
                 el = locate(obs, a["ekey"], a["nth"])
                 if a["do"] == "click":
@@ -113,13 +133,20 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                     ran_all = False
                     break
                 res = await s.execute(a["do"], el.id if el else None, a["value"])
+                done.append({"do": a["do"], "id": el.id if el else None, "value": a["value"],
+                             "el": el.describe() if el else None, "ekey": a["ekey"], "nth": a["nth"],
+                             "ok": res.ok, "url_after": res.url_after})
                 if not res.ok:
                     failed += 1
                     ran_all = False
                     break
+            if sw is not None:
+                await sw.actions_done(s)
+                sigs = await sw.after(s, obs, done, rec.step, getattr(rec, "intent", None), getattr(rec, "suspect", None))
+                reproduced = reproduced or any(x.detail.get("sig") == finding.sig for x in sigs)
             if i == len(window) - 1 and finding.kind == "oracle_violation":
                 reproduced = ran_all and await _violated_again(s, finding, rec, obs, clicked_active(clicked))
-        if finding.kind != "oracle_violation":
+        if finding.kind not in ("oracle_violation", "consistency"):
             reproduced = any(signature(sig) == finding.sig for sig in s.drain_signals())
     finally:
         await s.close()
@@ -180,7 +207,8 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
     judge_usage = {"calls": 0, "tokens": 0}
     if gcfg.judge and llm is not None:
         for f in findings:
-            if f.kind == "oracle_violation" and f.status in ("confirmed", "flaky"):
+            judged = f.kind == "oracle_violation" or (f.kind == "consistency" and f.detail.get("tier") in ("T2", "T3"))
+            if judged and f.status in ("confirmed", "flaky"):
                 f.judge = await _judge(llm, f, judge_usage)
                 run.trace.event("gate_judge", sig=f.sig, **f.judge)
     if ctl is not None:
@@ -200,12 +228,18 @@ async def _judge(llm, f: Finding, usage: dict) -> dict:
 
     steps = "\n".join(f"- {t['do']} {t['el'] or ''} {('= ' + repr(t['value'])) if t.get('value') else ''}".rstrip()
                       for t in f.trail)
-    prompt = (f"Page where the actions started: {f.page_url}\n"
-              f"Actions:\n{steps or '(none)'}\n"
-              f"Expectation: the app {describe(f.detail['expect'])}\n"
-              f"What happened: {f.detail.get('evidence') or f.message}\n")
+    if f.kind == "consistency":
+        system = JUDGE_CONSISTENCY
+        prompt = (f"Page: {f.page_url}\nTester's last actions:\n{steps or '(none)'}\n"
+                  f"Conflict ({f.detail.get('rule')}): {f.message}\nEvidence: {f.detail.get('evidence') or '-'}\n")
+    else:
+        system = JUDGE_SYSTEM
+        prompt = (f"Page where the actions started: {f.page_url}\n"
+                  f"Actions:\n{steps or '(none)'}\n"
+                  f"Expectation: the app {describe(f.detail['expect'])}\n"
+                  f"What happened: {f.detail.get('evidence') or f.message}\n")
     try:
-        data, u = await llm.complete_json(JUDGE_SYSTEM, prompt)
+        data, u = await llm.complete_json(system, prompt)
     except LLMError as e:
         return {"verdict": "error", "reason": str(e)[:200]}
     usage["calls"] += u.calls

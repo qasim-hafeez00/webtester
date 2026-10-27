@@ -1,0 +1,40 @@
+resweeping 15 runs
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+done logs/experiments/v4dev/resweep_on_20261025-132615_realworld_b4_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_on_20261025-134022_realworld_b4nog1_n4_h3rep1.json
+resweeping 15 runs
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+keep logs/experiments/v4dev/resweep_on_20261025-132615_realworld_b4_n4_h3rep1.json
+keep logs/experiments/v4dev/resweep_on_20261025-134022_realworld_b4nog1_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_on_20261025-135835_realworld_b4nog3_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_on_20261025-161401_realworld_b4_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_on_20261025-164711_realworld_b4nog1_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_on_20261025-170324_realworld_b4nog3_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_on_20261025-173350_realworld_b4_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_on_20261025-182745_realworld_b4nog1_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_on_20261025-184718_realworld_b4nog3_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_on_20261025-191444_realworld_b4_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_on_20261025-195417_realworld_b4nog1_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_on_20261025-201539_realworld_b4nog3_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_on_20261025-204124_realworld_b4_n4_h3rep5.json
+done logs/experiments/v4dev/resweep_on_20261025-220122_realworld_b4nog1_n4_h3rep5.json
+done logs/experiments/v4dev/resweep_on_20261025-222542_realworld_b4nog3_n4_h3rep5.json
+up at http://127.0.0.1:4100 with faults: none
+done logs/experiments/v4dev/resweep_off_20261025-132615_realworld_b4_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_off_20261025-134022_realworld_b4nog1_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_off_20261025-135835_realworld_b4nog3_n4_h3rep1.json
+done logs/experiments/v4dev/resweep_off_20261025-161401_realworld_b4_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_off_20261025-164711_realworld_b4nog1_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_off_20261025-170324_realworld_b4nog3_n4_h3rep2.json
+done logs/experiments/v4dev/resweep_off_20261025-173350_realworld_b4_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_off_20261025-182745_realworld_b4nog1_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_off_20261025-184718_realworld_b4nog3_n4_h3rep3.json
+done logs/experiments/v4dev/resweep_off_20261025-191444_realworld_b4_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_off_20261025-195417_realworld_b4nog1_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_off_20261025-201539_realworld_b4nog3_n4_h3rep4.json
+done logs/experiments/v4dev/resweep_off_20261025-204124_realworld_b4_n4_h3rep5.json
+done logs/experiments/v4dev/resweep_off_20261025-220122_realworld_b4nog1_n4_h3rep5.json
+done logs/experiments/v4dev/resweep_off_20261025-222542_realworld_b4nog3_n4_h3rep5.json
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+resweep done
+down

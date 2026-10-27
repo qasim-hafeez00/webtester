@@ -27,7 +27,7 @@ def normalise_message(msg: str) -> str:
 
 
 def signature(sig: Signal) -> str:
-    if sig.kind == "oracle_violation":
+    if sig.kind in ("oracle_violation", "consistency"):  # v4: consistency|rule|route shape|subject (D49)
         return sig.detail["sig"]
     if sig.kind == "http_5xx":
         method = sig.detail.get("method", "")

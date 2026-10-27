@@ -42,6 +42,9 @@ class Decision:
     error: str = ""
     done: bool = False
     expect: list[dict] = field(default_factory=list)  # inferred-oracle checks (B4 only)
+    intent: dict | None = None  # v4: what the actions are meant to do (B4 family, D49)
+    suspect: dict | None = None  # v4: a contradiction the model cites (R15, B4 only)
+    page: str = ""  # v4: a 2-4 word name for a page new to the team (frontier v3)
 
 
 @dataclass
@@ -97,6 +100,20 @@ When your actions change data (create, edit, delete, save, toggle, follow, like,
 3. numbers: if a number on the page should move (a counter, a total, a count on a button), a count check on that element.
 Prefer checks on content over route checks: where an app goes after a save is its own design choice, so use a route check only for navigation you asked for (a link you clicked or a path you opened). Only state what any correct app must do, with text you typed or saw on the page. A failed check comes back to you as an error signal: it may be a bug, so investigate it."""
 
+# Harness v4 (D49). The v3 checks above asked for predictions of each action's outcome; on
+# BookStack every false alarm was a wrong guess about design (I43). v4 asks for the intent
+# instead, and the harness checks its effect independently (consistency.py). INTENT_PROMPT
+# goes to every v4 B4-family condition; CHECKS_PROMPT (cited contradictions, grounded
+# checks) to b4 and b4nog1 only, not to b4det.
+INTENT_PROMPT = """
+
+INTENT: when your actions should change data (create, edit, delete, favourite/like/follow or undo it, add to a list or cart, log out) or search/filter, add "intent": {"verb": "create|edit|delete|favourite|unfavourite|like|unlike|follow|unfollow|add|search|filter|logout", "object": "<the item's name or title, or the search term>", "type": "<kind of item>"}. State an intent only when you expect the action to succeed (valid input). The tester then checks on its own that the effect really happened: the item exists and is listed, its fields were saved, counts moved, other pages agree. You do not need to predict wording or where the app goes.
+Give items you create a distinctive name with a short code (e.g. "Atlas Q7"), so they can be found again. Good tests: create then find it again, edit then reopen it, delete then open its address, favourite then open the favourites list, search for something you created, double submit, back after submit, special characters (<b>x</b>, accents, quotes). Lines marked "Tester notes" tell you what was checked; follow up on conflicts."""
+
+CHECKS_PROMPT = """
+
+CONTRADICTIONS (optional): if two things you saw cannot both be true in a correct app (a count that does not match its list, one item with two names or ages, an item listed where it should not be), add "suspect": {"a": "<exact text 1>", "b": "<exact text 2>", "why": "<at most 10 words>"}, both copied exactly from pages you saw. You may also add "expect": at most 2 checks, each {"check": "shows"|"not_shows", "text": "<exact text you typed or saw>", "where": "now"|"reload"|"/path"} or {"check": "count", "id": "<element id>", "delta": 1}. Never guess headings, wording or where the app navigates."""
+
 _LOGIN_CONTROL = re.compile(r"^(sign in|log in|login)$", re.I)
 
 
@@ -110,7 +127,7 @@ def session_line(obs: Observation) -> str:
 
 def build_user_prompt(obs: Observation, mem: Memory, account: Account, step: int, max_steps: int,
                       frontier: "Frontier | None" = None, worker: int = 0, sid: str = "",
-                      suggestion: str | None = None) -> str:
+                      suggestion: str | None = None, notes: list[str] | None = None) -> str:
     """Without a frontier this is the Phase 1 (B1) prompt (plus, from harness v3, the session
     line: D46). With one, the
     route list comes from the map, elements carry done/taken marks, and a
@@ -124,8 +141,21 @@ def build_user_prompt(obs: Observation, mem: Memory, account: Account, step: int
         coord = ""
     else:
         who = "your team" if frontier.shared else "you"
-        routes = ", ".join(f"{r} (x{n})" for r, n in frontier.routes.most_common(30)) or "none yet"
-        els = "\n".join((e.describe() + " " + frontier.mark(worker, sid, e)).rstrip() for e in obs.elements)
+        compact = getattr(frontier, "version", 1) >= 3
+        routes = ", ".join(f"{r} (x{n})" for r, n in frontier.routes.most_common(12 if compact else 30)) or "none yet"
+        if compact:  # v4: explored navigation (marked [nav]) collapses into one line of ids and texts
+            lines, nav = [], []
+            for e in obs.elements:
+                m = frontier.mark(worker, sid, e)
+                if m == "[nav]":
+                    nav.append(f"[{e.id}] {(e.text or e.label)[:24]}")
+                else:
+                    lines.append((e.describe() + " " + m).rstrip())
+            if nav:
+                lines.append("Explored navigation (on most pages): " + ", ".join(nav))
+            els = "\n".join(lines)
+        else:
+            els = "\n".join((e.describe() + " " + frontier.mark(worker, sid, e)).rstrip() for e in obs.elements)
         els = els or "(no interactive elements)"
         seen = f"Distinct page states {who} have seen: {len(frontier.states)}. Routes visited by {who}: {routes}\n\n"
         team = ("You are one of several testers exploring this app in parallel; you share one map. "
@@ -137,13 +167,20 @@ def build_user_prompt(obs: Observation, mem: Memory, account: Account, step: int
         elif suggestion:
             coord += f"Least-explored area: {suggestion}. Go there if this page has nothing new left.\n"
         coord += "\n"
+    naming = ""
+    graph = getattr(frontier, "graph", None)
+    if graph is not None and graph.unnamed(route_shape(obs.url)):
+        naming = 'NEW PAGE for your team: also add "page": "<2-4 word name for this kind of page>" to your reply.\n'
+    tester = ("Tester notes (your recent intents, checked independently):\n" + "\n".join(notes) + "\n\n") if notes else ""
     return (
         f"Step {step} of at most {max_steps}.\n"
         f"Test account: email={account.email} password={account.password} (username {account.username})\n"
         f"{session_line(obs)}"
         f"{seen}"
         f"{coord}"
+        f"{naming}"
         f"Your recent steps:\n{recent}\n\n"
+        f"{tester}"
         f"CURRENT PAGE: {route_shape(obs.url)}  (url {obs.url})  title={obs.title!r}\n"
         f"Visible text (truncated):\n{text}\n\n"
         f"Interactive elements:\n{els}\n"
@@ -208,24 +245,47 @@ class LLMPolicy:
     name = "llm"
 
     def __init__(self, llm: LLMClient, account: Account, max_steps: int,
-                 frontier: "Frontier | None" = None, worker: int = 0, inferred: bool = False):
+                 frontier: "Frontier | None" = None, worker: int = 0, inferred: bool = False,
+                 intents: bool = False, notes=None):
+        """`inferred`: the model may add checks and cited contradictions (v4: b4, b4nog1).
+        `intents`: the model states intents that the harness verifies (v4 B4 family, D49).
+        `notes`: callable returning the worker's memory lines for the prompt (M5)."""
         self.llm = llm
         self.account = account
         self.max_steps = max_steps
         self.frontier = frontier
         self.worker = worker
         self.inferred = inferred
-        self.system_prompt = SYSTEM_PROMPT + ORACLE_PROMPT if inferred else SYSTEM_PROMPT
+        self.intents = intents
+        self.notes = notes
+        if intents:
+            self.system_prompt = SYSTEM_PROMPT + INTENT_PROMPT + (CHECKS_PROMPT if inferred else "")
+        else:
+            self.system_prompt = SYSTEM_PROMPT + ORACLE_PROMPT if inferred else SYSTEM_PROMPT
         self.last_suggestion: str | None = None
+        self._prepared = False
+
+    def prepare(self, sid: str) -> tuple[str, str] | None:
+        """Frontier v2+: work out this step's focus area once. Returns it when it is newly assigned
+        (the harness may then travel there without an LLM step, v4), else None."""
+        if self.frontier is None or getattr(self.frontier, "version", 1) < 2:
+            return None
+        prev = self.frontier.focus_of.get(self.worker)
+        focus = self.frontier.focus(self.worker, sid)
+        self.last_suggestion = f"{focus[0]} {focus[1]}" if focus else None
+        self._prepared = True
+        return focus if focus is not None and (prev is None or prev[0] != focus[0]) else None
 
     async def decide(self, obs: Observation, mem: Memory, step: int, sid: str = "") -> Decision:
-        if self.frontier is not None and getattr(self.frontier, "version", 1) >= 2:
+        if self._prepared:
+            self._prepared = False
+        elif self.frontier is not None and getattr(self.frontier, "version", 1) >= 2:
             focus = self.frontier.focus(self.worker, sid)
             self.last_suggestion = f"{focus[0]} {focus[1]}" if focus else None
         else:
             self.last_suggestion = self.frontier.suggest(self.worker, sid) if self.frontier else None
         prompt = build_user_prompt(obs, mem, self.account, step, self.max_steps, self.frontier, self.worker, sid,
-                                   self.last_suggestion)
+                                   self.last_suggestion, self.notes() if self.notes else None)
         try:
             data, usage = await self.llm.complete_json(self.system_prompt, prompt)
         except LLMError as e:
@@ -237,7 +297,20 @@ class LLMPolicy:
             actions = sanitize_actions([data])  # a bare single action object
         err = "" if actions else "no valid action in reply: " + json.dumps(data, ensure_ascii=False)[:400]
         expect = sanitize_expectations(data.get("expect")) if self.inferred and actions else []
-        return Decision(actions, str(data.get("thought", ""))[:300], usage, err, expect=expect)
+        intent = sanitize_intent(data.get("intent")) if self.intents and actions else None
+        suspect = data.get("suspect") if self.inferred and isinstance(data.get("suspect"), dict) else None
+        page = str(data.get("page"))[:40] if isinstance(data.get("page"), str) else ""
+        return Decision(actions, str(data.get("thought", ""))[:300], usage, err, expect=expect, intent=intent,
+                        suspect=suspect, page=page)
+
+
+def sanitize_intent(raw: object) -> dict | None:
+    if isinstance(raw, list) and raw:
+        raw = raw[0]
+    if not isinstance(raw, dict) or not raw.get("verb"):
+        return None
+    return {"verb": str(raw.get("verb"))[:20], "object": str(raw.get("object") or "")[:120],
+            "type": str(raw.get("type") or "")[:40]}
 
 
 class RandomPolicy:
