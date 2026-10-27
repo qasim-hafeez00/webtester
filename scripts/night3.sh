@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Night 3 (harness v4, locked): b3v3 and b4 x 5 on Conduit (label h4rep), then on BookStack (bs4rep),
 # interleaved per rep, same budget as Nights 1-2 (4 workers, 190k tokens, 30 min). One app at a time (I19).
-# Run through the sleep block: powershell -File scripts/queue_keepawake.ps1 -CmdFile logs/batch_queue_n3_<date>.cmd.txt
+# Run through the sleep block: powershell -File scripts/queue_keepawake.ps1 -CmdFile logs/batch_queue_n3_2026-10-27.cmd.txt
 set -u
 cd "$(dirname "$0")/.."
 PY=.venv/Scripts/python
