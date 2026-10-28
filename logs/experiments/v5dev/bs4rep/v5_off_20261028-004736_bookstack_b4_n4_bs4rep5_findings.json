@@ -1,0 +1,23 @@
+[
+  {
+    "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-test-bnameb-at|updated",
+    "kind": "consistency",
+    "message": "[R08 T2] '17 hours ago', but an agent changed it 0 min ago (step 10)",
+    "first_step": 25,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-test-bnameb-at|updated",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Recent Activity Worker 04 updated permissions Shelf Test <b>Name</b>! @#% 1 second ago Worker 04 updated shelf Shelf Test <b>Name</b>! @#% 11 seconds ago Admin "
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

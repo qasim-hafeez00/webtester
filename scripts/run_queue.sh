@@ -5,6 +5,7 @@
 # Usage: scripts/run_queue.sh "<agent> <rep> [label]" ...   e.g. "b1 5" "b4 1 g23rep"
 #   label defaults to g1rep (the G1 runs). FIRST_WINDOW_NOW=1 uses today's quota window
 #   for the first batch instead of waiting for the next reset (when today's quota is unused).
+#   CONFIG=configs/bookstack.toml runs the queue on that app (default: Conduit).
 set -u
 cd "$(dirname "$0")/.."
 PY=.venv/Scripts/python
@@ -26,12 +27,12 @@ for day in $(seq 1 "$MAX_DAYS"); do
     read -r agent rep label <<< "$item"
     label=${label:-$LABEL}
     healthy "$agent" "$rep" "$label" && continue
-    batches+=("--agents $agent --workers $WORKERS --tokens $TOKENS --minutes $MINUTES --reps 1 --start $rep --label $label")
+    batches+=("${CONFIG:+--config $CONFIG }--agents $agent --workers $WORKERS --tokens $TOKENS --minutes $MINUTES --reps 1 --start $rep --label $label")
   done
   [ ${#batches[@]} -eq 0 ] && { echo "$(date '+%F %H:%M') queue done"; exit 0; }
   echo "$(date '+%F %H:%M') window $day: ${#batches[@]} run(s) left"
   if [ "$day" = "1" ] && [ "${FIRST_WINDOW_NOW:-0}" = "1" ]; then
-    bash scripts/after_reset.sh "${batches[@]}"
+    bash scripts/after_reset.sh --now "${batches[@]}"
   else
     bash scripts/after_reset.sh --next-reset "${batches[@]}"
   fi

@@ -1,0 +1,16 @@
+{
+  "candidates": 10,
+  "confirmed": 7,
+  "flaky": 1,
+  "rejected": 2,
+  "replays": 36,
+  "minutes": 11.51,
+  "k": 3,
+  "windows": [
+    1,
+    4,
+    0
+  ],
+  "judge_calls": 0,
+  "judge_tokens": 0
+}

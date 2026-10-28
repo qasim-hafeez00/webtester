@@ -5,7 +5,7 @@ import HttpException from '../../models/http-exception.model';
 import { RegisteredUser } from './registered-user.model';
 import generateToken from './token.utils';
 import { User } from './user.model';
-import { fault } from '../../../agentic/faults';
+import { fault, fired } from '../../../agentic/faults';
 
 const checkUserUniqueness = async (email: string, username: string) => {
   const existingUserByEmail = await prisma.user.findUnique({
@@ -47,6 +47,7 @@ export const createUser = async (input: RegisterInput): Promise<RegisteredUser> 
   }
 
   // [FAULT F03] the blank-username check is skipped
+  if (!username && fault('F03')) fired('F03');
   if (!username && !fault('F03')) {
     throw new HttpException(422, { errors: { username: ["can't be blank"] } });
   }

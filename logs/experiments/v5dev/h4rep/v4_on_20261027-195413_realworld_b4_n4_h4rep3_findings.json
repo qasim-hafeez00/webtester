@@ -1,0 +1,359 @@
+[
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/, http://127.0.0.1:4100/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R16|/article/*|long|write a comment...",
+    "kind": "consistency",
+    "message": "[R16 T1] submitting the form at /article/* again with a value of 1000 characters in 'Write a comment...': POST /api/articles/Flaky-tests-are-a-smell-part-two-20/comments -> HTTP 500",
+    "first_step": 20,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R16|/article/*|long|write a comment...",
+      "rule": "R16",
+      "tier": "T1",
+      "evidence": "long: 1000 chars; writes [500]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 20,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|<b>test comment</b> <s> \\o/ worker01october <n>, <n>",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted \"<b>test comment</b> 'quotes' \\\\o/ worker01October 28, 2026\" (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 28,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|<b>test comment</b> <s> \\o/ worker01october <n>, <n>",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-submit|/article/*|create|long comment",
+    "kind": "consistency",
+    "message": "[I-submit T2] create 'long comment': a valid form was submitted, but nothing was sent and the page did not change",
+    "first_step": 32,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-submit|/article/*|create|long comment",
+      "rule": "I-submit",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/article/*|whitespace comment",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'whitespace comment': the app accepted the write, but 'whitespace comment' is shown neither on the page it led to nor where the flow started",
+    "first_step": 32,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/article/*|whitespace comment",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|test unicode/emoji: 🚀✨ worker01october <n>, <n>",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'Test unicode/emoji: 🚀✨ worker01October 28, 2026' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 43,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|test unicode/emoji: 🚀✨ worker01october <n>, <n>",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|<script>alert(<n>)</script> & <b>bold</b> \\\"' worker01october <n>, <n>",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted '<script>alert(1)</script> & <b>bold</b> \\\\\"\\' worker01October 27, 2026' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 48,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|<script>alert(<n>)</script> & <b>bold</b> \\\"' worker01october <n>, <n>",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|a very long comment string meant to test boundary handling and storage limits fo",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'A very long comment string meant to test boundary handling and storage limits for article comments on the Conduit test a' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 58,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|a very long comment string meant to test boundary handling and storage limits fo",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-edit|/|worker01_special",
+    "kind": "consistency",
+    "message": "[I-edit T1] edit 'worker01_special': the app accepted the write, but 'worker01_special' is shown neither on the page it led to nor where the flow started",
+    "first_step": 78,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-edit|/|worker01_special",
+      "rule": "I-edit",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/, http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 13,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-Z9-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-filter|/|filter|backend",
+    "kind": "consistency",
+    "message": "[I-filter T2] filter for 'backend' lists 'Test Article Z9-m0aa', which does not contain 'backend', not even on its own page",
+    "first_step": 35,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|I-filter|/|filter|backend",
+      "rule": "I-filter",
+      "tier": "T2",
+      "evidence": "worker02 October 28, 2026 0 Test Article Z9-m0aa About Z9-m0aa Read more... tagz-m0aa"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R11|/|page|<n>",
+    "kind": "consistency",
+    "message": "[R11 T2] clicking page control '2' left the list 'conduit' unchanged (10 items)",
+    "first_step": 39,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|R11|/|page|<n>",
+      "rule": "R11",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/|login",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'login': the app accepted the write, but 'login' is shown neither on the page it led to nor where the flow started",
+    "first_step": 72,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|I-create|/|login",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R13|/article/*|offered|/editor/*",
+    "kind": "consistency",
+    "message": "[R13 T2] the page 'Flaky tests are a smell, part two' offers 'Edit Article', but its address http://127.0.0.1:4100/editor/Flaky-tests-are-a-smell-part-two-20 refuses this session (ended on /, HTTP 200)",
+    "first_step": 72,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R13|/article/*|offered|/editor/*",
+      "rule": "R13",
+      "tier": "T2",
+      "evidence": "the same kind of edit address opened a filled-in form for this session elsewhere"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|great review comment from worker02!",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'Great review comment from worker02!' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 84,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|great review comment from worker02!",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-filter|/|filter|testing",
+    "kind": "consistency",
+    "message": "[I-filter T2] filter for 'testing' lists 'Quote\\'\" title & test', which does not contain 'testing', not even on its own page",
+    "first_step": 67,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-filter|/|filter|testing",
+      "rule": "I-filter",
+      "tier": "T2",
+      "evidence": "worker03 October 28, 2026 0 Quote'\" title & test About Z9-2 with <b>markdown</b> & quotes \"' Read more... tagZ9-2"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

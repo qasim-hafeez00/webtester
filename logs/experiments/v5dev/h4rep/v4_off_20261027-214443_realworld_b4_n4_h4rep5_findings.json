@@ -1,0 +1,149 @@
+[
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 19,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/article/*|test comment with symbols & quotes ' \"",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'Test comment with symbols & quotes \\' \"': the app accepted the write, but 'Test comment with symbols & quotes \\' \"' is shown neither on the page it led to nor where the flow started",
+    "first_step": 24,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/article/*|test comment with symbols & quotes ' \"",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R11|/|page|<n>",
+    "kind": "consistency",
+    "message": "[R11 T2] clicking page control '2' left the list 'tab: Global Feed' unchanged (10 items)",
+    "first_step": 80,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R11|/|page|<n>",
+      "rule": "R11",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 16,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-Alpha-X9-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-edit|/profile/*|worker02 settings",
+    "kind": "consistency",
+    "message": "[I-edit T1] edit 'worker02 settings': the app accepted the write, but 'worker02 settings' is shown neither on the page it led to nor where the flow started",
+    "first_step": 35,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/profile/worker02",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-edit|/profile/*|worker02 settings",
+      "rule": "I-edit",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/profile/worker02, http://127.0.0.1:4100/"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R11|/profile/*|page|<n>",
+    "kind": "consistency",
+    "message": "[R11 T2] clicking page control '0' left the list 'worker02' unchanged (3 items)",
+    "first_step": 82,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/profile/worker02",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R11|/profile/*|page|<n>",
+      "rule": "R11",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-edit|/profile/*|worker03 settings email",
+    "kind": "consistency",
+    "message": "[I-edit T1] edit 'worker03 settings email': the app accepted the write, but 'worker03 settings email' is shown neither on the page it led to nor where the flow started",
+    "first_step": 84,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/profile/worker03_updated",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-edit|/profile/*|worker03 settings email",
+      "rule": "I-edit",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/profile/worker03_updated, http://127.0.0.1:4100/settings"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

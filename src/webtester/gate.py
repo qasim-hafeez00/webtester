@@ -6,14 +6,22 @@ session that worker had, with the app's data reset before every replay:
 
 1. Minimise: replay the last 1 step, then the last `windows[1]` steps, ... up to
    the finding's step, until one replay reproduces the finding. That window is
-   the finding's minimal trace.
+   the finding's minimal trace. A window size of 0 means the worker's whole log
+   from its first step: the only window that rebuilds data the worker created
+   earlier (its own account, articles), which the reset wipes (gate v2, I32).
 2. Confirm: replay the minimal trace until there are `k` replays in total.
-3. Label: confirmed (k/k), flaky (1..k-1 of k), rejected (no replay reproduced
-   it), unverified (gate time ran out first).
+3. Label: confirmed (k/k), flaky (1..k-1 of k), rejected (replays ran to the
+   end and none reproduced it), unverified (gate time ran out first, or no replay
+   could even run its actions: elements missing on a reset app, e.g. data another
+   worker created; harness v3, D46).
 
 "Reproduced" means the same finding signature again: the same implicit signal
 (HTTP 5xx, JS error, ...) anywhere in the replay, or for an inferred-oracle
-finding the same check failing again after the last step's actions.
+finding the same check failing again after the last step's actions. A v4
+consistency finding (D49) is reproduced when a fresh Sweeper, fed the replayed
+steps (and the recorded intents), raises the same rule on the same subject: the
+memory it needs is rebuilt by the replay itself, so short windows usually miss
+and the full-prefix window (0) is what reproduces memory-based rules.
 
 Replays need no LLM: they repeat recorded actions, locating each element by its
 position-independent key plus its ordinal among same-key elements. The only LLM
@@ -28,7 +36,8 @@ import time
 from dataclasses import dataclass
 
 from .browser import BrowserSession, Observation
-from .inferred import CheckResult, check, describe, oracle_signature
+from .consistency import SweepState, Sweeper
+from .inferred import CheckResult, check, clicked_active, describe, oracle_signature
 from .oracles import Finding, signature
 from .worker import RunContext, StepRecord
 
@@ -39,20 +48,31 @@ the tester (it expected other wording, a feature the app does not have, or behav
 have). Reply with one JSON object and nothing else:
 {"verdict": "bug" | "wrong_expectation" | "unsure", "reason": "<at most 30 words>"}"""
 
+# v4 (D49): consistency findings are not predictions, so the judge is asked about the conflict.
+JUDGE_CONSISTENCY = """You review a possible bug reported by an automated web-app tester. It compared what a web \
+app showed with itself and with what the tester did, and found the conflict below. It happened again every time \
+the tester's actions were replayed on a freshly reset app. Decide whether a CORRECT app could show this (for \
+example: the list is only a preview, the item was changed by another user, the wording differs but the meaning \
+agrees) or whether it reveals a BUG. Reply with one JSON object and nothing else:
+{"verdict": "bug" | "wrong_expectation" | "unsure", "reason": "<at most 30 words>"}
+("wrong_expectation" = a correct app can show this.)"""
+
 
 @dataclass(frozen=True)
 class GateConfig:
     k: int = 3
-    windows: tuple[int, ...] = (1, 4)  # minimal-trace search: suffix lengths in steps
+    windows: tuple[int, ...] = (1, 4, 0)  # minimal-trace search: suffix lengths in steps, 0 = full prefix
     max_minutes: float = 20.0
     judge: bool = True
 
 
-def label(reproduced: int, k: int, tried: bool) -> str:
+def label(reproduced: int, k: int, tried: bool, ran: bool = True) -> str:
+    """`ran`: at least one replay ran all its actions. A finding no replay could run is
+    unverified, not rejected: the gate has no evidence against it (D46)."""
     if not tried:
         return "unverified"
     if reproduced == 0:
-        return "rejected"
+        return "rejected" if ran else "unverified"
     return "confirmed" if reproduced >= k else "flaky"
 
 
@@ -72,7 +92,7 @@ def windows_for(log: list[StepRecord], step: int, sizes: tuple[int, ...]) -> lis
         return []
     out, seen = [], set()
     for n in sizes:
-        start = max(0, idx - n + 1)
+        start = 0 if n <= 0 else max(0, idx - n + 1)
         if start in seen:
             continue
         seen.add(start)
@@ -81,14 +101,16 @@ def windows_for(log: list[StepRecord], step: int, sizes: tuple[int, ...]) -> lis
 
 
 async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) -> dict:
-    """One replay of `window` on freshly reset data. Returns {reproduced, missing, seconds}."""
+    """One replay of `window` on freshly reset data. Returns {reproduced, missing, failed, reason, seconds}."""
     t0 = time.monotonic()
     if ctl is not None:
         await asyncio.to_thread(ctl.reset)
     s = BrowserSession(browser, cfg, finding.worker)
     await s.start(storage_state=window[0].storage)
-    missing = 0
+    missing = failed = 0
     reproduced = False
+    sw = Sweeper(SweepState(), finding.worker, cfg.app.account(finding.worker)) \
+        if finding.kind == "consistency" else None
     try:
         await s.goto(window[0].url)
         for i, rec in enumerate(window):
@@ -97,33 +119,52 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                 await s.goto(rec.url)
                 obs = await s.observe()
             ran_all = True
+            clicked, done = [], []
+            if sw is not None:
+                plan = [{"do": a["do"], "id": (el.id if (el := locate(obs, a["ekey"], a["nth"])) else None),
+                         "value": a["value"]} for a in rec.actions]
+                await sw.before(s, obs, plan)
             for a in rec.actions:
                 el = locate(obs, a["ekey"], a["nth"])
+                if a["do"] == "click":
+                    clicked.append(el)
                 if a["ekey"] and el is None:
                     missing += 1
                     ran_all = False
                     break
                 res = await s.execute(a["do"], el.id if el else None, a["value"])
+                done.append({"do": a["do"], "id": el.id if el else None, "value": a["value"],
+                             "el": el.describe() if el else None, "ekey": a["ekey"], "nth": a["nth"],
+                             "ok": res.ok, "url_after": res.url_after})
                 if not res.ok:
+                    failed += 1
                     ran_all = False
                     break
+            if sw is not None:
+                await sw.actions_done(s)
+                sigs = await sw.after(s, obs, done, rec.step, getattr(rec, "intent", None), getattr(rec, "suspect", None))
+                reproduced = reproduced or any(x.detail.get("sig") == finding.sig for x in sigs)
             if i == len(window) - 1 and finding.kind == "oracle_violation":
-                reproduced = ran_all and await _violated_again(s, finding, rec, obs)
-        if finding.kind != "oracle_violation":
+                reproduced = ran_all and await _violated_again(s, finding, rec, obs, clicked_active(clicked))
+        if finding.kind not in ("oracle_violation", "consistency"):
             reproduced = any(signature(sig) == finding.sig for sig in s.drain_signals())
     finally:
         await s.close()
-    return {"reproduced": reproduced, "missing": missing, "seconds": round(time.monotonic() - t0, 1)}
+    reason = ("reproduced" if reproduced else "missing elements" if missing else "action failed" if failed
+              else "ran, not reproduced")
+    return {"reproduced": reproduced, "missing": missing, "failed": failed, "reason": reason,
+            "seconds": round(time.monotonic() - t0, 1)}
 
 
-async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation) -> bool:
+async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation,
+                          active_click: bool = False) -> bool:
     exp = dict(finding.detail["expect"])
     if exp["check"] == "count":  # the element id of the original page means nothing here
         el = locate(obs, exp.get("_ekey"), exp.get("_nth", 0))
         if el is None:
             return False
         exp["id"] = el.id
-    r: CheckResult = await check(s, exp, obs)
+    r: CheckResult = await check(s, exp, obs, active_click)
     return r.status == "violated" and oracle_signature(exp, rec.url) == finding.sig
 
 
@@ -155,15 +196,20 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
                 attempts.append({"steps": len(minimal), **r})
                 run.trace.event("gate_replay", sig=f.sig, steps=len(minimal), **r)
                 hits += r["reproduced"]
-        f.status = label(hits, gcfg.k, tried=bool(wins))
+        ran = any(a.get("reason", "ran, not reproduced") in ("reproduced", "ran, not reproduced") for a in attempts)
+        f.status = label(hits, gcfg.k, tried=bool(wins), ran=ran)
         f.gate = {"reproduced": hits, "k": gcfg.k, "minimal_steps": len(minimal) if minimal else None,
-                  "attempts": attempts, **({} if wins else {"reason": "no step record to replay"})}
+                  "attempts": attempts,
+                  **({} if wins else {"reason": "no step record to replay"}),
+                  **({"reason": "could not replay"} if wins and not ran else {})}
         run.trace.event("gate_result", sig=f.sig, kind=f.kind, status=f.status, gate=f.gate)
 
     judge_usage = {"calls": 0, "tokens": 0}
     if gcfg.judge and llm is not None:
         for f in findings:
-            if f.kind == "oracle_violation" and f.status in ("confirmed", "flaky"):
+            # every consistency tier (D55): Night 3's worst rule (I-create) was T1 and never judged; reported only
+            judged = f.kind in ("oracle_violation", "consistency")
+            if judged and f.status in ("confirmed", "flaky"):
                 f.judge = await _judge(llm, f, judge_usage)
                 run.trace.event("gate_judge", sig=f.sig, **f.judge)
     if ctl is not None:
@@ -183,12 +229,18 @@ async def _judge(llm, f: Finding, usage: dict) -> dict:
 
     steps = "\n".join(f"- {t['do']} {t['el'] or ''} {('= ' + repr(t['value'])) if t.get('value') else ''}".rstrip()
                       for t in f.trail)
-    prompt = (f"Page where the actions started: {f.page_url}\n"
-              f"Actions:\n{steps or '(none)'}\n"
-              f"Expectation: the app {describe(f.detail['expect'])}\n"
-              f"What happened: {f.detail.get('evidence') or f.message}\n")
+    if f.kind == "consistency":
+        system = JUDGE_CONSISTENCY
+        prompt = (f"Page: {f.page_url}\nTester's last actions:\n{steps or '(none)'}\n"
+                  f"Conflict ({f.detail.get('rule')}): {f.message}\nEvidence: {f.detail.get('evidence') or '-'}\n")
+    else:
+        system = JUDGE_SYSTEM
+        prompt = (f"Page where the actions started: {f.page_url}\n"
+                  f"Actions:\n{steps or '(none)'}\n"
+                  f"Expectation: the app {describe(f.detail['expect'])}\n"
+                  f"What happened: {f.detail.get('evidence') or f.message}\n")
     try:
-        data, u = await llm.complete_json(JUDGE_SYSTEM, prompt)
+        data, u = await llm.complete_json(system, prompt)
     except LLMError as e:
         return {"verdict": "error", "reason": str(e)[:200]}
     usage["calls"] += u.calls

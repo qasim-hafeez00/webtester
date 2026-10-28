@@ -1,0 +1,65 @@
+[
+  {
+    "sig": "consistency|R09|/article/*|flaky tests are a smell, part two|-post comment",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Post Comment' disappeared from 'Flaky tests are a smell, part two' (revisit at step 20, last seen step 16) and no action explains it",
+    "first_step": 20,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/article/*|flaky tests are a smell, part two|-post comment",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 20,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 13,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-Z9-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

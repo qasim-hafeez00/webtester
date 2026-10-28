@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
-from .browser import BrowserSession
+from .browser import INNER_TEXT_JS, BrowserSession
 from .budget import Budget
-from .inferred import annotate, check, violation_signal
+from .inferred import (annotate, check, clicked_active, ground_expectations, persistence_twins, twin_eligible,
+                       violation_signal)
 from .oracles import FindingStore
 from .policies import Memory
 from .state import action_key, route_shape, state_id
@@ -33,10 +36,16 @@ class RunContext:
     states_seen: set = field(default_factory=set)
     actions_seen: set = field(default_factory=set)
     # Evidence gate (G2): per worker, what each step started from and did, so a
-    # finding can be replayed later in a fresh context. Kept in memory only.
+    # finding can be replayed later in a fresh context. Saved as replay.jsonl so the
+    # gate can be re-run on a finished run (`webtester regate`).
     record_replay: bool = False
     replay_log: dict[int, list["StepRecord"]] = field(default_factory=dict)
     exposed: dict[int, set] = field(default_factory=dict)  # worker -> injected faults it has triggered
+    # Harness v4 (D49): the abstract state graph, recorded in every condition, and the consistency
+    # oracles with their run memory (B4 family). `sweep` is a consistency.SweepState or None.
+    graph: object = None
+    sweep: object = None
+    sweepers: dict = field(default_factory=dict)  # worker -> consistency.Sweeper
 
     def next_step(self) -> int:
         self.step_counter += 1
@@ -50,12 +59,34 @@ class StepRecord:
     storage: dict  # cookies + localStorage when the step started (the session to replay from)
     actions: list[dict]  # {do, ekey, nth, value} for the actions that ran
     expect: list[dict]  # checks evaluated after the actions (annotated)
+    intent: dict | None = None  # v4: the model's stated intent (the gate's sweeper reuses it)
+    suspect: dict | None = None  # v4: a contradiction the model cited (R15)
+
+
+def save_replay_log(path: Path, log: dict[int, list[StepRecord]]) -> None:
+    """One JSON line per step record. Holds the local test accounts' session tokens: runs/ is gitignored."""
+    with path.open("w", encoding="utf-8") as fh:
+        for worker, records in sorted(log.items()):
+            for r in records:
+                fh.write(json.dumps({"worker": worker, **asdict(r)}, ensure_ascii=False) + "\n")
+
+
+def load_replay_log(path: Path) -> dict[int, list[StepRecord]]:
+    log: dict[int, list[StepRecord]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            d = json.loads(line)
+            log.setdefault(d.pop("worker"), []).append(StepRecord(**d))
+    return log
 
 
 async def run_worker(run: RunContext, session: BrowserSession, policy, worker: int, max_steps: int) -> str:
     mem = Memory()
     await session.goto("/")
     errors = 0
+    sweeper = run.sweepers.get(worker)
+    graph = run.graph
+    edge = None  # (state, actions, verb, signals, by) of the last step: becomes a graph edge on arrival
     while True:
         reason = run.budget.exhausted()
         if reason or run.stop.is_set():
@@ -63,10 +94,31 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
         t0 = time.monotonic()
         obs = await session.observe()
         sid = state_id(obs.url, obs.skeleton)
+        frontier = getattr(policy, "frontier", None)
+        if graph is not None:
+            graph.visit(worker, sid, obs.url, run.step_counter, obs.title)
+            if edge:
+                graph.transition(worker, edge[0], edge[1], sid, by=edge[4], verb=edge[2], signals=edge[3])
+        edge = None
+        # v4 travel: a newly assigned focus area elsewhere is reached by URL, without an LLM step.
+        if getattr(frontier, "version", 1) >= 3 and hasattr(policy, "prepare"):
+            focus = policy.prepare(sid)
+            if focus and frontier.area(route_shape(obs.url)) != focus[0] and focus[1].startswith("/"):
+                res = await session.goto(focus[1])
+                run.trace.event("travel", worker=worker, step=run.step_counter, src=route_shape(obs.url),
+                                dst=focus[0], path=focus[1], ok=res.ok)
+                if res.ok:
+                    graph.travels += 1
+                    frontier.visit(worker, sid, obs)
+                    src = sid
+                    obs = await session.observe()
+                    sid = state_id(obs.url, obs.skeleton)
+                    graph.visit(worker, sid, obs.url, run.step_counter, obs.title)
+                    graph.transition(worker, src, [{"do": "navigate", "value": focus[1], "ekey": None}], sid,
+                                     by="harness")
         new_state = sid not in run.states_seen
         run.states_seen.add(sid)
         mem.note_visit(obs.url, sid)
-        frontier = getattr(policy, "frontier", None)
         if frontier is not None:
             frontier.visit(worker, sid, obs)
         step = run.next_step()
@@ -89,10 +141,16 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
                 mem.add(f"s{step}: (your reply had no valid action - use the exact JSON format)")
             continue
         errors = 0
+        if decision.page and graph is not None:
+            graph.name_page(route_shape(obs.url), decision.page)
+        if sweeper is not None:
+            await sweeper.before(session, obs, decision.actions)
 
-        done = []
+        done, clicked = [], []
         for a in decision.actions:
             el = obs.element(a["id"]) if a["id"] else None
+            if a["do"] == "click":
+                clicked.append(el)
             akey = action_key(sid, a["do"], el.key() if el else None, a["value"])
             dup = akey in run.actions_seen
             run.actions_seen.add(akey)
@@ -107,23 +165,50 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             })
             if not res.ok or a["do"] in STOP_AFTER:
                 break
+        if sweeper is not None:
+            await sweeper.actions_done(session)
 
         # G3: checks only make sense when every action the model planned actually ran.
-        expects = [annotate(e, obs) for e in decision.expect]
+        expects = decision.expect
+        if sweeper is not None and expects:  # v4: only checks about facts (D49)
+            typed_now = [d["value"] for d in done if d["do"] in ("fill", "select") and d["value"]]
+            seen = [t for _, t in run.sweep.memory.page_text.get(worker, [])]
+            expects = ground_expectations(expects, obs, done, sorted(run.sweep.memory.typed) + typed_now, seen)
+        expects = [annotate(e, obs) for e in expects]
         checks, violations = [], []
         if expects:
             ran_all = len(done) == len(decision.actions) and all(d["ok"] for d in done)
+            active = clicked_active(clicked[:len(done)])
+            results = []
             for e in expects:
-                r = await check(session, e, obs) if ran_all else None
+                r = await check(session, e, obs, active) if ran_all else None
+                results.append(r)
+            # Persistence twins (D46): passed "now" checks again after reload, after a data-changing click.
+            if ran_all and twin_eligible(clicked):
+                typed = [d["value"] for d in done if d["do"] in ("fill", "select") and d["value"]]
+                twins = persistence_twins(expects, results, await session.page.evaluate(INNER_TEXT_JS), typed)
+                for t in twins:
+                    expects.append(t)
+                    results.append(await check(session, t, obs))
+            for e, r in zip(expects, results):
                 checks.append({**e, "status": r.status if r else "skipped", "evidence": r.evidence[:200] if r else ""})
                 if r and r.status == "violated":
                     violations.append(violation_signal(e, r, obs.url))
+        consistency = []
+        if sweeper is not None:
+            n_events = len(run.sweep.memory.events)
+            consistency = await sweeper.after(session, obs, done, step, decision.intent, decision.suspect)
+            for e in run.sweep.memory.events[n_events:]:
+                if e.verb != "view":
+                    run.trace.event("memory_event", worker=worker, step=step, verb=e.verb, obj=e.obj, source=e.source,
+                                    status=e.status, written=e.written, url=e.url)
         if run.record_replay:
             run.replay_log.setdefault(worker, []).append(StepRecord(
                 step, obs.url, storage,
-                [{"do": d["do"], "ekey": d["ekey"], "nth": d["nth"], "value": d["value"]} for d in done], expects))
+                [{"do": d["do"], "ekey": d["ekey"], "nth": d["nth"], "value": d["value"]} for d in done], expects,
+                decision.intent, decision.suspect))
 
-        signals = session.drain_signals() + violations
+        signals = session.drain_signals() + violations + consistency
         fired = session.drain_exposures()
         seen = run.exposed.setdefault(worker, set())
         seen.update(fired)
@@ -134,6 +219,9 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
         run.budget.charge(steps=1, tokens=tokens, browser_seconds=elapsed)
 
         mem.add(_history_line(step, obs.url, decision.thought, done, signals))
+        verb = run.sweep.memory.events[-1].verb if sweeper is not None and run.sweep.memory.events and \
+            run.sweep.memory.events[-1].step == step else ""
+        edge = (sid, done, verb, len(signals), "llm") if done else None
         run.trace.event(
             "step", worker=worker, step=step, state=sid, new_state=new_state, url=obs.url,
             route=route_shape(obs.url), n_elements=len(obs.elements), thought=decision.thought,
@@ -142,6 +230,9 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             usage=(decision.usage.__dict__ if decision.usage else None), seconds=round(elapsed, 3),
             suggestion=getattr(policy, "last_suggestion", None),
             **({"checks": checks} if checks else {}),
+            **({"intent": decision.intent} if decision.intent else {}),
+            **({"suspect": decision.suspect} if decision.suspect else {}),
+            **({"page_name": decision.page} if decision.page else {}),
             **({"faults_exposed": fired} if fired else {}),
             **({"faults_triggered_silent": session.silent_triggers[:]} if session.silent_triggers else {}),
         )
@@ -174,3 +265,4 @@ def _history_line(step: int, url: str, thought: str, done: list[dict], signals) 
     moved = f" -> {route_shape(end)}" if end and route_shape(end) != route_shape(url) else ""
     sig = f" [!] {len(signals)} error signal(s): {signals[0].message[:80]}" if signals else ""
     return f"s{step} @{route_shape(url)}: {acts}{moved}{sig}"
+

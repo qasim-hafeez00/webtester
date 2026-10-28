@@ -1,0 +1,7 @@
+| Run | Candidates | Confirmed | Flaky | Rejected | Unverified | Precision raw | Precision gated | Faults raw | Faults confirmed | Gate min | Judge tokens (% of run) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `20261027-221950_bookstack_b4_n4_bs4rep1` | 12 | 10 | 0 | 2 | 0 | 42% | 50% | 3 | 3 | 20.06 | 1855 (1%) |
+| `20261027-230029_bookstack_b4_n4_bs4rep2` | 7 | 6 | 0 | 1 | 0 | 43% | 50% | 2 | 2 | 8.83 | 270 (0%) |
+| `20261027-232821_bookstack_b4_n4_bs4rep3` | 6 | 6 | 0 | 0 | 0 | 50% | 50% | 2 | 2 | 7.0 | 0 (0%) |
+| `20261028-000919_bookstack_b4_n4_bs4rep4` | 11 | 10 | 0 | 1 | 0 | 55% | 50% | 4 | 4 | 21.77 | 1135 (1%) |
+| `20261028-004736_bookstack_b4_n4_bs4rep5` | 16 | 8 | 0 | 5 | 3 | 19% | 38% | 2 | 2 | 21.79 | 297 (0%) |

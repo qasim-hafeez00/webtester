@@ -95,6 +95,51 @@ def test_fault_detection_matches_catalog_rules():
     assert res["F01"]["detected"] and not res["F02"]["detected"] and not res["F02"]["implicit_detectable"]
 
 
+def test_fault_reach_rules():
+    from webtester.metrics import fault_reach
+
+    catalog = {
+        "F01": {"reach": [{"route": ["/article/*"], "do": ["click"], "el": "Post Comment",
+                           "with": {"do": ["fill"], "el": "Write a comment", "min_len": 281}}]},
+        "F05": {"reach": [{"route": ["/"], "do": ["click"], "el": '^button "\\d+"$', "id_max": 39}]},
+        "F07": {"reach": [{"route": ["/article/*"]}]},
+        "F08": {"reach": [{"route": ["/"], "do": ["click"], "el": "Your Feed"}]},
+    }
+
+    def step(n, route, *acts):
+        return {"worker": 1, "step": n, "route": route, "actions": list(acts)}
+
+    short = {"do": "fill", "el": '[15] textarea label="Write a comment..."', "value": "x" * 50}
+    long = {**short, "value": "x" * 300}
+    post = {"do": "click", "el": '[16] button "Post Comment"'}
+    steps = [step(1, "/", {"do": "click", "el": '[45] button "1"'}),  # pagination id: not a favorite
+             step(2, "/article/*", short, post),  # too short for F01
+             step(3, "/article/*", long, post),
+             step(4, "/", {"do": "click", "el": '[8] button "0"'})]
+    res = fault_reach(steps, ["F01", "F05", "F07", "F08", "F09"], catalog)
+    assert res["F01"]["first"] == {"worker": 1, "step": 3}
+    assert res["F05"]["first"]["step"] == 4
+    assert res["F07"]["first"]["step"] == 2  # visit rule
+    assert not res["F08"]["reached"] and res["F08"]["has_rule"]
+    assert not res["F09"]["reached"] and not res["F09"]["has_rule"]
+
+
+def test_realworld_reach_rules_compile():
+    import re
+
+    from webtester.metrics import load_fault_catalog
+
+    catalog = load_fault_catalog(REPO_ROOT / "apps" / "realworld" / "faults" / "faults.toml")
+    for fid, spec in catalog.items():
+        assert spec.get("reach"), f"{fid} has no reach rule"
+        for r in spec["reach"]:
+            withs = r.get("with") or []
+            for cond in [r, *([withs] if isinstance(withs, dict) else withs)]:
+                for key in ("el", "value"):
+                    if cond.get(key):
+                        re.compile(cond[key])
+
+
 def test_element_key_is_position_independent():
     a = Element(id="3", tag="a", text="Home", href="/")
     b = Element(id="9", tag="a", text="Home", href="/")

@@ -1,0 +1,934 @@
+down
+2026-10-27 08:03 window 1: 10 run(s) left
+08:03 probe: OK
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 113, in main
+    ctl.wait_healthy(10)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 118, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4100/api/tags after 10s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --config configs/realworld.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label h4rep
+=== b3v3 n=4 h4rep1 ===
+run finished in 12.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-080349_realworld_b3v3_n4_h4rep1
+  run_id                   20261027-080349_realworld_b3v3_n4_h4rep1
+  agent                    b3v3
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    114
+  wall_minutes             12.4
+  unique_states            28
+  unique_routes            10
+  actions                  145
+  duplicate_action_rate    0.4069
+  failed_action_rate       0.0
+  findings                 2
+  findings_by_kind         {'console_error': 2}
+  llm_calls                114
+  llm_retries              0
+  policy_errors            0
+  tokens_total             197500
+  tokens_per_step          1732.5
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label h4rep
+=== b4 n=4 h4rep1 ===
+run finished in 22.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-081619_realworld_b4_n4_h4rep1
+  run_id                   20261027-081619_realworld_b4_n4_h4rep1
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    89
+  wall_minutes             9.78
+  unique_states            26
+  unique_routes            10
+  actions                  123
+  duplicate_action_rate    0.3659
+  failed_action_rate       0.0
+  findings                 21
+  findings_by_kind         {'consistency': 18, 'console_error': 2, 'http_5xx': 1}
+  llm_calls                89
+  llm_retries              1
+  policy_errors            0
+  tokens_total             197396
+  tokens_per_step          2217.9
+  gate                     {'candidates': 21, 'confirmed': 21, 'replays': 72, 'minutes': 12.6, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 12, 'judge_tokens': 3951}
+  findings_confirmed       21
+  judge_verdicts           {'bug': 11, 'wrong_expectation': 1}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label h4rep
+=== b3v3 n=4 h4rep2 ===
+run finished in 13.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-083847_realworld_b3v3_n4_h4rep2
+  run_id                   20261027-083847_realworld_b3v3_n4_h4rep2
+  agent                    b3v3
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    119
+  wall_minutes             12.92
+  unique_states            26
+  unique_routes            10
+  actions                  174
+  duplicate_action_rate    0.4655
+  failed_action_rate       0.0115
+  findings                 2
+  findings_by_kind         {'console_error': 2}
+  llm_calls                119
+  llm_retries              0
+  policy_errors            0
+  tokens_total             194401
+  tokens_per_step          1633.6
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label h4rep
+=== b4 n=4 h4rep2 ===
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 110, in main
+    ctl._compose("down")
+    ~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 34, in _compose
+    raise AppControlError(f"docker compose {' '.join(args)} failed:\n{proc.stderr[-2000:]}")
+webtester.appctl.AppControlError: docker compose down failed:
+error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/containers/json?all=1&filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.oneoff%3DFalse%22%3Atrue%2C%22com.docker.compose.project%3Dbookstack%22%3Atrue%7D%7D": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+
+2026-10-27 19:05 window 1: 7 run(s) left
+19:06 probe: OK
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 113, in main
+    ctl.wait_healthy(10)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 118, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4100/api/tags after 10s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 105, in main
+    ctl.up(faults, build=args.build)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 71, in up
+    self._compose(*args, env=env, timeout=1800)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 34, in _compose
+    raise AppControlError(f"docker compose {' '.join(args)} failed:\n{proc.stderr[-2000:]}")
+webtester.appctl.AppControlError: docker compose up -d failed:
+unable to get image 'postgres:16-alpine': error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/images/postgres:16-alpine/json": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label h4rep
+=== b4 n=4 h4rep2 ===
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 126, in main
+    out = run_sync(cfg, args.agent, workers=args.workers, reset=not args.no_reset, label=args.label,
+                   gate=False if args.no_gate else None, gate_cfg=gate_cfg)
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 306, in run_sync
+    out = asyncio.run(run(*args, **kwargs))
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 720, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 79, in run
+    ctl.wait_healthy(30)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 118, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4100/api/tags after 30s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+unhealthy run (b4 n=4 h4rep2), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-27 19:07 window 2: 7 run(s) left
+waiting 1017 min for the quota reset
+down
+2026-10-27 19:11 window 1: 7 run(s) left
+19:11 probe: OK
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 113, in main
+    ctl.wait_healthy(10)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 118, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4100/api/tags after 10s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label h4rep
+=== b4 n=4 h4rep2 ===
+run finished in 27.8 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-191138_realworld_b4_n4_h4rep2
+  run_id                   20261027-191138_realworld_b4_n4_h4rep2
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    91
+  wall_minutes             11.17
+  unique_states            34
+  unique_routes            10
+  actions                  139
+  duplicate_action_rate    0.3165
+  failed_action_rate       0.0144
+  findings                 21
+  findings_by_kind         {'consistency': 18, 'http_5xx': 1, 'oracle_violation': 1, 'console_error': 1}
+  llm_calls                91
+  llm_retries              2
+  policy_errors            0
+  tokens_total             196195
+  tokens_per_step          2156.0
+  checks                   {'proposed': 1, 'pass': 0, 'violated': 1, 'inconclusive': 0, 'skipped': 0}
+  gate                     {'candidates': 21, 'confirmed': 18, 'rejected': 3, 'replays': 73, 'minutes': 16.56, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 11, 'judge_tokens': 4100}
+  findings_confirmed       18
+  judge_verdicts           {'unsure': 1, 'bug': 10}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label h4rep
+=== b3v3 n=4 h4rep3 ===
+run finished in 14.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-193928_realworld_b3v3_n4_h4rep3
+  run_id                   20261027-193928_realworld_b3v3_n4_h4rep3
+  agent                    b3v3
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    121
+  wall_minutes             13.2
+  unique_states            26
+  unique_routes            9
+  actions                  190
+  duplicate_action_rate    0.4211
+  failed_action_rate       0.0158
+  findings                 2
+  findings_by_kind         {'console_error': 1, 'http_5xx': 1}
+  llm_calls                121
+  llm_retries              0
+  policy_errors            0
+  tokens_total             197171
+  tokens_per_step          1629.5
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label h4rep
+=== b4 n=4 h4rep3 ===
+run finished in 32.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-195413_realworld_b4_n4_h4rep3
+  run_id                   20261027-195413_realworld_b4_n4_h4rep3
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    85
+  wall_minutes             10.01
+  unique_states            41
+  unique_routes            11
+  actions                  152
+  duplicate_action_rate    0.2303
+  failed_action_rate       0.0
+  findings                 21
+  findings_by_kind         {'consistency': 19, 'http_5xx': 1, 'console_error': 1}
+  llm_calls                85
+  llm_retries              0
+  policy_errors            0
+  tokens_total             199726
+  tokens_per_step          2349.7
+  gate                     {'candidates': 21, 'confirmed': 19, 'rejected': 2, 'replays': 79, 'minutes': 22.64, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 7, 'judge_tokens': 2387}
+  findings_confirmed       19
+  judge_verdicts           {'bug': 6, 'wrong_expectation': 1}
+  fault F01    DETECTED  (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label h4rep
+=== b3v3 n=4 h4rep4 ===
+run finished in 13.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-202658_realworld_b3v3_n4_h4rep4
+  run_id                   20261027-202658_realworld_b3v3_n4_h4rep4
+  agent                    b3v3
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    115
+  wall_minutes             12.68
+  unique_states            32
+  unique_routes            10
+  actions                  159
+  duplicate_action_rate    0.4088
+  failed_action_rate       0.0
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                115
+  llm_retries              0
+  policy_errors            0
+  tokens_total             197423
+  tokens_per_step          1716.7
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label h4rep
+=== b4 n=4 h4rep4 ===
+down
+2026-10-27 20:59 window 1: 3 run(s) left
+20:59 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label h4rep
+=== b4 n=4 h4rep4 ===
+run finished in 31.8 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-205941_realworld_b4_n4_h4rep4
+  run_id                   20261027-205941_realworld_b4_n4_h4rep4
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    87
+  wall_minutes             9.84
+  unique_states            31
+  unique_routes            10
+  actions                  148
+  duplicate_action_rate    0.3311
+  failed_action_rate       0.0135
+  findings                 20
+  findings_by_kind         {'consistency': 17, 'console_error': 2, 'http_5xx': 1}
+  llm_calls                87
+  llm_retries              0
+  policy_errors            0
+  tokens_total             199923
+  tokens_per_step          2298.0
+  gate                     {'candidates': 20, 'confirmed': 17, 'rejected': 2, 'unverified': 1, 'replays': 76, 'minutes': 21.88, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 10, 'judge_tokens': 3667}
+  findings_confirmed       17
+  judge_verdicts           {'bug': 9, 'wrong_expectation': 1}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label h4rep
+=== b3v3 n=4 h4rep5 ===
+run finished in 13.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-213133_realworld_b3v3_n4_h4rep5
+  run_id                   20261027-213133_realworld_b3v3_n4_h4rep5
+  agent                    b3v3
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    119
+  wall_minutes             13.09
+  unique_states            27
+  unique_routes            10
+  actions                  164
+  duplicate_action_rate    0.3902
+  failed_action_rate       0.0
+  findings                 3
+  findings_by_kind         {'console_error': 3}
+  llm_calls                119
+  llm_retries              0
+  policy_errors            0
+  tokens_total             196626
+  tokens_per_step          1652.3
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/realworld.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label h4rep
+=== b4 n=4 h4rep5 ===
+run finished in 24.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-214443_realworld_b4_n4_h4rep5
+  run_id                   20261027-214443_realworld_b4_n4_h4rep5
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    89
+  wall_minutes             9.68
+  unique_states            27
+  unique_routes            10
+  actions                  127
+  duplicate_action_rate    0.3465
+  failed_action_rate       0.0079
+  findings                 15
+  findings_by_kind         {'consistency': 14, 'console_error': 1}
+  llm_calls                89
+  llm_retries              0
+  policy_errors            0
+  tokens_total             199414
+  tokens_per_step          2240.6
+  gate                     {'candidates': 15, 'confirmed': 14, 'rejected': 1, 'replays': 56, 'minutes': 14.43, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 6, 'judge_tokens': 1882}
+  findings_confirmed       14
+  judge_verdicts           {'bug': 4, 'wrong_expectation': 2}
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+2026-10-27 22:08 queue done
+down
+2026-10-27 22:09 window 1: 10 run(s) left
+22:09 probe: OK
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 113, in main
+    ctl.wait_healthy(10)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 118, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4200/login after 10s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label bs4rep
+=== b3v3 n=4 bs4rep1 ===
+run finished in 9.9 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-220951_bookstack_b3v3_n4_bs4rep1
+  run_id                   20261027-220951_bookstack_b3v3_n4_bs4rep1
+  agent                    b3v3
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    89
+  wall_minutes             9.82
+  unique_states            45
+  unique_routes            24
+  actions                  140
+  duplicate_action_rate    0.2786
+  failed_action_rate       0.0286
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                89
+  llm_retries              0
+  policy_errors            0
+  tokens_total             197411
+  tokens_per_step          2218.1
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label bs4rep
+=== b4 n=4 bs4rep1 ===
+run finished in 28.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-221950_bookstack_b4_n4_bs4rep1
+  run_id                   20261027-221950_bookstack_b4_n4_bs4rep1
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    73
+  wall_minutes             8.24
+  unique_states            47
+  unique_routes            25
+  actions                  109
+  duplicate_action_rate    0.1743
+  failed_action_rate       0.0
+  findings                 12
+  findings_by_kind         {'consistency': 11, 'oracle_violation': 1}
+  llm_calls                73
+  llm_retries              0
+  policy_errors            0
+  tokens_total             200500
+  tokens_per_step          2746.6
+  checks                   {'proposed': 1, 'pass': 0, 'violated': 1, 'inconclusive': 0, 'skipped': 0}
+  gate                     {'candidates': 12, 'confirmed': 10, 'rejected': 2, 'replays': 41, 'minutes': 20.06, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 6, 'judge_tokens': 1855}
+  findings_confirmed       10
+  judge_verdicts           {'bug': 4, 'wrong_expectation': 2}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label bs4rep
+=== b3v3 n=4 bs4rep2 ===
+run finished in 12.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-224820_bookstack_b3v3_n4_bs4rep2
+  run_id                   20261027-224820_bookstack_b3v3_n4_bs4rep2
+  agent                    b3v3
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    82
+  wall_minutes             11.91
+  unique_states            45
+  unique_routes            24
+  actions                  139
+  duplicate_action_rate    0.2302
+  failed_action_rate       0.0504
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                82
+  llm_retries              1
+  policy_errors            0
+  tokens_total             201180
+  tokens_per_step          2453.4
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label bs4rep
+=== b4 n=4 bs4rep2 ===
+run finished in 17.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-230029_bookstack_b4_n4_bs4rep2
+  run_id                   20261027-230029_bookstack_b4_n4_bs4rep2
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    68
+  wall_minutes             8.42
+  unique_states            37
+  unique_routes            23
+  actions                  111
+  duplicate_action_rate    0.2613
+  failed_action_rate       0.018
+  findings                 7
+  findings_by_kind         {'consistency': 7}
+  llm_calls                68
+  llm_retries              1
+  policy_errors            0
+  tokens_total             202338
+  tokens_per_step          2975.6
+  checks                   {'proposed': 2, 'pass': 0, 'violated': 0, 'inconclusive': 0, 'skipped': 2}
+  gate                     {'candidates': 7, 'confirmed': 6, 'rejected': 1, 'replays': 23, 'minutes': 8.83, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 1, 'judge_tokens': 270}
+  findings_confirmed       6
+  judge_verdicts           {'wrong_expectation': 1}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label bs4rep
+=== b3v3 n=4 bs4rep3 ===
+run finished in 10.3 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-231755_bookstack_b3v3_n4_bs4rep3
+  run_id                   20261027-231755_bookstack_b3v3_n4_bs4rep3
+  agent                    b3v3
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    89
+  wall_minutes             9.68
+  unique_states            47
+  unique_routes            27
+  actions                  149
+  duplicate_action_rate    0.2349
+  failed_action_rate       0.0
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                89
+  llm_retries              0
+  policy_errors            0
+  tokens_total             199678
+  tokens_per_step          2243.6
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label bs4rep
+=== b4 n=4 bs4rep3 ===
+run finished in 14.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-232821_bookstack_b4_n4_bs4rep3
+  run_id                   20261027-232821_bookstack_b4_n4_bs4rep3
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    68
+  wall_minutes             7.62
+  unique_states            35
+  unique_routes            23
+  actions                  123
+  duplicate_action_rate    0.2195
+  failed_action_rate       0.0
+  findings                 6
+  findings_by_kind         {'consistency': 6}
+  llm_calls                68
+  llm_retries              1
+  policy_errors            0
+  tokens_total             202199
+  tokens_per_step          2973.5
+  gate                     {'candidates': 6, 'confirmed': 6, 'replays': 20, 'minutes': 7.0, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 0, 'judge_tokens': 0}
+  findings_confirmed       6
+  judge_verdicts           {}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label bs4rep
+=== b3v3 n=4 bs4rep4 ===
+2026-10-27 23:58 window 1: 4 run(s) left
+23:59 probe: OK
+healthy at http://127.0.0.1:4200; faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label bs4rep
+=== b3v3 n=4 bs4rep4 ===
+run finished in 10.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261027-235907_bookstack_b3v3_n4_bs4rep4
+  run_id                   20261027-235907_bookstack_b3v3_n4_bs4rep4
+  agent                    b3v3
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    92
+  wall_minutes             10.04
+  unique_states            52
+  unique_routes            29
+  actions                  156
+  duplicate_action_rate    0.1987
+  failed_action_rate       0.0
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                92
+  llm_retries              0
+  policy_errors            0
+  tokens_total             199295
+  tokens_per_step          2166.2
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label bs4rep
+=== b4 n=4 bs4rep4 ===
+run finished in 29.5 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261028-000919_bookstack_b4_n4_bs4rep4
+  run_id                   20261028-000919_bookstack_b4_n4_bs4rep4
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    67
+  wall_minutes             7.61
+  unique_states            29
+  unique_routes            19
+  actions                  104
+  duplicate_action_rate    0.2788
+  failed_action_rate       0.0096
+  findings                 11
+  findings_by_kind         {'consistency': 11}
+  llm_calls                67
+  llm_retries              0
+  policy_errors            0
+  tokens_total             202278
+  tokens_per_step          3019.1
+  gate                     {'candidates': 11, 'confirmed': 10, 'rejected': 1, 'replays': 41, 'minutes': 21.77, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 3, 'judge_tokens': 1135}
+  findings_confirmed       10
+  judge_verdicts           {'unsure': 1, 'wrong_expectation': 1, 'bug': 1}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b3v3 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label bs4rep
+=== b3v3 n=4 bs4rep5 ===
+run finished in 8.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261028-003851_bookstack_b3v3_n4_bs4rep5
+  run_id                   20261028-003851_bookstack_b3v3_n4_bs4rep5
+  agent                    b3v3
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    78
+  wall_minutes             8.58
+  unique_states            37
+  unique_routes            21
+  actions                  118
+  duplicate_action_rate    0.2542
+  failed_action_rate       0.0254
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                78
+  llm_retries              0
+  policy_errors            0
+  tokens_total             200011
+  tokens_per_step          2564.2
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --config configs/bookstack.toml --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label bs4rep
+=== b4 n=4 bs4rep5 ===
+run finished in 30.2 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261028-004736_bookstack_b4_n4_bs4rep5
+  run_id                   20261028-004736_bookstack_b4_n4_bs4rep5
+  agent                    b4
+  workers                  4
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    72
+  wall_minutes             8.38
+  unique_states            43
+  unique_routes            25
+  actions                  101
+  duplicate_action_rate    0.2277
+  failed_action_rate       0.0198
+  findings                 16
+  findings_by_kind         {'consistency': 16}
+  llm_calls                72
+  llm_retries              0
+  policy_errors            0
+  tokens_total             202363
+  tokens_per_step          2810.6
+  gate                     {'candidates': 16, 'confirmed': 8, 'rejected': 5, 'unverified': 3, 'replays': 50, 'minutes': 21.79, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 1, 'judge_tokens': 297}
+  findings_confirmed       8
+  judge_verdicts           {'wrong_expectation': 1}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+2026-10-28 01:17 queue done
+2026-10-28 01:17 night 3 done

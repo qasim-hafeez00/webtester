@@ -1,0 +1,717 @@
+2026-10-24 13:02 window 1: 13 run(s) left
+13:02 probe: OK
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 94, in main
+    ctl.wait_healthy(10)
+    ~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 97, in wait_healthy
+    raise AppControlError(f"app not healthy at {url} after {timeout_s}s: {last}")
+webtester.appctl.AppControlError: app not healthy at http://127.0.0.1:4100/api/tags after 10s: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label g23rep
+=== b4 n=4 g23rep1 ===
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 107, in main
+    out = run_sync(cfg, args.agent, workers=args.workers, reset=not args.no_reset, label=args.label,
+                   gate=False if args.no_gate else None, gate_cfg=gate_cfg)
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 153, in run_sync
+    out = asyncio.run(run(*args, **kwargs))
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 720, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 72, in run
+    faults = ctl.running_faults()
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 45, in running_faults
+    out = self._compose("exec", "-T", "backend", "printenv", "FAULTS", timeout=60) if self._backend_up() else ""
+          ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 26, in _compose
+    proc = subprocess.run(
+        ["docker", "compose", *args], cwd=self.dir, capture_output=True, text=True,
+        env={**os.environ, **(env or {})}, timeout=timeout,
+    )
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 556, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1219, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 1640, in _communicate
+    raise TimeoutExpired(self.args, orig_timeout)
+subprocess.TimeoutExpired: Command '['docker', 'compose', 'exec', '-T', 'backend', 'printenv', 'FAULTS']' timed out after 60 seconds
+unhealthy run (b4 n=4 g23rep1), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-24 13:06 window 2: 13 run(s) left
+waiting 1378 min for the quota reset
+2026-10-24 13:29 queue stopped by hand: the first run crashed on a cold Docker start (no LLM calls made); relaunching for today's window
+2026-10-24 13:30 window 1: 13 run(s) left
+13:30 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label g23rep
+=== b4 n=4 g23rep1 ===
+run finished in 15.2 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-133035_realworld_b4_n4_g23rep1
+  run_id                   20261024-133035_realworld_b4_n4_g23rep1
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    103
+  wall_minutes             12.52
+  unique_states            27
+  unique_routes            10
+  actions                  134
+  duplicate_action_rate    0.3657
+  failed_action_rate       0.0746
+  findings                 15
+  findings_by_kind         {'oracle_violation': 12, 'console_error': 2, 'http_5xx': 1}
+  llm_calls                103
+  llm_retries              0
+  policy_errors            0
+  tokens_total             196899
+  tokens_per_step          1911.6
+  checks                   {'proposed': 74, 'pass': 34, 'violated': 23, 'inconclusive': 0, 'skipped': 17}
+  gate                     {'candidates': 15, 'rejected': 10, 'confirmed': 5, 'replays': 36, 'minutes': 2.56, 'k': 3, 'windows': [1, 4], 'judge_calls': 3, 'judge_tokens': 878}
+  findings_confirmed       5
+  judge_verdicts           {'bug': 2, 'wrong_expectation': 1}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 1 --label g23rep
+=== b4nog1 n=4 g23rep1 ===
+run finished in 16.9 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-134546_realworld_b4nog1_n4_g23rep1
+  run_id                   20261024-134546_realworld_b4nog1_n4_g23rep1
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    114
+  wall_minutes             12.66
+  unique_states            26
+  unique_routes            8
+  actions                  174
+  duplicate_action_rate    0.569
+  failed_action_rate       0.046
+  findings                 12
+  findings_by_kind         {'console_error': 1, 'oracle_violation': 11}
+  llm_calls                114
+  llm_retries              2
+  policy_errors            0
+  tokens_total             196584
+  tokens_per_step          1724.4
+  checks                   {'proposed': 108, 'pass': 80, 'violated': 19, 'inconclusive': 0, 'skipped': 9}
+  gate                     {'candidates': 12, 'confirmed': 9, 'rejected': 3, 'replays': 36, 'minutes': 4.2, 'k': 3, 'windows': [1, 4], 'judge_calls': 8, 'judge_tokens': 2309}
+  findings_confirmed       9
+  judge_verdicts           {'bug': 8}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label g23rep
+=== b4 n=4 g23rep2 ===
+run finished in 14.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-140256_realworld_b4_n4_g23rep2
+  run_id                   20261024-140256_realworld_b4_n4_g23rep2
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    96
+  wall_minutes             10.88
+  unique_states            31
+  unique_routes            10
+  actions                  145
+  duplicate_action_rate    0.3103
+  failed_action_rate       0.0069
+  findings                 10
+  findings_by_kind         {'oracle_violation': 7, 'console_error': 2, 'http_5xx': 1}
+  llm_calls                96
+  llm_retries              0
+  policy_errors            1
+  tokens_total             195625
+  tokens_per_step          2037.8
+  checks                   {'proposed': 67, 'pass': 45, 'violated': 16, 'inconclusive': 0, 'skipped': 6}
+  gate                     {'candidates': 10, 'rejected': 3, 'confirmed': 7, 'replays': 29, 'minutes': 3.08, 'k': 3, 'windows': [1, 4], 'judge_calls': 6, 'judge_tokens': 1943}
+  findings_confirmed       7
+  judge_verdicts           {'bug': 5, 'wrong_expectation': 1}
+  fault F01    DETECTED  (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label g23rep
+=== b4nog1 n=4 g23rep2 ===
+run finished in 17.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-141705_realworld_b4nog1_n4_g23rep2
+  run_id                   20261024-141705_realworld_b4nog1_n4_g23rep2
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    115
+  wall_minutes             14.08
+  unique_states            25
+  unique_routes            7
+  actions                  188
+  duplicate_action_rate    0.6543
+  failed_action_rate       0.0372
+  findings                 12
+  findings_by_kind         {'console_error': 1, 'oracle_violation': 10, 'http_5xx': 1}
+  llm_calls                115
+  llm_retries              0
+  policy_errors            0
+  tokens_total             196894
+  tokens_per_step          1712.1
+  checks                   {'proposed': 114, 'pass': 88, 'violated': 13, 'inconclusive': 0, 'skipped': 13}
+  gate                     {'candidates': 12, 'confirmed': 8, 'rejected': 4, 'replays': 32, 'minutes': 3.29, 'k': 3, 'windows': [1, 4], 'judge_calls': 7, 'judge_tokens': 2297}
+  findings_confirmed       8
+  judge_verdicts           {'bug': 3, 'wrong_expectation': 4}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+unhealthy run (b4nog1 n=4 g23rep2), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-24 14:34 window 2: 10 run(s) left
+waiting 1290 min for the quota reset
+2026-10-24 14:36 queue stopped by hand: user added quota; relaunching now
+2026-10-24 14:36 window 1: 10 run(s) left
+14:37 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 2 --label g23rep
+=== b4nog1 n=4 g23rep2 ===
+run finished in 18.8 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-143711_realworld_b4nog1_n4_g23rep2
+  run_id                   20261024-143711_realworld_b4nog1_n4_g23rep2
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    113
+  wall_minutes             14.73
+  unique_states            31
+  unique_routes            8
+  actions                  175
+  duplicate_action_rate    0.5657
+  failed_action_rate       0.0514
+  findings                 13
+  findings_by_kind         {'console_error': 2, 'oracle_violation': 10, 'http_5xx': 1}
+  llm_calls                113
+  llm_retries              1
+  policy_errors            0
+  tokens_total             195380
+  tokens_per_step          1729.0
+  checks                   {'proposed': 100, 'pass': 72, 'violated': 16, 'inconclusive': 0, 'skipped': 12}
+  gate                     {'candidates': 13, 'confirmed': 9, 'rejected': 4, 'replays': 37, 'minutes': 3.99, 'k': 3, 'windows': [1, 4], 'judge_calls': 8, 'judge_tokens': 2374}
+  findings_confirmed       9
+  judge_verdicts           {'wrong_expectation': 5, 'bug': 3}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label g23rep
+=== b4 n=4 g23rep3 ===
+run finished in 14.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-145604_realworld_b4_n4_g23rep3
+  run_id                   20261024-145604_realworld_b4_n4_g23rep3
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    100
+  wall_minutes             11.22
+  unique_states            34
+  unique_routes            9
+  actions                  148
+  duplicate_action_rate    0.3176
+  failed_action_rate       0.0946
+  findings                 12
+  findings_by_kind         {'oracle_violation': 8, 'console_error': 3, 'http_5xx': 1}
+  llm_calls                100
+  llm_retries              2
+  policy_errors            0
+  tokens_total             197698
+  tokens_per_step          1977.0
+  checks                   {'proposed': 83, 'pass': 53, 'violated': 15, 'inconclusive': 0, 'skipped': 15}
+  gate                     {'candidates': 12, 'confirmed': 9, 'rejected': 3, 'replays': 33, 'minutes': 2.63, 'k': 3, 'windows': [1, 4], 'judge_calls': 7, 'judge_tokens': 2058}
+  findings_confirmed       9
+  judge_verdicts           {'wrong_expectation': 3, 'bug': 4}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label g23rep
+=== b4nog1 n=4 g23rep3 ===
+2026-10-24 18:34 queue found dead (laptop entered Modern Standby 15:18, run 20261024-151007 stopped at step ~108, no summary); relaunching
+2026-10-24 18:35 window 1: 8 run(s) left
+18:35 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label g23rep
+=== b4nog1 n=4 g23rep3 ===
+run finished in 16.9 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-183536_realworld_b4nog1_n4_g23rep3
+  run_id                   20261024-183536_realworld_b4nog1_n4_g23rep3
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    111
+  wall_minutes             13.18
+  unique_states            20
+  unique_routes            7
+  actions                  177
+  duplicate_action_rate    0.6723
+  failed_action_rate       0.0169
+  findings                 12
+  findings_by_kind         {'oracle_violation': 10, 'console_error': 1, 'http_5xx': 1}
+  llm_calls                111
+  llm_retries              3
+  policy_errors            1
+  tokens_total             194865
+  tokens_per_step          1755.5
+  checks                   {'proposed': 116, 'pass': 93, 'violated': 18, 'inconclusive': 0, 'skipped': 5}
+  gate                     {'candidates': 12, 'rejected': 4, 'confirmed': 8, 'replays': 32, 'minutes': 3.62, 'k': 3, 'windows': [1, 4], 'judge_calls': 7, 'judge_tokens': 2227}
+  findings_confirmed       8
+  judge_verdicts           {'bug': 6, 'wrong_expectation': 1}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label g1rep
+=== b3v2local n=4 g1rep3 ===
+run finished in 12.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-185243_realworld_b3v2local_n4_g1rep3
+  run_id                   20261024-185243_realworld_b3v2local_n4_g1rep3
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:policy_unavailable', 'w2:policy_unavailable', 'w3:policy_unavailable', 'w4:policy_unavailable']
+  steps                    83
+  wall_minutes             9.62
+  unique_states            13
+  unique_routes            6
+  actions                  129
+  duplicate_action_rate    0.5581
+  failed_action_rate       0.0853
+  findings                 2
+  findings_by_kind         {'console_error': 2}
+  llm_calls                83
+  llm_retries              3
+  policy_errors            20
+  tokens_total             147214
+  tokens_per_step          1773.7
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+unhealthy run (b3v2local n=4 g1rep3), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-24 19:05 window 2: 7 run(s) left
+waiting 1019 min for the quota reset
+2026-10-24 19:10 queue stopped by hand: user asked to use another key; realworld.toml api_key_env = GEMINI_API_KEY_4; relaunching
+2026-10-24 19:11 window 1: 7 run(s) left
+19:11 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 3 --label g1rep
+=== b3v2local n=4 g1rep3 ===
+run finished in 14.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-191133_realworld_b3v2local_n4_g1rep3
+  run_id                   20261024-191133_realworld_b3v2local_n4_g1rep3
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    124
+  wall_minutes             14.32
+  unique_states            37
+  unique_routes            9
+  actions                  174
+  duplicate_action_rate    0.3793
+  failed_action_rate       0.0172
+  findings                 2
+  findings_by_kind         {'console_error': 1, 'http_5xx': 1}
+  llm_calls                124
+  llm_retries              6
+  policy_errors            0
+  tokens_total             195358
+  tokens_per_step          1575.5
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label g23rep
+=== b4 n=4 g23rep4 ===
+run finished in 13.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-192558_realworld_b4_n4_g23rep4
+  run_id                   20261024-192558_realworld_b4_n4_g23rep4
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    98
+  wall_minutes             11.07
+  unique_states            30
+  unique_routes            11
+  actions                  141
+  duplicate_action_rate    0.305
+  failed_action_rate       0.0567
+  findings                 10
+  findings_by_kind         {'oracle_violation': 5, 'console_error': 3, 'http_5xx': 2}
+  llm_calls                98
+  llm_retries              3
+  policy_errors            0
+  tokens_total             196802
+  tokens_per_step          2008.2
+  checks                   {'proposed': 69, 'pass': 47, 'violated': 6, 'inconclusive': 0, 'skipped': 16}
+  gate                     {'candidates': 10, 'rejected': 4, 'confirmed': 6, 'replays': 26, 'minutes': 2.3, 'k': 3, 'windows': [1, 4], 'judge_calls': 3, 'judge_tokens': 960}
+  findings_confirmed       6
+  judge_verdicts           {'bug': 3}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label g23rep
+=== b4nog1 n=4 g23rep4 ===
+run finished in 16.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-193933_realworld_b4nog1_n4_g23rep4
+  run_id                   20261024-193933_realworld_b4nog1_n4_g23rep4
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    114
+  wall_minutes             14.03
+  unique_states            25
+  unique_routes            8
+  actions                  185
+  duplicate_action_rate    0.6162
+  failed_action_rate       0.027
+  findings                 11
+  findings_by_kind         {'oracle_violation': 7, 'http_5xx': 3, 'console_error': 1}
+  llm_calls                114
+  llm_retries              4
+  policy_errors            0
+  tokens_total             195609
+  tokens_per_step          1715.9
+  checks                   {'proposed': 121, 'pass': 100, 'violated': 10, 'inconclusive': 0, 'skipped': 11}
+  gate                     {'candidates': 11, 'confirmed': 4, 'rejected': 7, 'replays': 27, 'minutes': 2.22, 'k': 3, 'windows': [1, 4], 'judge_calls': 4, 'judge_tokens': 1128}
+  findings_confirmed       4
+  judge_verdicts           {'wrong_expectation': 3, 'bug': 1}
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label g1rep
+=== b3v2local n=4 g1rep4 ===
+run finished in 14.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-195602_realworld_b3v2local_n4_g1rep4
+  run_id                   20261024-195602_realworld_b3v2local_n4_g1rep4
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    109
+  wall_minutes             14.37
+  unique_states            25
+  unique_routes            7
+  actions                  152
+  duplicate_action_rate    0.4934
+  failed_action_rate       0.1184
+  findings                 2
+  findings_by_kind         {'console_error': 2}
+  llm_calls                109
+  llm_retries              13
+  policy_errors            0
+  tokens_total             197564
+  tokens_per_step          1812.5
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+unhealthy run (b3v2local n=4 g1rep4), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-24 20:10 window 2: 4 run(s) left
+waiting 954 min for the quota reset
+2026-10-24 20:30 queue stopped by hand: g1rep4 stall was one slow LLM call (100 s, 1 retry), not quota; relaunching on key 4
+2026-10-24 20:30 window 1: 4 run(s) left
+20:31 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label g1rep
+=== b3v2local n=4 g1rep4 ===
+run finished in 17.9 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-203129_realworld_b3v2local_n4_g1rep4
+  run_id                   20261024-203129_realworld_b3v2local_n4_g1rep4
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:policy_unavailable', 'w2:policy_unavailable', 'w3:policy_unavailable', 'w4:policy_unavailable']
+  steps                    21
+  wall_minutes             2.88
+  unique_states            7
+  unique_routes            5
+  actions                  37
+  duplicate_action_rate    0.6216
+  failed_action_rate       0.0
+  findings                 0
+  findings_by_kind         {}
+  llm_calls                21
+  llm_retries              3
+  policy_errors            20
+  tokens_total             27694
+  tokens_per_step          1318.8
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+unhealthy run (b3v2local n=4 g1rep4), stopping the batch
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+2026-10-24 20:49 window 2: 4 run(s) left
+waiting 915 min for the quota reset
+2026-10-24 20:58 queue stopped by hand: key 4 out of quota; user asked for another key; api_key_env = GEMINI_API_KEY_5; relaunching
+2026-10-24 20:58 window 1: 4 run(s) left
+20:58 probe: OK
+healthy at http://127.0.0.1:4100; faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 4 --label g1rep
+=== b3v2local n=4 g1rep4 ===
+run finished in 15.5 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-205906_realworld_b3v2local_n4_g1rep4
+  run_id                   20261024-205906_realworld_b3v2local_n4_g1rep4
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    123
+  wall_minutes             15.41
+  unique_states            22
+  unique_routes            7
+  actions                  199
+  duplicate_action_rate    0.5176
+  failed_action_rate       0.0151
+  findings                 3
+  findings_by_kind         {'console_error': 2, 'http_5xx': 1}
+  llm_calls                123
+  llm_retries              16
+  policy_errors            0
+  tokens_total             195974
+  tokens_per_step          1593.3
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label g23rep
+=== b4 n=4 g23rep5 ===
+run finished in 18.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-211443_realworld_b4_n4_g23rep5
+  run_id                   20261024-211443_realworld_b4_n4_g23rep5
+  agent                    b4
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    98
+  wall_minutes             11.38
+  unique_states            28
+  unique_routes            10
+  actions                  140
+  duplicate_action_rate    0.3643
+  failed_action_rate       0.0643
+  findings                 8
+  findings_by_kind         {'oracle_violation': 5, 'http_5xx': 1, 'console_error': 2}
+  llm_calls                98
+  llm_retries              4
+  policy_errors            0
+  tokens_total             197750
+  tokens_per_step          2017.9
+  checks                   {'proposed': 67, 'pass': 47, 'violated': 8, 'inconclusive': 0, 'skipped': 12}
+  gate                     {'candidates': 8, 'confirmed': 6, 'flaky': 1, 'rejected': 1, 'replays': 24, 'minutes': 4.78, 'k': 3, 'windows': [1, 4], 'judge_calls': 5, 'judge_tokens': 1802}
+  findings_confirmed       6
+  judge_verdicts           {'wrong_expectation': 1, 'bug': 4}
+  fault F01    DETECTED  (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b4nog1 --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label g23rep
+=== b4nog1 n=4 g23rep5 ===
+run finished in 17.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-213301_realworld_b4nog1_n4_g23rep5
+  run_id                   20261024-213301_realworld_b4nog1_n4_g23rep5
+  agent                    b4nog1
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    113
+  wall_minutes             14.03
+  unique_states            35
+  unique_routes            8
+  actions                  174
+  duplicate_action_rate    0.4368
+  failed_action_rate       0.0575
+  findings                 10
+  findings_by_kind         {'oracle_violation': 8, 'console_error': 1, 'http_5xx': 1}
+  llm_calls                113
+  llm_retries              6
+  policy_errors            0
+  tokens_total             197444
+  tokens_per_step          1747.3
+  checks                   {'proposed': 100, 'pass': 70, 'violated': 17, 'inconclusive': 0, 'skipped': 13}
+  gate                     {'candidates': 10, 'rejected': 4, 'confirmed': 6, 'replays': 26, 'minutes': 2.82, 'k': 3, 'windows': [1, 4], 'judge_calls': 5, 'judge_tokens': 1559}
+  findings_confirmed       6
+  judge_verdicts           {'bug': 2, 'wrong_expectation': 3}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+=== batch: --agents b3v2local --workers 4 --tokens 190000 --minutes 30 --reps 1 --start 5 --label g1rep
+=== b3v2local n=4 g1rep5 ===
+run finished in 13.7 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261024-215010_realworld_b3v2local_n4_g1rep5
+  run_id                   20261024-215010_realworld_b3v2local_n4_g1rep5
+  agent                    b3v2local
+  workers                  4
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_tokens', 'w2:max_tokens', 'w3:max_tokens', 'w4:max_tokens']
+  steps                    112
+  wall_minutes             13.66
+  unique_states            26
+  unique_routes            8
+  actions                  171
+  duplicate_action_rate    0.5088
+  failed_action_rate       0.1111
+  findings                 2
+  findings_by_kind         {'console_error': 1, 'http_5xx': 1}
+  llm_calls                112
+  llm_retries              4
+  policy_errors            0
+  tokens_total             199017
+  tokens_per_step          1776.9
+  fault F01    DETECTED  (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+wrote C:\Users\Seraphindra\Desktop\agenticproject\logs\experiments\run_registry.md
+batch done, 0 failed run(s)
+2026-10-24 22:04 queue done

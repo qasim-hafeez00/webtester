@@ -14,4 +14,11 @@ const enabled = new Set(
 
 export const fault = (id: string): boolean => enabled.has(id.toUpperCase());
 
+// Exposure marker: called inside a faulty branch when it actually takes effect. The harness
+// reads these lines from the container log after exploration (ground truth for "the fault
+// fired", never a finding). Logging only: behaviour is decided by fault() alone.
+export const fired = (id: string): void => {
+  console.log(`[wt-fault] ${id.toUpperCase()}`);
+};
+
 export const enabledFaults = (): string[] => [...enabled].sort();

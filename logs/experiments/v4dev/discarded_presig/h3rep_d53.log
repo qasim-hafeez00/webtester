@@ -1,0 +1,5 @@
+resweeping 15 runs
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+done logs/experiments/v4dev/resweep_on_20261025-132615_realworld_b4_n4_h3rep1.json
+failed logs/experiments/v4dev/resweep_on_20261025-134022_realworld_b4nog1_n4_h3rep1.json (try 1)
+failed logs/experiments/v4dev/resweep_on_20261025-134022_realworld_b4nog1_n4_h3rep1.json (try 2)

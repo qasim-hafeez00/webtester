@@ -3,6 +3,7 @@ every condition is measured by the same code."""
 
 from __future__ import annotations
 
+import re
 import tomllib
 from collections import Counter
 from pathlib import Path
@@ -26,6 +27,7 @@ def summarize(trace_path: Path) -> dict:
     prompt_tok = completion_tok = calls = retries = 0
     checks: Counter = Counter()
     exposed: set[str] = set()
+    markers = False  # the run read server-side exposure markers (D44)
     silent: set[str] = set()
     for i, s in enumerate(steps, 1):
         exposed.update(s.get("faults_exposed") or ())
@@ -50,6 +52,10 @@ def summarize(trace_path: Path) -> dict:
         if i % 10 == 0 or i == len(steps):
             curve.append((i, round(s["t"] / 60, 2), len(states)))
 
+    for e in events:  # server-side markers read after exploration (appctl.fired_faults)
+        if e["type"] == "backend_exposure":
+            exposed.update(e["faults"])
+            markers = True
     findings = [e["finding"] for e in events if e["type"] == "finding"]
     # Run health: an LLM outage or quota stop makes a time-budgeted run incomparable.
     gaps = [b["t"] - a["t"] for a, b in zip(steps, steps[1:])]
@@ -64,6 +70,9 @@ def summarize(trace_path: Path) -> dict:
     healthy = bool(steps) and llm_failures == 0 and not stalled and gate_ok and all(
         r.endswith(("max_minutes", "max_steps", "max_tokens")) for r in reasons)
     by_kind = Counter(f["kind"] for f in findings)
+    cons = [f for f in findings if f["kind"] == "consistency"]
+    graph = next((e for e in events if e["type"] == "graph"), None)
+    sweep = next((e for e in events if e["type"] == "sweep"), None)
     tokens = prompt_tok + completion_tok
     return {
         "run_id": start.get("run_id"),
@@ -82,6 +91,7 @@ def summarize(trace_path: Path) -> dict:
         "failed_action_rate": round(failed_actions / actions, 4) if actions else 0.0,
         "findings": len(findings),
         "findings_by_kind": dict(by_kind),
+        "exposure_markers": markers,
         "llm_calls": calls,
         "llm_retries": retries,
         "policy_errors": sum(1 for e in events if e["type"] == "policy_error"),
@@ -94,6 +104,11 @@ def summarize(trace_path: Path) -> dict:
         "health": {"ok": healthy, "llm_failures": llm_failures, "max_step_gap_s": max_gap, "stalled": stalled,
                    **({"gate_ok": gate_ok} if gate_expected else {})},
         **_g2_g3(events, checks, gate_done),
+        **({"consistency_by_tier": dict(Counter(f["detail"].get("tier") for f in cons)),
+            "consistency_by_rule": dict(Counter(f["detail"].get("rule") for f in cons))} if cons else {}),
+        **({"graph": {k: v for k, v in graph.items() if k not in ("t", "type")}} if graph else {}),
+        **({"travels": sum(1 for e in events if e["type"] == "travel" and e.get("ok"))} if graph else {}),
+        **({"sweep": {k: v for k, v in sweep.items() if k not in ("t", "type")}} if sweep else {}),
         **({"faults_exposed": sorted(exposed), "faults_exposed_n": len(exposed)} if exposed else {}),
         # trigger held but never with a visible change (e.g. a literal-dependent fault without its literal)
         **({"faults_triggered_silent_only": sorted(silent - exposed)} if silent - exposed else {}),
@@ -122,19 +137,91 @@ def load_fault_catalog(path: Path) -> dict[str, dict]:
     return {f["id"].upper(): f for f in raw.get("fault", [])}
 
 
-def fault_detection(findings: list[dict], enabled: list[str], catalog: dict[str, dict]) -> dict:
+def route_matches(pattern: str, route: str) -> bool:
+    """`/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11)."""
+    return route == pattern or (pattern.endswith("/*") and route.startswith(pattern[:-1]))
+
+
+_EL_ID = re.compile(r"^\[(\d+)\]\s*")
+
+
+def _action_matches(cond: dict, a: dict) -> bool:
+    """One action against a `reach` condition: action type, element description (regex, without
+    its [id]), typed value (regex, or minimum length) and an optional ceiling on the element id."""
+    if cond.get("do") and a.get("do") not in cond["do"]:
+        return False
+    el = a.get("el") or ""
+    m = _EL_ID.match(el)
+    if cond.get("id_max") is not None and (m is None or int(m.group(1)) > cond["id_max"]):
+        return False
+    if cond.get("el") and not re.search(cond["el"], el[m.end():] if m else el):
+        return False
+    value = str(a.get("value") or "")
+    if cond.get("value") is not None and not re.search(cond["value"], value):
+        return False
+    return len(value) >= cond.get("min_len", 0)
+
+
+def fault_reach(steps: list[dict], enabled: list[str], catalog: dict[str, dict]) -> dict:
+    """Which enabled faults some worker at least attempted to trigger (offline, from the trace).
+
+    A catalog entry's `reach` rules describe the trigger as one step's actions: a route the
+    step started on, an action matching `el`/`do`/`value`, and optionally other actions in
+    the same step (`with`: one condition or a list, e.g. the long comment typed before Post
+    Comment). A rule without
+    `el` means visiting the route is enough. Separates "never reached" from "reached but not
+    detected" for faults without exposure markers (Conduit); an approximation, not ground truth."""
+    result = {}
+    for fid in enabled:
+        rules = catalog.get(fid, {}).get("reach") or []
+        first = None
+        for s in steps:
+            for r in rules:
+                if r.get("route") and not any(route_matches(p, s["route"]) for p in r["route"]):
+                    continue
+                acts = s.get("actions") or []
+                if not r.get("el") and not r.get("do"):
+                    hit = True
+                else:
+                    withs = r.get("with") or []
+                    withs = [withs] if isinstance(withs, dict) else withs
+                    hit = any(_action_matches(r, a) and all(any(_action_matches(w, b) for b in acts if b is not a)
+                                                            for w in withs) for a in acts)
+                if hit:
+                    first = {"worker": s["worker"], "step": s["step"]}
+                    break
+            if first:
+                break
+        result[fid] = {"reached": first is not None, "first": first, "has_rule": bool(rules)}
+    return result
+
+
+def reach_from_trace(trace_path: Path, enabled: list[str], catalog: dict[str, dict]) -> dict | None:
+    """`fault_reach` over a run's trace, or None when no enabled fault has a `reach` rule."""
+    if not any(catalog.get(fid, {}).get("reach") for fid in enabled):
+        return None
+    steps = [e for e in read_trace(trace_path) if e["type"] == "step"]
+    return fault_reach(steps, enabled, catalog)
+
+
+def fault_detection(findings: list[dict], enabled: list[str], catalog: dict[str, dict],
+                    fired: set[str] | None = None) -> dict:
     """Which enabled faults were revealed by at least one finding.
 
     A catalog entry's `detect` table holds the implicit-oracle signature it
     produces: `kind` plus a substring that must appear in the finding signature.
     Faults whose class needs a semantic oracle have no `detect` entry and can
-    only be found by inferred oracles (G3) or by manual triage."""
+    only be found by inferred oracles (G3) or by manual triage.
+
+    `fired`: the faults whose exposure markers fired in the run (runs with markers, D44).
+    Given, a signature match counts only if that fault actually fired: a 500 on /comments
+    is not F01 unless the F01 branch ran (I36, D46). None keeps the signature-only rule."""
     result = {}
     for fid in enabled:
         spec = catalog.get(fid, {})
         rule = spec.get("detect")
         hit = None
-        if rule:
+        if rule and (fired is None or fid in fired):
             kinds = rule["kind"] if isinstance(rule["kind"], list) else [rule["kind"]]
             for f in findings:
                 if (f["kind"] in kinds and rule.get("contains", "") in f["sig"]

@@ -1,6 +1,6 @@
 # Research Plan: Coordinated, Evidence-Gated LLM Exploration for Web Application Testing
 
-Status: v1 foundation, 10 Oct 2026. This is our internal planning document. It is not text for the course submission: the course runs a Turnitin AI-writing check, so the literature review, proposal and paper must be written by the group.
+Status: v1 foundation, 10 Oct 2026; progress update 25 Oct 2026: Conduit experiments complete on harness v3 (D46), labelled; KPI check in `logs/experiments/phase2_g23_results.md` (G1 duplicates and G3 met, G2 precision 74% vs target 90% not met); BookStack held-out runs done 26 Oct (`logs/experiments/phase2_bookstack_results.md`): 0 of 13 reachable injected faults found by any condition, so G3 does not replicate on the held-out app. This is our internal planning document. It is not text for the course submission: the course runs a Turnitin AI-writing check, so the literature review, proposal and paper must be written by the group.
 
 ---
 
@@ -136,7 +136,7 @@ Each gap maps to one component, one ablation, one RQ with a hypothesis, and one 
 
 Bugs found that we did not seed: two people label each one independently, and we report Cohen's κ.
 
-**Status 16 Oct (base-paper comparison, D31–D37):** BookStack is set up from the WebTestPilot benchmark (`apps/bookstack`), not yet run.
+**Status 16 Oct (base-paper comparison, D31–D37):** BookStack is set up from the WebTestPilot benchmark (`apps/bookstack`). **26 Oct:** run (B0, B3v2, B4 × 5); no injected fault found.
 - **Their bugs are not source faults.** They are client-side DOM mutations, armed after a scripted login, one per test case, and fired during the flow that tests them.
 - **For exploration:** 27 BookStack scripts = 18 distinct faults. 13 are reachable without a spec. 5 need a literal from their spec. None is a crash.
 - **Consequences:** BookStack measures G3 (implicit oracles score 0 by construction) and G1 exposure, on faults we did not write. Their oracles are relational across pages, which our single-page check language cannot express (I22).

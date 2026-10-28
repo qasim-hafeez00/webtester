@@ -1,0 +1,191 @@
+[
+  {
+    "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Chapter Title' in 'Recently Created Chapters View All' links nowhere (href '#') while 4 siblings have real links",
+    "first_step": 10,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Chapter Title Custom Chapter Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Book Title' in 'Recently Created Books View All' links nowhere (href '#') while 3 siblings have real links",
+    "first_step": 10,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Book Title Custom Book Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created books view all|book",
+    "kind": "consistency",
+    "message": "[R04 T1] '3 Books' but 4 Books are listed under 'Recently Created Books View All'",
+    "first_step": 10,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 8,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created books view all|book",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "book; book1; book2; custom book title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-filter|/search?term|search|viewed by me",
+    "kind": "consistency",
+    "message": "[I-filter T2] search for 'Viewed by me' lists 'Page 1', which does not contain 'Viewed by me', not even on its own page",
+    "first_step": 62,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/search?term=",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-filter|/search?term|search|viewed by me",
+      "rule": "I-filter",
+      "tier": "T2",
+      "evidence": "Page 1 Book1 Page Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Admin' disappeared from 'Recent Activity' (revisit at step 23, last seen step 16) and no action explains it",
+    "first_step": 23,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-scriptalert1script-x99",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 7,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|created",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows created 'Created 6 seconds ago' here but '2 days ago' on /shelves/test-shelf-alpha-w04 (step 21)",
+    "first_step": 25,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|created",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Created 6 seconds ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|updated",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows updated 'Updated 6 seconds ago' here but '2 days ago' on /shelves/test-shelf-alpha-w04 (step 21)",
+    "first_step": 25,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|updated",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Updated 6 seconds ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R10|/search?term|env",
+    "kind": "consistency",
+    "message": "[R10 T2] the link 'env' in 'Tags' opens a page titled 'Search Results'",
+    "first_step": 31,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/search?term=%5Benv%5D",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R10|/search?term|env",
+      "rule": "R10",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

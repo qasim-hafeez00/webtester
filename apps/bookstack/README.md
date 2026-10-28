@@ -64,6 +64,17 @@ In the benchmark, each of the 100 test cases runs in a fresh Compose stack with 
 - Some effects need data a fresh worker lacks: BS05–BS07 add phantom entries only to non-empty "Recently Created" lists (visible on `/user/admin` or after the worker creates content), and BS09 needs activity on Book1 (I23).
 - BS10 fires on book and shelf pages only. In 25.2.1 chapter pages and page views have no Recent Activity block, so two of its three benchmark scripts cannot fire on the page their own test case is about (I27).
 
+## Held-out runs (26 Oct 2026, `bsrep`)
+
+B0, B3v2 and B4 × 5 on harness v3 ([results](../../logs/experiments/phase2_bookstack_results.md)). No condition found an injected fault; B0 exposed all 13 reachable faults per run, the LLM conditions about 10.
+
+Environment failures the agents found (labelled `env: ...`, D48):
+
+| Failure | Cause |
+|---|---|
+| Password reset returns 500 ('an unknown error occurred'); Add New User with an invite fails ('could not create user since invite email failed to send') | No MAIL_* variables are set, so BookStack uses its default SMTP host `smtp.mailgun.org:587`, which rejects without credentials (530). Each attempt opened an outbound connection, rejected before any message was sent (I42). For later runs: `MAIL_DRIVER=log` |
+| One run's workers timed out at login 24 s after a reset | The first `/login` page load after a reset was slow (I40) |
+
 ## Verification (16 Oct 2026, logs in [logs/bookstack_setup/](../../logs/bookstack_setup/))
 
 - `verify_faults.py`: **PASS on** (13/13 reachable faults fire visibly, 4 effect checks hold) and **PASS off** (none fires). No page or console errors on any visited page.

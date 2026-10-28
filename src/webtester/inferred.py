@@ -14,7 +14,13 @@ over page state (never free text judged by an LLM):
 `where` is "now" (the worker's page right after its actions), "reload" (the same
 URL opened in a fresh tab of the worker's context: does the change persist?) or
 a path (that page in a fresh tab). Fresh tabs share the worker's session but
-never disturb its page. A failed check becomes an `oracle_violation` signal,
+never disturb its page. On freshly loaded pages (reload, /path) page text includes
+the values of visible text fields, which then come from the app, not from typing.
+
+Harness v3 (D46) adds a persistence twin: after a step that clicked a control
+(not a link or tab), a passed "now" not_shows check, or a passed "now" shows check
+of text typed in that step, is re-run after reload, so a change the UI shows but
+never saved is caught without the model having to ask. A failed check becomes an `oracle_violation` signal,
 which the FindingStore deduplicates like any implicit signal, and which the
 evidence gate (G2) replays like any other finding.
 """
@@ -23,13 +29,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from fnmatch import fnmatchcase
 from urllib.parse import urljoin
 
-from .browser import Observation, Signal
+from .browser import INNER_TEXT_JS, Element, Observation, Signal
 from .oracles import normalise_message
 from .state import route_shape
 
-MAX_EXPECT_PER_STEP = 2
+MAX_EXPECT_PER_STEP = 3  # v2: 2 (D46)
 CHECKS = ("shows", "not_shows", "count", "changes", "route")
 _ALIASES = {
     "shows": "shows", "show": "shows", "contains": "shows", "visible": "shows", "present": "shows",
@@ -42,8 +49,6 @@ _ALIASES = {
 }
 _INT = re.compile(r"-?\d+")
 _WS = re.compile(r"\s+")
-
-TEXT_JS = "() => document.body ? document.body.innerText : ''"
 
 
 def norm_text(s: str) -> str:
@@ -137,9 +142,41 @@ def eval_count(before: int | None, after: int | None, delta: int) -> tuple[str, 
 
 
 def eval_route(expected: str, url_after: str) -> tuple[bool, str]:
+    """A '*' the model writes is a wildcard (v4: fixes I41, where '/tags*' never matched)."""
     want = route_shape(urljoin("http://x/", expected))
     got = route_shape(url_after)
-    return want == got, f"on {got}, expected {want}"
+    return want == got or fnmatchcase(got, want), f"on {got}, expected {want}"
+
+
+def ground_expectations(expects: list[dict], obs: Observation, actions: list[dict], typed: list[str],
+                        seen: list[str]) -> list[dict]:
+    """v4 (D49): keep only checks about facts, never guesses about design (I43).
+    route: only for navigation the model asked for; the expected route becomes the clicked
+    link's href or the navigated path. shows / not_shows: only text typed in this run or seen
+    on a page (now or earlier), so a guessed heading or wording is dropped."""
+    out = []
+    hay = [norm_text(obs.text)] + [norm_text(t) for t in seen]
+    typed_n = [norm_text(t) for t in typed if t]
+    for e in expects:
+        c = e["check"]
+        if c == "route":
+            last = actions[-1] if actions else None
+            target = None
+            if last and last["do"] == "navigate" and last.get("value"):
+                target = last["value"]
+            elif last and last["do"] == "click":
+                m = re.search(r"href=(\S+)", last.get("el") or "")
+                if m and not m.group(1).startswith(("#", "javascript:")):
+                    target = m.group(1)
+            if target:
+                out.append({**e, "route": target, "grounded": "href"})
+        elif c in ("shows", "not_shows"):
+            n = norm_text(e["text"])
+            if any(n in t for t in typed_n) or any(n in h for h in hay):
+                out.append(e)
+        else:
+            out.append(e)
+    return out
 
 
 def eval_changes(url_before: str, text_before: str, url_after: str, text_after: str) -> tuple[bool, str]:
@@ -188,18 +225,57 @@ def annotate(exp: dict, obs: Observation) -> dict:
             "_label": re.sub(r"-?\d+", "", el.text or el.label)[:60]}
 
 
+def clicked_active(clicked: list[Element | None]) -> bool:
+    """True when the step clicked something and every clicked control was already selected
+    (current page number, open tab): then 'nothing changed' is the correct outcome (D46)."""
+    return bool(clicked) and all(el is not None and el.active for el in clicked)
+
+
+def twin_eligible(clicked: list[Element | None]) -> bool:
+    """A persistence twin follows a click on a control that may change data: not a link or a tab."""
+    return any(el is not None and el.tag != "a" and el.role not in ("link", "tab") for el in clicked)
+
+
+def persistence_twins(expects: list[dict], results: list[CheckResult | None], inner_text: str,
+                      typed: list[str]) -> list[dict]:
+    """For each passed shows/not_shows check on the current page, the same check after reload,
+    unless the model already asked for it. Persistence is about data: something removed stays
+    removed (not_shows), and text the worker typed in this step and now sees on the page stays
+    (shows). Other shown text gets no twin: messages like "can't be blank" are meant to vanish."""
+    asked = {(e["check"], norm_text(e.get("text", ""))) for e in expects if e.get("where") == "reload"}
+    hay = norm_text(inner_text)
+    typed_n = [norm_text(t) for t in typed if t and t.strip()]
+    out = []
+    for e, r in zip(expects, results):
+        if e["check"] not in ("shows", "not_shows") or e.get("where") != "now" or r is None or r.status != "pass":
+            continue
+        if (e["check"], norm_text(e["text"])) in asked:
+            continue
+        needle = norm_text(e["text"])
+        if e["check"] == "shows" and (needle not in hay or not any(needle in t for t in typed_n)):
+            continue
+        out.append({"check": e["check"], "text": e["text"], "where": "reload", "twin": True})
+    return out
+
+
 # ---------- evaluation against a live session ----------
-async def check(session, exp: dict, obs: Observation) -> CheckResult:
+async def check(session, exp: dict, obs: Observation, active_click: bool = False) -> CheckResult:
     """Evaluate one expectation right after the step's actions. `obs` is the
-    observation the actions were chosen from (ids are still valid on the page)."""
+    observation the actions were chosen from (ids are still valid on the page).
+    `active_click`: every click hit an already-selected control (see clicked_active)."""
     from playwright.async_api import Error as PWError
 
-    page = session.page
     c = exp["check"]
+    if c == "changes" and active_click:
+        return CheckResult("inconclusive", "clicked control was already active")
+    page = session.page
     try:
         if c in ("shows", "not_shows"):
             if exp["where"] == "now":
-                text = await page.evaluate(TEXT_JS)
+                # innerText only: right after the actions, a field still holds what was typed into it
+                # (a failed save keeps the form), which would make 'shows <typed text>' pass. Field
+                # values count only on freshly loaded pages (reload, /path), where they come from the app.
+                text = await page.evaluate(INNER_TEXT_JS)
             else:
                 target = page.url if exp["where"] == "reload" else urljoin(session.cfg.app.base_url, exp["where"])
                 if not session.in_scope(target):
@@ -217,8 +293,8 @@ async def check(session, exp: dict, obs: Observation) -> CheckResult:
             status, ev = eval_count(first_int(el.text or el.label or el.value),
                                     first_int(await loc.first.inner_text()), exp["delta"])
             return CheckResult(status, ev)
-        if c == "changes":
-            ok, ev = eval_changes(obs.url, obs.text, page.url, await page.evaluate(TEXT_JS))
+        if c == "changes":  # innerText only, like obs.text: typed field values are not a change
+            ok, ev = eval_changes(obs.url, obs.text, page.url, await page.evaluate(INNER_TEXT_JS))
             return CheckResult("pass" if ok else "violated", ev)
         ok, ev = eval_route(exp["route"], page.url)
         return CheckResult("pass" if ok else "violated", ev)

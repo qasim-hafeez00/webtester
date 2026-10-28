@@ -54,9 +54,13 @@ Switch LLM provider with `--provider groq --model llama-3.3-70b-versatile` or in
 | B1 | One LLM worker, implicit oracles only (Phase 1 baseline) | done (needs an API key to run) |
 | B2 | N independent LLM workers | done (`--workers N`) |
 | B3 | Shared frontier (G1), v1: advisory marks + suggestion (`--agent b3`) | done, n = 5 (no effect) |
-| B3v2 | Shared frontier v2: focus area per worker, nav filtering, input-class marks (`--agent b3v2`; ablation `b3v2local`) | done, n = 5 (more states, fewer duplicates); `b3v2local` ablation to run |
-| B4 | B3v2 + inferred oracles (G3) + evidence gate (G2) (`--agent b4`) | built 15 Oct, pilot pending |
-| A-G1 / A-G2 / A-G3 | B4 without the frontier (`b4nog1`) / without the gate (B4's raw candidates, no extra runs) / without inferred oracles (`b4nog3`) | built 15 Oct |
+| B3v2 | Shared frontier v2: focus area per worker, nav filtering, input-class marks (`--agent b3v2`; ablation `b3v2local`) | done, n = 5 on harness v1, v2 and v3; `b3v2local` n = 5 (v1) |
+| B4 | B3v2 + inferred oracles (G3) + evidence gate (G2) (`--agent b4`) | done, n = 5 on harness v1, v2 and v3, labelled |
+| A-G1 / A-G2 / A-G3 | B4 without the frontier (`b4nog1`) / without the gate (B4's raw candidates, no extra runs) / without inferred oracles (`b4nog3`) | done, n = 5 each on v2 and v3 (A-G1 also v1), labelled |
+
+Harness versions (all conditions re-run on each): v1 (24 Oct), v2 (D42–D44: observation fix, full-prefix gate, exposure markers), **v3 (D46: settle on network idle, active controls, after-reload twin checks, `unverified` gate label; current)**. Results: [phase2_g23_results.md](logs/experiments/phase2_g23_results.md); every fact for the paper: [docs/paper_ledger.md](docs/paper_ledger.md). Findings are labelled in `logs/experiments/finding_labels.toml` (D45: labels by Claude, `by = "claude"`, user blind-checks 20% in `label_check_sample.toml`).
+
+**Status 26 Oct:** Conduit (development app) complete on harness v3. BookStack held-out runs complete (B0, B3v2, B4 × 5, `bsrep`, labelled): no condition found any of the injected faults, although all were reached ([results](logs/experiments/phase2_bookstack_results.md)).
 
 Phase 2 run order and commands: [docs/phase2_runbook.md](docs/phase2_runbook.md).
 
@@ -64,5 +68,5 @@ Phase 2 run order and commands: [docs/phase2_runbook.md](docs/phase2_runbook.md)
 
 | App | Role | Faults | Config |
 |---|---|---|---|
-| RealWorld / Conduit ([apps/realworld](apps/realworld/README.md)) | Development app | 10 seeded by us (server- and client-side), 2 visible to implicit oracles | `configs/realworld.toml` (default) |
+| RealWorld / Conduit ([apps/realworld](apps/realworld/README.md)) | Development app | 10 seeded by us (server- and client-side), 2 visible to implicit oracles; F03 and F04 UI-unreachable (I34, I37); upstream defects U1–U7 and 5 defects found by the agents | `configs/realworld.toml` (default) |
 | BookStack 25.2.1 ([apps/bookstack](apps/bookstack/README.md)) | Second app, from the WebTestPilot benchmark (base paper) | 18 injected client-side faults from 27 benchmark scripts, 13 reachable by exploration, none visible to implicit oracles | `--config configs/bookstack.toml` |

@@ -1,0 +1,86 @@
+[
+  {
+    "sig": "consistency|I-filter|/search?term|search|viewed by me",
+    "kind": "consistency",
+    "message": "[I-filter T2] search for 'Viewed by me' lists 'Page 1', which does not contain 'Viewed by me', not even on its own page",
+    "first_step": 62,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/search?term=",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-filter|/search?term|search|viewed by me",
+      "rule": "I-filter",
+      "tier": "T2",
+      "evidence": "Page 1 Book1 Page Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Admin' disappeared from 'Recent Activity' (revisit at step 23, last seen step 16) and no action explains it",
+    "first_step": 23,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-scriptalert1script-x99",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 7,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R10|/search?term|env",
+    "kind": "consistency",
+    "message": "[R10 T2] the link 'env' in 'Tags' opens a page titled 'Search Results'",
+    "first_step": 31,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/search?term=%5Benv%5D",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R10|/search?term|env",
+      "rule": "R10",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

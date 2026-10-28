@@ -1,0 +1,22 @@
+enabled faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+reset: 3.86 s; probe row left after reset: 0
+accounts: 16 worker users; worker01 favourites: 4
+login worker01: ok
+login worker02: ok
+login worker03: ok
+login worker04: ok
+BS01 The favourited shelf 'Shelf' is missing from My Favourites   fired effect ok ('Shelf' absent)
+BS02 'Chapter 2' is missing from Recently Viewed                  fired
+BS03 'Page Template' is missing from Recently Viewed              fired
+BS04 A phantom book card 'Book' (link /books/book-duplicate) is a fired
+BS05 A phantom book 'Custom Book Title' is listed under Recently  fired effect ok ('Custom Book Title' present)
+BS06 A phantom chapter 'Custom Chapter Title' is listed under Rec fired
+BS07 A phantom shelf 'Shelf 2' is listed under Recently Created S fired
+BS08 A phantom result 'Some Page' (in 'Some Book') is appended to fired
+BS09 Activity entries about Book1 claim they happened '1 year ago fired
+BS10 Relative timestamps ('N minutes/hours/days ago') in Details  fired
+BS11 The page's relative timestamps read '2 days ago'             fired
+BS12 Its page 'Page 1' is listed as 'Page 3', inconsistent with s fired effect ok ('Page 3' present)
+BS13 The 'Create Sort Rule' button is missing                     fired effect ok ('Create Sort Rule' absent)
+
+PASS in 106 s

@@ -1,0 +1,1 @@
+cd /c/Users/Seraphindra/Desktop/agenticproject && bash scripts/resweep_v5.sh >> logs/experiments/v5dev/resweep_v5.log 2>&1

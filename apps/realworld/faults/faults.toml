@@ -12,6 +12,14 @@
 # `hint` (routes where the step started, check types) only helps a person label
 # inferred-oracle findings (`python -m webtester triage`). It is never shown to an
 # agent and never used as a label by itself.
+#
+# `reach` (analysis only, metrics.fault_reach) describes the trigger as one step's
+# actions, so a run can say whether any worker even attempted it ("reached" vs
+# "reached but not detected"). An approximation from the trace, not an exposure
+# marker: `route` the step started on, `do`/`el` (regex on the element description
+# without its [id]), `value` (regex) or `min_len`, `id_max` (element id ceiling),
+# and `with` (other actions in the same step, one table or a list). No `el` =
+# visiting the route.
 
 [[fault]]
 id = "F01"
@@ -21,6 +29,7 @@ summary = "Posting a comment longer than 280 characters returns HTTP 500"
 trigger = "Log in, open any article, post a comment of more than 280 characters"
 oracle = "Server error response; the comment does not appear"
 detect = { kind = ["http_5xx"], contains = "/comments" }
+reach = [{ route = ["/article/*"], do = ["click", "press"], el = 'Post Comment', with = { do = ["fill"], el = 'Write a comment', min_len = 281 } }]
 
 [[fault]]
 id = "F02"
@@ -30,6 +39,7 @@ summary = "Adding a tag that contains a space throws a TypeError in the editor"
 trigger = "Log in, New Article, type a tag with a space (e.g. 'web dev') and press Enter or publish"
 oracle = "Uncaught error logged; the tag is not added and publishing does nothing"
 detect = { kind = ["console_error", "page_error"], contains = "Cannot read properties of undefined", page = "/editor" }
+reach = [{ route = ["/editor", "/editor/*"], do = ["click", "press"], el = 'Publish Article|Enter tags', with = { do = ["fill"], el = 'Enter tags', value = '\S\s+\S' } }]
 
 [[fault]]
 id = "F03"
@@ -39,6 +49,7 @@ summary = "Registration accepts an empty username"
 trigger = "Sign up with an email and password but an empty username"
 oracle = "Required field accepted (other blank fields are rejected); the new user has no name in the nav bar / profile link"
 hint = { routes = ["/register"], checks = ["route", "shows", "not_shows", "changes"] }
+reach = [{ route = ["/register"], do = ["click", "press"], el = 'Sign up', with = [{ do = ["fill", "clear"], el = 'Username', value = '^\s*$' }, { do = ["fill"], el = 'Email', value = '@' }] }]
 
 [[fault]]
 id = "F04"
@@ -48,6 +59,7 @@ summary = "Editing an article silently removes all of its tags"
 trigger = "Create an article with tags, open Edit, change the body, publish"
 oracle = "Tags shown before the edit are gone afterwards although they were never removed"
 hint = { routes = ["/editor", "/editor/*", "/article/*"], checks = ["shows"] }
+reach = [{ route = ["/editor/*"], do = ["click", "press"], el = 'Publish Article' }]
 
 [[fault]]
 id = "F05"
@@ -57,6 +69,7 @@ summary = "After favoriting, the displayed favorites count does not increase"
 trigger = "Log in, click the heart/favorite button of an article you have not favorited"
 oracle = "Button becomes active but the count stays the same; reloading shows the correct (+1) count"
 hint = { routes = ["/", "/article/*", "/profile/*", "/?page", "/?tag"], checks = ["count", "shows"] }
+reach = [{ route = ["/", "/profile/*"], do = ["click"], el = '^button "\d+"$', id_max = 39 }, { route = ["/article/*"], do = ["click"], el = 'Favorite' }]
 
 [[fault]]
 id = "F06"
@@ -66,6 +79,7 @@ summary = "Deleting a comment is acknowledged but not performed"
 trigger = "Post a comment, click its trash icon, reload the article"
 oracle = "The deleted comment reappears after reload"
 hint = { routes = ["/article/*"], checks = ["not_shows"] }
+reach = [{ route = ["/article/*"], do = ["click"], el = 'trash' }]
 
 [[fault]]
 id = "F07"
@@ -75,6 +89,7 @@ summary = "Any logged-in user sees Edit/Delete on other users' articles, and del
 trigger = "Log in as a worker account, open an article written by alice/bob/carol/dave"
 oracle = "Modify controls offered to a non-author; deleting another user's article works"
 hint = { routes = ["/article/*"], checks = ["not_shows", "route"] }
+reach = [{ route = ["/article/*"] }]
 
 [[fault]]
 id = "F08"
@@ -84,6 +99,7 @@ summary = "'Your Feed' lists articles from authors the user does not follow"
 trigger = "Log in as a worker account (follows nobody) and open Your Feed"
 oracle = "Feed should be empty (or only followed authors) but shows every article"
 hint = { routes = ["/"], checks = ["shows", "not_shows"] }
+reach = [{ route = ["/"], do = ["click"], el = 'Your Feed' }]
 
 [[fault]]
 id = "F09"
@@ -93,6 +109,7 @@ summary = "Clicking a pagination link does nothing"
 trigger = "On the home page (12 articles, 10 per page) click page 2"
 oracle = "Same articles still shown; page 2 never loads"
 hint = { routes = ["/", "/?page"], checks = ["changes", "shows", "not_shows", "route"] }
+reach = [{ route = ["/", "/profile/*"], do = ["click"], el = '^button "[2-9]"$' }]
 
 [[fault]]
 id = "F10"
@@ -102,3 +119,4 @@ summary = "Filtering by tag returns articles that do not have that tag"
 trigger = "Click a tag in the Popular Tags sidebar"
 oracle = "The tag-filtered list contains articles whose tag list lacks the selected tag"
 hint = { routes = ["/", "/?tag"], checks = ["shows", "not_shows"] }
+reach = [{ route = ["/"], do = ["click"], el = '^a "(?!Your Feed|Global Feed)[^"]+"$' }]

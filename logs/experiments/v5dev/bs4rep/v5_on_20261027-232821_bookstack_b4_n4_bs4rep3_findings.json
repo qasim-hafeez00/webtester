@@ -1,0 +1,170 @@
+[
+  {
+    "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Chapter Title' in 'Recently Created Chapters View All' links nowhere (href '#') while 4 siblings have real links",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Chapter Title Custom Chapter Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Book Title' in 'Recently Created Books View All' links nowhere (href '#') while 3 siblings have real links",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Book Title Custom Book Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created shelves view all|shelf <n>",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Shelf 2' in 'Recently Created Shelves View All' links nowhere (href '#') while 1 siblings have real links",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created shelves view all|shelf <n>",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Shelf 2 Shelf Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created chapters view all|chapter",
+    "kind": "consistency",
+    "message": "[R04 T1] '4 Chapters' but 5 Chapters are listed under 'Recently Created Chapters View All'",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 14,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created chapters view all|chapter",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "chapter; chapter 1; chapter 2; chapter 2; custom chapter title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created books view all|book",
+    "kind": "consistency",
+    "message": "[R04 T1] '3 Books' but 4 Books are listed under 'Recently Created Books View All'",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 14,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created books view all|book",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "book; book1; book2; custom book title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/books|views|/books/book1|created",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows created 'Created 16 hours ago' here but '1 year ago' on /user/admin (step 51)",
+    "first_step": 7,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/books|views|/books/book1|created",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Book1 Description Created 16 hours ago Updated 16 hours ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/books/*|touched|/books/test-book-t15|other",
+    "kind": "consistency",
+    "message": "[R08 T2] '2 days ago', but an agent created it 0 min ago (step 15)",
+    "first_step": 15,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-t15",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/books/*|touched|/books/test-book-t15|other",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "2 days ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/user/admin|views|/books/book1|created",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows created '1 year ago' here but 'Created 16 hours ago' on /books (step 7)",
+    "first_step": 67,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/user/admin|views|/books/book1|created",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Admin created book Book1 1 year ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

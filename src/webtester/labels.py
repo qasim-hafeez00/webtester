@@ -8,7 +8,7 @@ logs/experiments/finding_labels.toml:
 
     ["<run id>"."<finding signature>"]
     label = "F06"   # a seeded/injected fault id enabled in that run, a known upstream defect
-                    # (U1-U5 for Conduit), "new: <what>" (a real bug we did not seed), or "fp"
+                    # (U1-U7 for Conduit, apps/realworld/README.md), "new: <what>" (a real bug we did not seed), or "fp"
 
 Suggestions (catalog `detect` rules, injected faults the worker had already
 triggered, `hint` routes/checks, known upstream patterns) are shown to speed
@@ -22,7 +22,7 @@ import tomllib
 from pathlib import Path
 
 from .config import REPO_ROOT
-from .metrics import fault_detection, load_fault_catalog
+from .metrics import fault_detection, load_fault_catalog, route_matches
 from .registry import LOG_DIR
 
 LABELS = LOG_DIR / "finding_labels.toml"
@@ -50,21 +50,17 @@ def suggest(f: dict, catalog: dict, enabled: list[str]) -> str:
     if f["kind"] == "http_5xx" and "PUT /api/user" in sig:
         return "U1?"
     if f.get("exposed"):  # injected faults (BookStack): those this worker had already triggered
-        return " / ".join(f"{fid}?" for fid in f["exposed"]) + (" / fp?" if f["kind"] == "oracle_violation" else "")
+        return " / ".join(f"{fid}?" for fid in f["exposed"]) + \
+            (" / fp?" if f["kind"] in ("oracle_violation", "consistency") else "")
     if f["kind"] == "oracle_violation":
         _, check, route, *_ = sig.split("|")
         cands = []
         for fid in enabled:
             hint = catalog.get(fid, {}).get("hint") or {}
-            if check in hint.get("checks", ()) and any(_route_matches(r, route) for r in hint.get("routes", ())):
+            if check in hint.get("checks", ()) and any(route_matches(r, route) for r in hint.get("routes", ())):
                 cands.append(fid)
         return " / ".join(f"{c}?" for c in cands) or "fp?"
     return ""
-
-
-def _route_matches(pattern: str, route: str) -> bool:
-    """`/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11)."""
-    return route == pattern or (pattern.endswith("/*") and route.startswith(pattern[:-1]))
 
 
 def label_metrics(run_id: str, findings: list[dict], summary: dict, labels: dict) -> dict:
@@ -74,7 +70,7 @@ def label_metrics(run_id: str, findings: list[dict], summary: dict, labels: dict
     lab = {f["sig"]: label_of(labels, run_id, f["sig"]) for f in findings}
     enabled = set(summary.get("faults") or [])
     gated = any(f.get("status", "candidate") != "candidate" for f in findings)
-    has_g3 = any(f["kind"] == "oracle_violation" for f in findings) or run_id in labels
+    has_g3 = any(f["kind"] in ("oracle_violation", "consistency") for f in findings) or run_id in labels
     out: dict = {"labels_missing": sum(1 for v in lab.values() if not v)}
 
     def seeded(fs: list[dict], rule_key: str) -> int:
@@ -136,7 +132,7 @@ def triage(arg: str, write: bool = True) -> str:
     if write and new_entries:
         header = "" if LABELS.exists() else (
             "# Finding labels (ground truth for precision and semantic-fault recall). See src/webtester/labels.py.\n"
-            "# label = seeded fault id (F01..), U1-U5 (known upstream defect), \"new: <what>\" or \"fp\".\n\n")
+            "# label = seeded fault id (F01..), U1-U7 (known upstream defect, apps/realworld/README.md), \"new: <what>\" or \"fp\".\n\n")
         with LABELS.open("a", encoding="utf-8") as fh:
             fh.write(header + "\n".join(new_entries) + "\n")
         lines += ["", f"appended {len(new_entries)} blank label(s) to {LABELS.relative_to(REPO_ROOT)}"]

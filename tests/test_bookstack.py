@@ -34,8 +34,12 @@ def test_injected_js_is_current_and_adapted():
 
 
 def test_bookstack_config_mirrors_conduit_llm_settings():
+    from dataclasses import replace
+
     conduit = load_config(REPO_ROOT / "configs" / "realworld.toml")
-    assert CFG.llm == conduit.llm and CFG.budget == conduit.budget
+    # which API key is used (D41) is not an LLM setting
+    assert replace(CFG.llm, api_key_env=None) == replace(conduit.llm, api_key_env=None)
+    assert CFG.budget == conduit.budget
     assert CFG.app.fault_script == "apps/bookstack/faults/injected.js"
     assert CFG.app.account(3).email == "worker03@bookstack.test"
 

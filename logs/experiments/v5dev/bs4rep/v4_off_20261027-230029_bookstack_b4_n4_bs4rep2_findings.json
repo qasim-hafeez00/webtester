@@ -1,0 +1,65 @@
+[
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 5,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02|/books/*/*|default page template|/link",
+    "kind": "consistency",
+    "message": "[R02 T1] the link 'Default Page Template' in 'Create New Chapter' returns HTTP 404",
+    "first_step": 24,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/create-chapter",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02|/books/*/*|default page template|/link",
+      "rule": "R02",
+      "tier": "T1",
+      "evidence": "http://127.0.0.1:4200/link"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|G2|/settings/users|count|seconds ago",
+    "kind": "consistency",
+    "message": "[G2 T2] opening /settings/users again shows '16 seconds ago', not '12 seconds ago'",
+    "first_step": 68,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/users",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|G2|/settings/users|count|seconds ago",
+      "rule": "G2",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

@@ -11,6 +11,9 @@ import urllib.request
 from .config import REPO_ROOT, AppConfig
 
 
+_MARKER = re.compile(r"\[wt-fault\] (F\d+)")
+
+
 class AppControlError(RuntimeError):
     pass
 
@@ -45,6 +48,15 @@ class AppControl:
             out = self._compose("exec", "-T", "backend", "printenv", "FAULTS", timeout=60) if self._backend_up() else ""
         return sorted(f.strip().upper() for f in out.strip().split(",") if f.strip())
 
+    def fired_faults(self, since: float, until: float) -> list[str]:
+        """Server-side exposure markers (`[wt-fault] Fxx`) the backend logged between two unix
+        times: which seeded faults actually took effect during exploration (I33, D36)."""
+        if self.app.fault_script or not self._backend_up():
+            return []
+        out = self._compose("logs", "backend", "--no-log-prefix", "--since", str(int(since)),
+                            "--until", str(int(until) + 1), timeout=120)
+        return sorted(set(_MARKER.findall(out)))
+
     def _backend_up(self) -> bool:
         out = self._compose("ps", "--status", "running", "--services", timeout=60)
         return "backend" in out.split()
@@ -54,7 +66,8 @@ class AppControl:
         if self.app.fault_script:
             self._client_faults_file.write_text(",".join(faults), encoding="utf-8")
         env = {"FAULTS": ",".join(faults)}
-        args = ["up", "-d"] + (["--build"] if build else [])
+        # --build alone left the old containers running on 25 Oct (I35): recreate them explicitly.
+        args = ["up", "-d"] + (["--build", "--force-recreate"] if build else [])
         self._compose(*args, env=env, timeout=1800)
         self.wait_healthy()
         if self.app.setup_service:
@@ -79,7 +92,15 @@ class AppControl:
         if not self.app.reset_compose_args:
             raise AppControlError(f"app {self.app.name!r} has no reset_compose_args")
         t0 = time.monotonic()
-        self._compose(*self.app.reset_compose_args, timeout=120)
+        # Docker Desktop occasionally stalls one `exec` (26 Oct: a reset hung for 120 s and the next
+        # took 0.5 s); the reset is idempotent, so a stalled one is retried.
+        for attempt in range(3):
+            try:
+                self._compose(*self.app.reset_compose_args, timeout=90)
+                break
+            except subprocess.TimeoutExpired:
+                if attempt == 2:
+                    raise
         return time.monotonic() - t0
 
     def wait_healthy(self, timeout_s: float = 180) -> None:

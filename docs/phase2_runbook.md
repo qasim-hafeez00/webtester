@@ -1,8 +1,8 @@
 # Phase 2 runbook: what to run, in order
 
-Status 16 Oct 2026. G1 (B2, B3 v1, B3 v2) is finished at n = 5 ([results](../logs/experiments/phase2_g1_results.md)). Built and unit-tested, but **not yet run against an app**:
-- 15 Oct: inferred oracles (G3), the evidence gate (G2), the B4 condition and its ablations (D27–D30).
-- 16 Oct: the second app, BookStack with the WebTestPilot benchmark's injected faults (D31–D37, section 7).
+Status 26 Oct 2026. BookStack held-out runs done (B0, B3v2, B4 × 5, `bsrep`, labelled; [results](../logs/experiments/phase2_bookstack_results.md)): 0 injected faults found by any condition; B4 gated precision 19%. Conduit is finished: G1 at n = 5 ([results](../logs/experiments/phase2_g1_results.md)); B4 and its ablations (A-G1, A-G3) plus B3v2 at n = 5 on harness v1, v2 and **v3** (D46, current), all labelled ([results](../logs/experiments/phase2_g23_results.md)). D47 kept v3's check changes for BookStack. Still to run: BookStack (section 7; D31–D37), B0, B3v2 and B4 × 5, on harness v3, with no tuning on BookStack (I22).
+
+On a nearly full disk the runs can die from the memory commit limit (I39): close memory-heavy apps before a queue.
 
 All decisions are in [logs/decisions.md](../logs/decisions.md).
 
@@ -65,7 +65,7 @@ python scripts/run_batch.py --agents b4nog3 --workers 4 --tokens 190000 --minute
 python -m webtester triage runs/<run_id>
 ```
 
-This prints each finding with its gate status, judge verdict and a *suggested* label, and appends blank entries to `logs/experiments/finding_labels.toml`. Fill `label =` with a seeded id (`F05`), a known upstream defect (`U1`–`U5`), `new: <what>`, or `fp`. Suggestions are never used as labels (D30). Precision is computed only for fully labelled runs. A few days later, re-label a random 20% blind, for an agreement figure.
+This prints each finding with its gate status, judge verdict and a *suggested* label, and appends blank entries to `logs/experiments/finding_labels.toml`. Fill `label =` with a seeded id (`F05`), a known upstream defect (`U1`–`U7`, `apps/realworld/README.md`), `new: <what>` (reuse the exact text of an existing `new:` label for the same defect), or `fp`. Rule: the defect without which the finding would not have happened; if the check would also fail on a correct app, `fp`. Since D45 Claude writes the labels from checked evidence (`by = "claude"`) and the user re-labels a random 20% blind (`label_check_sample.toml`) for Cohen's kappa. Precision is computed only for fully labelled runs.
 
 Then tell me, and I review the runs, mark `run_notes.toml`, and write the results:
 ```bash

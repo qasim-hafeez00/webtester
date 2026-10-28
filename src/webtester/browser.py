@@ -21,8 +21,30 @@ from urllib.parse import urlsplit
 from playwright.async_api import Browser, BrowserContext, Error as PWError, Page
 
 from .config import REPO_ROOT, Account, RunConfig
+from .evidence import DRAIN_MSGS_JS, MAX_BODY_BYTES, MAX_NET_RECORDS, MAX_POST_CHARS, MSG_JS
 
 FAULT_MARKER = "[wt-fault] "  # console line an injected fault logs when it first fires (exposure)
+NET_TYPES = ("xhr", "fetch", "document")  # requests `settle` waits for
+BODY_TYPES = ("xhr", "fetch")  # responses whose JSON body the evidence layer keeps (D58)
+QUIET_S, QUIET_MAX_S = 0.3, 3.0
+
+# Page text of a freshly loaded page for inferred checks (reload, /path): innerText plus the values
+# of visible text fields, which innerText leaves out (a saved bio shown back in its textarea, D46).
+# Not used for 'now' checks, where a field may still hold typed text. Passwords are skipped.
+TEXT_JS = r"""() => {
+  if (!document.body) return '';
+  const vals = [];
+  for (const el of document.querySelectorAll('input, textarea, select')) {
+    const t = (el.getAttribute('type') || '').toLowerCase();
+    if (['password', 'hidden', 'checkbox', 'radio', 'submit', 'button', 'file'].includes(t)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const v = el.tagName === 'SELECT' ? (el.selectedOptions[0] ? el.selectedOptions[0].text : '') : el.value;
+    if (v && v.trim()) vals.push(v);
+  }
+  return document.body.innerText + (vals.length ? '\n' + vals.join('\n') : '');
+}"""
+INNER_TEXT_JS = "() => document.body ? document.body.innerText : ''"
 
 # Runs in the page. Tags visible interactive elements with data-wt-id and
 # returns their descriptors, plus a skeleton of the visible DOM in which text
@@ -37,12 +59,25 @@ OBSERVE_JS = r"""
   };
   const SEL = 'a[href], button, input:not([type=hidden]), textarea, select, [role=button], [role=link], [role=tab], ' +
               '[role=checkbox], [role=menuitem], [role=switch], [contenteditable=""], [contenteditable=true], [onclick]';
+  // Framework click handlers (Angular (click), React onClick) leave no attribute behind, so an
+  // <a> without href or an icon <i> is invisible to SEL. Their usual tell is cursor:pointer: take
+  // the outermost such element (cursor is inherited) that is not inside an element SEL already
+  // takes (D43, I33).
+  const pointerCursor = new Map();
+  const isPointer = (el) => {
+    if (!el) return false;
+    if (!pointerCursor.has(el)) pointerCursor.set(el, getComputedStyle(el).cursor === 'pointer');
+    return pointerCursor.get(el);
+  };
+  const byCursor = (el) => isPointer(el) && !isPointer(el.parentElement) && !(el.parentElement && el.parentElement.closest(SEL));
   document.querySelectorAll('[data-wt-id]').forEach((e) => e.removeAttribute('data-wt-id'));
   const clean = (s, n) => (s || '').replace(/\s+/g, ' ').trim().slice(0, n);
   const els = [];
   let next = 1;
-  for (const el of document.querySelectorAll(SEL)) {
+  for (const el of document.body ? document.body.querySelectorAll('*') : []) {
     if (els.length >= maxEls) break;
+    const std = el.matches(SEL);
+    if (!std && !byCursor(el)) continue;
     if (!visible(el)) continue;
     const id = String(next++);
     el.setAttribute('data-wt-id', id);
@@ -50,10 +85,18 @@ OBSERVE_JS = r"""
     let label = '';
     if (el.labels && el.labels.length) label = el.labels[0].innerText;
     label = label || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('title') || el.getAttribute('name') || '';
+    // An icon taken by its cursor has no text; its class names (e.g. 'ion-trash-a') say what it does.
+    if (!std && !label && !clean(el.innerText, 1)) label = el.getAttribute('class') || '';
     let options = [];
     if (tag === 'select') options = Array.from(el.options).slice(0, 15).map((o) => clean(o.text, 30));
     const form = el.form || el.closest('form');
+    // Already-selected control (current page number, open tab): ARIA state or a Bootstrap-style
+    // 'active' class on the element or its parent. Clicking it is not expected to change anything (D46).
+    const isActive = (e) => !!e && e !== document.body && (
+      (e.getAttribute('aria-current') || 'false') !== 'false' || e.getAttribute('aria-selected') === 'true' ||
+      e.getAttribute('aria-pressed') === 'true' || e.classList.contains('active'));
     els.push({
+      active: isActive(el) || isActive(el.parentElement),
       id, tag,
       type: (el.getAttribute('type') || '').toLowerCase(),
       role: el.getAttribute('role') || '',
@@ -65,6 +108,7 @@ OBSERVE_JS = r"""
       disabled: !!el.disabled,
       options,
       form: form ? Array.from(document.querySelectorAll('form')).indexOf(form) : -1,
+      cls: (el.getAttribute('class') || '').slice(0, 80),
     });
   }
   const SKIP = new Set(['script', 'style', 'noscript', 'svg', 'link', 'meta', 'template', 'br']);
@@ -111,6 +155,8 @@ class Element:
     disabled: bool = False
     options: list[str] = field(default_factory=list)
     form: int = -1
+    active: bool = False  # already-selected control (D46); not part of key()
+    cls: str = ""  # class names (v4: lets memory classify icon controls, e.g. 'ion-heart'); not in key() or describe()
 
     def key(self) -> str:
         """Position-independent identity, used to recognise 'the same action' across visits."""
@@ -135,6 +181,8 @@ class Element:
             parts.append("options=" + "|".join(self.options))
         if self.disabled:
             parts.append("disabled")
+        if self.active:
+            parts.append("active")
         if self.form >= 0:
             parts.append(f"form#{self.form}")
         return " ".join(parts)
@@ -188,6 +236,14 @@ class BrowserSession:
         self.injector_errors: list[str] = []  # written to the trace by the worker
         self.silent_triggers: list[str] = []  # injected faults whose trigger held but changed nothing
         self.last_in_scope_url = cfg.app.base_url
+        self._pending: set = set()  # in-flight xhr/fetch/document requests (settle waits for them, D46)
+        self._last_net = 0.0
+        self.mutations: list[dict] = []  # same-origin write requests (method != GET) and their status (v4, D49)
+        # v5 evidence layer (D58), only with cfg.capture_evidence: network timeline with JSON bodies
+        self.evidence = bool(getattr(cfg, "capture_evidence", False))
+        self.net: list[dict] = []
+        self._net_seq = 0
+        self._body_tasks: set = set()
 
     # ---------- lifecycle ----------
     async def start(self, storage_state: dict | None = None) -> None:
@@ -198,6 +254,8 @@ class BrowserSession:
         if self.cfg.app.fault_script and self.cfg.client_faults:
             await self.context.add_init_script(script=f"window.__WT_FAULTS__ = {json.dumps(list(self.cfg.client_faults))};")
             await self.context.add_init_script(path=str(REPO_ROOT / self.cfg.app.fault_script))
+        if self.evidence:
+            await self.context.add_init_script(script=MSG_JS)
         await self.context.route("**/*", self._route)
         self.page = await self.context.new_page()
         self._wire(self.page)
@@ -224,6 +282,19 @@ class BrowserSession:
         page.on("console", self._on_console)
         page.on("response", self._on_response)
         page.on("requestfailed", self._on_request_failed)
+        page.on("request", self._on_request)
+        page.on("requestfinished", self._on_request_done)
+        page.on("requestfailed", self._on_request_done)
+
+    def _on_request(self, req) -> None:
+        if req.resource_type in NET_TYPES:
+            self._pending.add(req)
+            self._last_net = time.monotonic()
+
+    def _on_request_done(self, req) -> None:
+        if req in self._pending:
+            self._pending.discard(req)
+            self._last_net = time.monotonic()
 
     def _on_console(self, msg) -> None:
         text = msg.text
@@ -251,6 +322,12 @@ class BrowserSession:
         self._signals.append(Signal("console_error", text[:300], self.page.url if self.page else "", {"source": loc.get("url", "")}))
 
     def _on_response(self, resp) -> None:
+        req = resp.request
+        if req.method not in ("GET", "HEAD", "OPTIONS") and req.resource_type in NET_TYPES and self.in_scope(resp.url):
+            self.mutations.append({"method": req.method, "path": urlsplit(resp.url).path, "status": resp.status})
+            del self.mutations[:-50]
+        if self.evidence and req.resource_type in NET_TYPES and self.in_scope(resp.url):
+            self._record(resp)
         if resp.status >= 500 and self.in_scope(resp.url):
             req = resp.request
             self._signals.append(Signal(
@@ -268,6 +345,58 @@ class BrowserSession:
             self.page.url if self.page else "", {"url": req.url},
         ))
 
+    # ---------- v5 evidence layer (D58) ----------
+    def _record(self, resp) -> None:
+        req = resp.request
+        self._net_seq += 1
+        ctype = (resp.headers.get("content-type") or "").split(";")[0].strip().lower()
+        rec = {"seq": self._net_seq, "t": time.time(), "method": req.method, "url": resp.url,
+               "path": urlsplit(resp.url).path, "status": resp.status, "type": req.resource_type, "ctype": ctype,
+               "page": self.page.url if self.page else ""}
+        if req.method not in ("GET", "HEAD", "OPTIONS"):
+            rec["sent"] = (req.post_data or "")[:MAX_POST_CHARS]
+        self.net.append(rec)
+        del self.net[:-MAX_NET_RECORDS]
+        if req.resource_type in BODY_TYPES and "json" in ctype:
+            task = asyncio.get_running_loop().create_task(self._grab_body(resp, rec))
+            self._body_tasks.add(task)
+            task.add_done_callback(self._body_tasks.discard)
+
+    @staticmethod
+    async def _grab_body(resp, rec: dict) -> None:
+        try:
+            raw = await resp.body()
+        except Exception:  # noqa: BLE001 (redirects, closed pages, aborted requests carry no body)
+            rec["body_error"] = "unavailable"
+            return
+        if len(raw) > MAX_BODY_BYTES:
+            rec["body_error"] = f"too large ({len(raw)} bytes)"
+            return
+        try:
+            rec["body"] = json.loads(raw)
+        except ValueError:
+            rec["body_error"] = "not JSON"
+
+    async def flush_bodies(self, timeout_s: float = 2.0) -> None:
+        """Wait (bounded) for the bodies of responses already seen to be read."""
+        if self._body_tasks:
+            await asyncio.wait(set(self._body_tasks), timeout=timeout_s)
+
+    def net_mark(self) -> int:
+        return self._net_seq
+
+    def net_since(self, mark: int) -> list[dict]:
+        return [r for r in self.net if r["seq"] > mark]
+
+    async def drain_messages(self, page: Page | None = None) -> list[dict]:
+        """Transient messages (toasts, flashes, alerts) caught since the last drain, oldest first."""
+        if not self.evidence:
+            return []
+        try:
+            return await (page or self.page).evaluate(DRAIN_MSGS_JS)
+        except PWError:
+            return []
+
     def drain_signals(self) -> list[Signal]:
         out, self._signals = self._signals, []
         return out
@@ -283,7 +412,19 @@ class BrowserSession:
             await self.page.wait_for_load_state("networkidle", timeout=2500)
         except PWError:
             pass
+        await self.wait_quiet()
         await asyncio.sleep(self.cfg.settle_ms / 1000)
+
+    async def wait_quiet(self, quiet_s: float = QUIET_S, max_s: float = QUIET_MAX_S) -> None:
+        """In a single-page app `networkidle` is reached once at load and returns at once after
+        a click, so wait until no xhr/fetch/document request has been in flight for `quiet_s`
+        (at most `max_s`). Without this, checks ran before the app answered (D46)."""
+        await asyncio.sleep(0.05)  # let a click's requests start
+        deadline = time.monotonic() + max_s
+        while time.monotonic() < deadline:
+            if not self._pending and time.monotonic() - self._last_net >= quiet_s:
+                return
+            await asyncio.sleep(0.05)
 
     async def observe(self) -> Observation:
         for attempt in range(3):
@@ -314,7 +455,7 @@ class BrowserSession:
             except PWError:
                 pass
             await asyncio.sleep(self.cfg.settle_ms / 1000)
-            return await page.evaluate("() => document.body ? document.body.innerText : ''")
+            return await page.evaluate(TEXT_JS)
         except PWError:
             return None
         finally:
@@ -405,12 +546,19 @@ class BrowserSession:
         recipe = self.cfg.app.login
         if not recipe:
             return False
-        await self.goto(recipe.path)
         vals = {"email": account.email, "password": account.password, "username": account.username}
-        for label, template in recipe.fields.items():
-            loc = self.page.get_by_placeholder(label).or_(self.page.get_by_label(label)).first
-            await loc.fill(template.format(**vals))
-        await self.page.get_by_role("button", name=recipe.submit).first.click()
+        for attempt in range(2):  # right after a reset the login page can load slowly (I40)
+            await self.goto(recipe.path)
+            try:
+                for label, template in recipe.fields.items():
+                    loc = self.page.get_by_placeholder(label).or_(self.page.get_by_label(label)).first
+                    await loc.fill(template.format(**vals))
+                await self.page.get_by_role("button", name=recipe.submit).first.click()
+                break
+            except PWError:
+                if attempt:
+                    raise
+                await asyncio.sleep(5)
         await self.settle()
         self.drain_signals()
         return not self.page.url.rstrip("/").endswith(recipe.path.rstrip("/"))

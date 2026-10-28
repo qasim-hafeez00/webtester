@@ -251,3 +251,16 @@ class FrontierV2(Frontier):
     def stats(self) -> dict:
         return {**super().stats(), "version": 2, "focus_reassignments": self.reassignments,
                 "global_elements": sum(1 for k in self.key_states if self.is_global(k))}
+
+
+class FrontierV3(FrontierV2):
+    """B3 v3 (harness v4, D49): FrontierV2 plus the run's abstract state graph (stategraph.py).
+    The harness travels to a newly assigned focus area by URL instead of spending an LLM step
+    on it (22-28% of v3 tokens went to travel to known routes), and the prompt is compact:
+    explored navigation on one line, 12 routes. Marks and focus areas are v2's."""
+
+    version = 3
+
+    def __init__(self, shared: bool, graph=None, **kw):
+        super().__init__(shared, **kw)
+        self.graph = graph

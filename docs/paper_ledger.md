@@ -2,7 +2,7 @@
 
 **Notes for synthesis, not submission text.** The course runs a Turnitin AI-writing check, so all paper prose is written by the author. This file only collects verified facts, numbers, decisions and threats, each with its source, so nothing has to be reconstructed later. Update it whenever a decision, result or issue is logged. IDs: D = [logs/decisions.md](../logs/decisions.md), I = [logs/issues.md](../logs/issues.md), runs = [run_registry.md](../logs/experiments/run_registry.md).
 
-Last updated: 2026-10-16 (after the BookStack verification runs).
+Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
 
 ---
 
@@ -30,6 +30,15 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - Minimal-suffix replay (1 step, then 4) from the worker's recorded steps, in a fresh context restored to the worker's session, with a DB reset before every replay.
   - k = 3 replays. Labels: confirmed 3/3, flaky 1–2, rejected 0, unverified (20-min cap).
   - An LLM judge gives a second opinion on reproduced oracle violations and never changes the label.
+- **Harness v3** (D46, 25 Oct; final system for Conduit `h3rep` and BookStack): settle waits for in-flight requests; `active` controls marked, and no-op checks on them are inconclusive; field values count as page text on freshly loaded pages (not on `now` checks); a logged-out line in the prompt; checks prompt v3 (≤ 3 checks: effect, after reload, numbers; route checks only for requested navigation) plus an automatic after-reload twin for passed checks after a button click; gate `unverified` for findings no replay could run (a judge-context change was tried and dropped: no gain); implicit fault detection requires the fault's marker. D47 pre-registers whether the check changes stay for BookStack. Conduit = development app from here on.
+- **Harness v4 pre-lock oracles** (D50): R13 access (an item page's Edit link refused while the same kind of edit address worked for this session; or Edit hidden while the address from the item's ids opens its filled form), R16 boundary input (5xx or page error when an accepted create form is re-submitted with empty, spaces-only or long/maxlength values; T1), R17 validation (empty name accepted; empty rejected but spaces accepted; T2), G2 reload invariance (fresh-tab reopen after a navigation; T2). Deterministic, no LLM tokens, probes in fresh tabs, capped per run.
+- **v4 pre-lock false-alarm fixes** (D53, D54; from resweeps of recorded runs on the clean app, no LLM): count tokens standalone; R09 skips revisits across a login/logout and additions to event feeds; tab bars are navigation, not lists; R04 skips a list whose heading holds the count; delete checked in a fresh tab by count against the page right before the click, on the whole item card; wait for slow write responses; consistency findings keyed by signature (I45). Conduit clean false alarms, T1 per run: 1.60 (first D53 pass) → 1.40 (D53); R09 2.47 → 2.07; I-submit 1.40 → 0.40. After D54 (tabs, delete item): clean T1 per run Conduit 0.33, BookStack 0.60; I-delete clean 1.20 → 0.13 and faults-on 21 → 40. Resweep replays have no LLM pauses; one clean run replayed twice gave I-submit 7 vs 1 and missing elements 19 vs 10 (timing sensitivity of T2 rules in replay). Lock numbers (after D54 part 3, tabbed lists named by the selected tab): clean T1 per run Conduit 0.33, BookStack 0.60; Conduit clean per run R09 0.67, I-submit 0.07, R11 0.73, R17 1.73 (R17 = a real Conduit weakness, D45). **v4 locked 27 Oct at `540887e`.** Pilots (2 workers, 5 min): tokens per step Conduit b4 2,476 vs v3 2,172, b3v3 1,731 vs b3v2 1,714; BookStack b4 2,731 vs 2,740; states per page median 1-2; 2-6 travels per run without the LLM; Conduit b4 gate 15 candidates in 12.2 min.
+- **v5 development resweep, BookStack** (D55; Night 3's 5 valid b4 bs4rep runs replayed with v4 (540887e) and v5 oracles, no LLM, labels by Claude under D45): faults per run v4 [2,2,3,3,4] vs v5 [5,6,6,7,7] (median 3 vs 6 of 13 reachable); precision on the faulty app 21/41 = 51% vs 56/59 = 95%; false alarms on the clean app 4.0 vs 0.6 per run. v5 clean false alarms: R08 after an edit that leaves the shown age unchanged (0.4/run), R09 heading read as an item (0.2/run). BookStack is a development app for v5 (fixtures and fixes derived from it).
+- **Fault-family coverage (D56, `docs/fault_families.md`):** 62 web fault families merged from Marchetto, Ricca and Tonella (JWE 2009; 57 classes validated on 676 bugs from 68 apps, 74.4% web-specific; largest classes A1f1 browser incompatibility 49, A3f9 data exchanged among components 36, A6f4 extracting information from the database 26), Mesbah, van Deursen and Roest (TSE 2012, generic invariants), Vijayaraghavan and Kaner (2003, e-commerce, 45 categories), Genie (OOPSLA 2021), Ocariza et al. (ESEM 2013: 65% of JavaScript faults DOM-related), WebTestPilot classes. Harness status as of 28 Oct: 25 covered, 14 partial, 13 coverable without a spec, 2 need a spec, 8 out of scope. 19 of the 21 reachable development faults are in covered or partial families (BS12, BS13 not).
+- **Fault families extended by workflow primitives (28 Oct, D56):** 106 families (25 covered, 19 partial, 50 coverable without a spec, 3 spec, 9 out) after adding 44 from app-type workflows (ledger, lifecycle, capacity, scheduling, hierarchy, aggregates, several users, files, settings, rich clients) and further sources: Segura et al. MET 2019 (query metamorphic relation patterns), Mai et al. ICST 2020 (22 security metamorphic relations: access control 7, authentication 6, data exposure 5, misconfiguration 3), Truelove et al. 2021 (20 game bug types), Riganelli et al. MSR 2019 (110 data-loss faults in 48 Android apps), MSR 2025 date/time bugs (151 bugs, time zones the largest factor), Xuan et al. (financial systems: internal interface 19.0%, algorithm 17.7%, logic 15.0%), El Hajj Chehade et al. S&P 2025 (access-control flaws on 7 of 100 sites), VA EHR safety analysis (100 investigations, 4 categories). 13 workflow primitives; over 13 app types (ratings by judgment) the most central are CRUD (9), identity (8), lifecycle, query, aggregates (7 each). Conduit and BookStack exercise 7 of the 13 primitives. CATTest: 40 of 102 apps are game (19), 3D (11) or SVG (10); bugs per category from its Table 5 only.
+- **Fault families extended from reviewer chats (28 Oct, D57):** 163 families (25 covered, 19 partial, 108 coverable without a spec, 3 spec, 8 out); 57 added, 3 moved from out to coverable (EN1 browsers via replay in Firefox/WebKit, PR5 via DOM geometry, WF3 via in-app notifications and a local mail catcher). 14 check mechanisms (M10 environment replay, after SetDroid's setting-wise metamorphic fuzzing, ISSTA 2021: 1,074 setting defects in 180 apps, about 70.7% non-crash; M11 network fault injection; M12 payload vs page, after PBFDroid's model-vs-layout check, FSE 2023: 30 new bugs in 18 apps, 22 non-crashing; M13 declared constraints; M14 DOM geometry and media state). A new evidence kind, 'declared': the page's own constraints and stated thresholds. 16 app types x 16 primitives (P-REL, P-CTX, P-MEDIA added). Families sourced only from the reviewer chats are marked 'our analysis'.
+- **v5 evaluation design (D58, `docs/v5_plan.md`):** recall reported oracle-conditioned and total; precision per distinct issue (rule x page template x entity kind) and per finding; a seven-stage recall funnel per seeded fault (reached, triggered, observed, armed, flagged, confirmed, matched); a check-outcome log in which an unexecuted check is never a pass; clean-app false alarms with a bound (rule of three); real historical faults and second-variant faults beside author-written ones; a rebranded-app control for LLM contamination; thresholds frozen before held-out runs. Evidence layer: network timeline with JSON bodies and transient messages (R57, R51), off unless `capture_evidence`.
+- **v4 → v5 oracle resweep, development apps (D55, 28 Oct; same recorded Night 3 b4 runs, n = 5 per app, no LLM, labelled by the D45 rule):** BookStack faults per run [2,2,3,3,4] → [5,6,6,7,7] (median 3 → 6 of 13 reachable), precision 21/41 = 51% → 56/59 = 95%, clean-app false alarms 4.0 → 0.6 per run; Conduit [4,5,5,5,6] → [5,6,6,6,7] (median 5 → 6 of 8), precision 67/79 = 85% → 66/67 = 99%, clean-app false alarms 2.8 → 0.4 per run. The new follow-feed rule R07c finds F08 in 5 of 5 Conduit runs (missed by v4 and in every Night 3 run). Development numbers: the v5 rules were written with these runs in view.
 - **Conditions** (D29, plan section 6):
   - B0 crawler, B1 one LLM worker, B2 N independent workers, B3 v1/v2 shared frontier, B3v2-local.
   - B4 = B3 v2 + G3 + G2.
@@ -48,6 +57,7 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - 30 files vendored byte-identical (`VENDORED.sha256`), CC BY 4.0 (I21).
 - **Exposure vs detection** (D36, D38): for injected faults, the trace records when a fault *visibly* changed a worker's page (DOM before vs after its effect), separately from whether it was reported. Trigger-only firings (no visible change) are kept apart.
 - **Labelling** (D30, D37): every finding of a B4-family run is labelled by hand (seeded id / U / new / fp). Solo author: a blind 20% re-label gives an intra-rater agreement figure (plan: two raters and κ).
+- **Labelling changed (D45, 25 Oct):** labels were assigned by Claude from checked evidence (`by = "claude"`), rule: the defect without which the finding would not occur, else fp. The user re-labels a blind 20% (49 entries) and the paper reports Cohen's kappa user vs Claude. Must be stated as such in the paper. Unseeded defect list now U1–U6 (U6 = editing creates a new article, I37).
 
 ## 4. Metrics and statistics
 - **Exploration:** unique abstract states, unique routes, duplicate-action rate (same state, element and input class), steps, tokens (`metrics.py`).
@@ -88,8 +98,70 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
   - The B0 crawler (2 workers, 5 min) **visibly exposed exactly the 13 reachable faults** (BS01–BS13), with 0 findings. Implicit oracles detected 0/18 faults, confirming D32 empirically.
   - BS15 and BS18 triggered with no visible change (their spec literal was absent).
   - Reset 3.1–6.0 s.
+- **G2/G3 + G1 ablation runs complete (24 Oct)**, n = 5 valid each, N = 4, 190k tokens, Conduit, all 10 faults on. Raw medians from the summaries only. Findings are not yet labelled by hand (D30, D37) and no tests have been run.
 
-## 7. Run accounting (all runs, as of 16 Oct)
+  | Median | B4 | A-G1 | B3v2-local |
+  |---|---|---|---|
+  | Steps | 98 | 113 | 116 |
+  | States | 30 | 26 | 26 |
+  | Routes | 10 | 8 | 8 |
+  | Duplicate actions | 32% | 57% | 51% |
+  | Seeded faults, candidates (per rep) | 2,1,1,2,2 | 1,1,1,0,1 | 0,1,1,2,1 |
+  | Seeded faults, gate-confirmed (per rep) | 1,0,1,2,1 | 1,1,1,0,1 | no gate |
+  | Candidates → confirmed (per rep) | 15→5, 10→7, 12→9, 10→6, 8→6 | 12→9, 13→9, 12→8, 11→4, 10→6 | – |
+
+  - **Gate recall loss on seeded faults:** in B4 reps 1, 2 and 5 the gate rejected a true seeded-fault candidate (F01 twice, F02 once). The cause was a replay that did not reproduce. A-G1 lost none. The gate took 2.2–4.8 min per run.
+  - Removing the shared frontier (A-G1) brings duplicates back to the B3v2-local level (57% vs 51%; B4 32%).
+  - **Statistics (exploration, final):** `logs/experiments/phase2_g23_results.md`.
+    - B4 vs A-G1: duplicates 32% vs 57%, routes 10 vs 8 (p = 0.008 each, Â12 large).
+    - B3v2 vs B3v2-local: states 38 vs 26 (p = 0.024), duplicates 37% vs 51% (p = 0.016). So **sharing**, not partitioning, drives G1.
+    - B4 vs B3v2: states 30 vs 38, steps 98 vs 124 (p = 0.008). G3's checks cost about 20% of the steps at equal tokens.
+  - **Fault funnel (provisional, suggested labels):**
+    - Of the 8 semantic faults, 4 were never reachable: F06/F08/F10 because the observation misses click-handler elements (I33), and F03 because the UI blocks it (I34).
+    - Of the 4 reached, inferred checks found F07 (1 run) and F09 (4 runs, 2 confirmed). They missed F04 and F05 (reached in 8 and 6 runs) because no check exposing them was proposed.
+  - **Gate v1 lost true F01 twice** because replays on a reset DB lack the worker's own account or articles (I32).
+
+- **Harness v2 re-runs complete (25 Oct, `h2rep`):** B3v2, B4, A-G1, A-G3 × 5 valid runs (`logs/experiments/phase2_g23_results.md`, second section).
+  - The observation fix (D43) works: F06, F08 and F10 fire in nearly every run (0 of 40 before). F04 never fires: it is UI-unreachable, because the editor creates a new article instead of updating (upstream U6, I37); F03 is UI-unreachable too (I34).
+  - G1 inside B4 replicates on duplicates (28% vs 56%, p = 0.008) but not on states or routes.
+  - The G3 ablation (A-G3 vs B4) gives 12 vs 2 findings (p = 0.008); the semantic share needs labels.
+  - **Labelled (D45), harness v2:** B4 vs A-G3 true findings/run 5 vs 2 (p = 0.040, Â12 0.92), distinct defects 4 vs 2 (p = 0.048), semantic seeded faults (F05–F10) 1 vs 0 per run (p = 0.048), precision gate-confirmed 50% vs 100%. A-G1 vs B4: no labelled difference. Judge called all 4 F08 hits `wrong_expectation`. G3 failure funnel: F05 never got a `count` check, F06 got 33 'gone now' checks (UI hides it; only a reload check would expose it), F10 needs a check the language cannot express. Details: `phase2_g23_results.md`.
+  - G3 still costs steps: B4 94 vs B3v2 115 (p = 0.008), states 26 vs 34 (p = 0.087).
+  - Gate v2: real F01 confirmed once and lost once (cross-worker); two '/comments 500' candidates were not F01, by the exposure markers (I36).
+
+- **Harness v3 runs complete (25 Oct, `h3rep`, D46; final system for Conduit, labelled with D45):** B3v2, B4, A-G1, A-G3 × 5 valid (`logs/experiments/phase2_g23_results.md`, v3 sections).
+  - **G1:** duplicates B4 31% vs A-G1 60% (p = 0.008), routes 9 vs 7 (p = 0.048), states 28 vs 22 (ns). Duplicates replicate on v1, v2 and v3. Labelled: no difference in what is found (true findings 8 vs 11, p = 0.421).
+  - **G3:** B4 vs A-G3 per run: true findings 8 vs 3 (p = 0.016), distinct defects 5 vs 3 (p = 0.016), seeded faults 3 vs 1 (p = 0.008), semantic seeded 2 vs 0 (p = 0.008, Â12 = 1.00). Over 5 runs B4 found F06, F07, F08, F09 (4 of 6 UI-reachable semantic faults); implicit-only found none.
+  - **F06 caught by the after-reload twin** (gate-confirmed in 5/5 A-G1, 2/5 B4 runs; v2: 0). F05 still never gets a count check; F10 needs a relational check.
+  - **G2:** B4 pooled precision raw 69% → gate-confirmed 74% → minus judge 81%; A-G1 65% → 78% → 92%. The judge discards 12 real confirmed B4 findings. 21% of B4's real findings end unverified/rejected (cross-worker data, races). Judge cost 1.2–1.8% of tokens.
+  - **D47 met:** B4 v3 vs v2 semantic seeded faults per run 2 vs 1 (p = 0.008), confirmed false alarms 3 vs 4: v3 checks kept for BookStack.
+  - **Unseeded defects found:** 3 race defects (follow/unfollow of a missing user, comment on and favorite of a deleted article: all 500 instead of 404), whitespace-only profile values, no email format check; plus U1, U2, U3, U5, U6.
+  - **KPIs (plan §3):** met: G1 duplicates (−48%), G2 cost, G3 (67% across runs). Not met: G1 states (ns), G2 precision ≥ 0.90 (74%), G2 recall loss ≤ 10 points (21%).
+
+- **BookStack held-out runs (26 Oct, `bsrep`, harness v3 frozen, nothing tuned; `logs/experiments/phase2_bookstack_results.md`):** B0, B3v2, B4 × 5 valid (N = 4, 190k tokens; LLM runs end on the token budget at 8–9.5 min, about 2,750 tokens per step).
+  - **Injected faults found: 0 in every condition.** Exposed (fired) per run: B0 13 of 13 reachable, B3v2 10, B4 10. All "reached but not noticed".
+  - **Coverage:** routes B0 13, B3v2 28, B4 25 (B0 vs B3v2 p = 0.008); duplicate actions 80% / 20% / 22%; states B3v2 46 vs B4 38 (p = 0.016).
+  - **B4 findings:** 39 (8 per run), 7 `env` (no mail server: password reset 500, user invite fails; I42, D48), 32 fp, 0 app defects. Precision raw 18% → gated 19% → minus judge 55%. Gate: 37 confirmed, 2 rejected, 0 unverified (wrong expectations about deterministic behaviour replay perfectly). The judge flagged 25 of 30 confirmed false alarms and 1 of 5 judged true findings.
+  - **False alarms:** 21 of 32 are route checks (Settings → /settings/features, 'New Page' → draft editor, ?search, model `*` not a wildcard (I41)); 12 text guesses (headings the form lacks, wording). Route checks are 41% of 288 checks despite prompt v3; no `count` check was proposed; 24 persistence twins, all passed.
+  - **Why G3 found nothing:** B4's content checks test the effect of its own action; BookStack's faults are wrong content on arrival (missing favourite or recently-viewed item, phantom entries, timestamps), needing an expectation about what a page should already show. B4 took 50 steps from the dashboard while BS02 was showing, with 6 content checks, none about Recently Viewed. G3 does not replicate on the held-out app.
+
+- **Harness v4 Night 3 (27–28 Oct, `h4rep` Conduit, `bs4rep` BookStack; v4 locked `540887e`; B3V3 implicit-only vs B4 full; N = 4, 190k tokens, n = 5 each; all 159 findings labelled by Claude, D45; `logs/experiments/phase2_v4_night3_results.md`):**
+  - **Conduit:** seeded faults per run B4 5 vs B3V3 1 (p = 0.008, Â12 1.00); semantic (F05–F10) B4 3 per run [3,3,4,4,3] vs 0; across runs F06, F07, F09, F10 (4 of 6; v3: F06, F07, F08, F09, 2 per run). F05, F08 not found.
+  - **BookStack:** injected faults per run B4 2 [3,2,2,4,2] vs B3V3 0 (p = 0.008); across runs BS05 5/5, BS06 5/5, BS03, BS04, BS10 1/5 each (5 of 18; v3 B4 0 of 18). BS03, BS04 found on 2nd arrivals the exposure markers did not count (I44, I49).
+  - **Precision, B4 pooled raw / gate-confirmed / minus judge:** Conduit 82% (80/98) / 88% (78/89) / 89% (75/84) (v3: 69 / 74 / 81%); BookStack 38% (20/52) / 48% (19/40) / 49% (17/35) (v3: 18 / 19 / 55%, the v3 true findings all `env`). Confirmed false alarms per run: Conduit 2, BookStack 5.
+  - **Gate:** recall loss (real findings not confirmed) Conduit 2.5% (v3 21%), BookStack 5%; judge ≤ 2% of tokens and drops 5 confirmed findings per app (3 and 2 real); gate time 7–23 min, over the 20-min cap in 5 of 10 runs.
+  - **False alarms (50):** intent-object mismatch in I-create/I-edit 21 (login intents 14), list churn from other workers, activity rotation and renamed shelves 14, R02 probe of BookStack's hidden page-picker anchor 4, rule misreads 9, unreproduced settings submit 2. Login-intent I-create = 5 of 11 confirmed false alarms on Conduit, 9 of 21 on BookStack (post-hoc only: without it 93% and 61% gated).
+  - **Per rule (B4):** I-filter 18/18, I-delete 18/18, R17 9/9, R16 5/5, R13 2/2 (Conduit); R03 10/10, R04 5/5, R08 2/2 (BookStack); I-create 1/18, R09 2/13, R02 1/6.
+  - **KPIs:** G2 precision ≥ 0.90 not met (88%, 48%); G2 recall loss ≤ 10 points met (2.5%, 5%); G2 cost met; G3 ≥ 40% met on Conduit (67% across runs, 50% per run), not on BookStack (28% across runs, 11% per run).
+  - **Exploration:** B4 89 vs 119 steps on Conduit and 68 vs 89 on BookStack (both p = 0.008), same token budget; duplicates 33% vs 41% on Conduit (p = 0.008), equal on BookStack.
+
+## 7. Run accounting (all runs, as of 24 Oct)
+- **As of 28 Oct, 01:17:** Night 3 (harness v4): 24 attempts, 20 valid (Conduit 10, BookStack 10), 4 invalid (key 7 quota then Docker stop, no-start after Docker stop, key 9 quota, key 10 quota; I48). Keys 7, 9, _OLD (Conduit), 10, 5 (BookStack), recorded in each `config.json` (D41).
+- **As of 26 Oct, 06:30:** BookStack `bsrep`: 17 runs with a summary, 15 valid, 2 invalid (1 crash at login I40, 1 quota on key 9); pilot `20261026-002235` (smoke). Keys 9 then 10 (D41).
+- **As of 25 Oct, 22:40:** 125 runs with a summary. Harness v3 (`h3rep`): 25 with a summary, 20 valid, 5 invalid (3 quota, 1 primary-key 403/429, 1 stall), plus 4 attempts with no summary (process tree ended, I39). Harness v2 (`h2rep`): 20 valid, 3 invalid. Keys per run in each `config.json` (D41).
+- **75 runs with a summary:** 40 valid, 4 pilots, 7 smoke, 24 invalid. The 24 Oct batch had 13 valid runs and 4 invalid (2 stalls, 1 × 403 I17, 1 × 429 on key 4), plus the 20 Oct Copilot-loop B4 rep 1 (stall). Two more attempts have no summary and are not counted: a cold-Docker crash before step 1 (I31) and a run killed by Modern Standby.
+
+## 7a. Run accounting as of 16 Oct (kept for the record)
 - **49 runs logged:** 25 valid (10 Phase 1, 15 G1), 3 pilots, 3 smoke, 18 invalid.
 - **Why the 18 were invalid:**
   - 7: Google 403 "project denied access" during free-key rotation (I17).
@@ -102,15 +174,36 @@ Last updated: 2026-10-16 (after the BookStack verification runs).
 ## 8. Threats to validity (collect here, discuss in the paper)
 - **Design on the test subject:** B3 v2 (D25) and the G3 prompt examples (D27) were designed by someone who knows Conduit's faults. Mitigation: BookStack faults written by others (D31). Do not tune on BookStack before its runs (I22).
 - **Key rotation:** B2 rep 5, B3 v1 rep 5 and B3 v2 reps 1–5 ran with `key_fallback = true`. Same model, so comparable, but the 403 recurred (I17).
+- **Several API keys in Phase 2 (D41):** the 24 Oct valid runs used the primary key (6 runs), key 4 (3) and key 5 (4). Same model and settings, and each `config.json` records `api_key_env`. Different Google projects could differ in latency (16 retries in one key-5 run), but not in model behaviour.
+- **Observation coverage (I33):** the element extractor misses `<a>` without `href` and click-handler icons, so F06/F08/F10 were unreachable for every condition. This is a harness limit shared by all conditions, but it caps RQ3 recall.
+- **Fault reachability (I34):** F03 cannot be triggered through the UI (form validation), so RQ3's denominator should be the UI-reachable semantic faults.
+- **Gate state dependency (I32):** suffix replays on a reset DB cannot rebuild state the worker created earlier, which costs recall. Gate v2 adds a full-prefix window.
+- **Unseeded 5xx not triaged:** non-reproducing 500/504s appeared in 24 Oct runs (PUT /api/user 504, POST /api/articles 504, GET /api/tags 500, DELETE follow 500, favorite 500). They are possibly load-related like I19/I20, and must be labelled before reporting precision.
 - **Machine load:** 21 unrelated containers ran during B3 v2 reps 3–5. The runs were healthy, but there were 504s at the end of rep 4 (I19).
 - **Single model, small N:** one cheap model (flash-lite), N = 4 only, n = 5, one laptop (4 cores, 16 GB).
 - **Oracle expressiveness:** the single-page check language cannot express the relational consistency the base paper's oracles check (I22).
 - **Benchmark fidelity:** client-side injected faults, not source faults; 5 of 18 are unreachable without the spec; the benchmark was revised after the paper (fact sheet 01). Two scripts cannot fire on the page their own test case is about in BookStack 25.2.1 (I27). Some effects need data a fresh worker lacks (I23).
 - **Labelling:** a single labeller (D30).
+- **Labels by the LLM-based assistant (D45):** risk of shared bias with the system's own LLM judgements; mitigated by evidence-based rules, the user's blind 20% check (kappa) and the label rule written down. F03 and F04 are UI-unreachable (I34, I37), so seeded-fault recall is over 8 faults.
+- **Development on the test app (D46):** harness v3 was designed after seeing Conduit's labelled v2 results, so Conduit v3 numbers are development results. BookStack is the held-out test. Unseeded Conduit defects now U1–U7 (U6 edit creates a new article, I37; U7 settings form never loads saved values, I38).
 - **State abstraction v0:** keeps `/profile/alice` and `/profile/bob` apart (I11). The same abstraction is used for every condition.
+- **Judge reliability:** the LLM judge called all F08 hits and many F06 twins `wrong_expectation`; filtering by the judge raises precision but drops real findings (12 of 34 real confirmed B4 findings in v3). Report precision both with and without it.
+- **Gate and parallel-only bugs:** race defects (another worker renamed or deleted the target seconds earlier) cannot be reproduced on a reset app; they end `unverified`/`rejected`. The gate under-reports exactly the bugs parallelism exposes.
+- **Memory pressure on the run machine (I39):** 4 v3 attempts died with their process tree; re-run, never counted.
 - **Unseeded real bugs found:**
   - U1 (PUT /api/user 500 on a username collision) and U5 (uncaught error on a missing article or profile).
   - A possible new one, I20 (tag `!@#$` → 504/500), not yet reproduced.
+
+- **Held-out result (26 Oct):** G3 found 4 of 6 Conduit semantic faults across runs but 0 of 13 reachable BookStack faults. The two fault sets differ in kind (Conduit: an action's effect is wrong; BookStack, WebTestPilot's injected faults: displayed content is wrong on arrival), so the Conduit G3 result is specific to action-effect faults. BookStack faults are client-side DOM mutations (D32), not source faults.
+- **Environment gaps found by the agents (BookStack):** no mail server (I42); route-shape comparison is literal (I41); slow first page after a reset (I40).
+- **Pre-lock oracle limits (I44):** R16/R17 see one-step create forms only; R13 needs the worker's own edit page as evidence; probe tabs count as arrivals for BookStack's injector and their markers are not counted as exposures; mutation copies add items that other workers see. Related work for these rules: BACScan (CCS'25), InputBlaster (ICSE'24), Genie (OOPSLA'21).
+
+- **BookStack is a development app for v4 (D53, D54):** v4's false-alarm fixes were derived from BookStack resweeps, so Night 3 BookStack numbers are not held-out numbers; PrestaShop (D51) is the held-out test.
+- **Browser and non-functional families out of scope (D56):** the largest class in Marchetto et al.'s taxonomy (browser incompatibility, 49 of 676 bugs) and the protocol, performance, hosting and visual-layout families are not tested (Chromium only, functional oracles only). Synthetic family-benchmark faults are written by the authors and are easier than real ones.
+- **Family list partly shaped by LLM reviewer chats (D57):** 57 of 163 families came from a check of our table by ChatGPT and Claude; their cited papers were verified before use, and families backed only by the chats are marked 'our analysis'. EN1 (browser incompatibility) is now coverable by design (replay in Firefox/WebKit) but stays untested until R71 is built; until then the D56 threat stands.
+- **LLM contamination (D58):** the development and held-out apps are public, so the LLM explorer may know how they should behave (spec leakage), and reviewer chats could recall published bug lists; a rebranded BookStack control run is planned, and PrestaShop's and CATTest's fault lists stay unread.
+- **v4 false-alarm families left in the locked harness (I49):** I-create/I-edit compare the model's intent name, not the typed value (login intents, description names); R02 probes hidden anchors; R11 treats a numeric button as a page control. Not fixed: fixing them after seeing Night 3 would be tuning on test data.
+- **Exposure markers undercount reach on BookStack (I44, I49):** faults that fire on a page's 2nd arrival (BS03, BS04) were found by B4 but not marked as exposed.
 
 ## 9. Artifact
 - **Repo layout:** `src/webtester` (harness), `apps/realworld`, `apps/bookstack`, `configs/`, `scripts/run_batch.py`, `tests/` (offline and live), `logs/` (progress, decisions, issues, registry, notes, labels).

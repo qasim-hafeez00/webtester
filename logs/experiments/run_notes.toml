@@ -228,3 +228,445 @@ note = "B3v2-local rep 2. Run by the user. Healthy, budget-stopped, 116 steps, 2
 ["20261016-142654_realworld_b3v2local_n4_g1rep3"]
 status = "invalid"
 note = "B3v2-local rep 3. Run by the user. Stall of 265 s at step 50 (worker 2: one LLM call needed 6 retries, 127 s total latency, step took 276 s), 21-min wall clock. Invalid under D20 (stall > 60 s); the queue re-runs rep 3."
+
+["20261020-194916_realworld_b4_n4_g23rep1"]
+status = "invalid"
+note = "B4 rep 1, started by a GitHub Copilot agent loop in VS Code (not by the queue). Stall 71 s and 14 LLM retries, 20.3-min wall clock for 104 steps. Invalid under D20 (stall > 60 s); re-run as 20261024-133035."
+
+["20261024-133035_realworld_b4_n4_g23rep1"]
+status = "valid"
+note = "B4 rep 1. Primary key. Healthy, budget-stopped, 103 steps, 27 states, 37% duplicates. Checks 74 proposed / 23 violated / 17 skipped. Gate: 15 candidates, 5 confirmed, 10 rejected, 2.6 min; judge 3 calls, 878 tokens. Candidates hit F01 and F02, but the gate rejected the F01 candidate (POST comments 500 not reproduced on replay: recall loss), so confirmed detection is F02 only."
+
+["20261024-134546_realworld_b4nog1_n4_g23rep1"]
+status = "valid"
+note = "A-G1 rep 1 (B4 without the shared frontier). Primary key. Healthy, budget-stopped, 114 steps, 26 states, 57% duplicates. Checks 108 / 19 violated. Gate: 12 candidates, 9 confirmed; judge 8 x 'bug'. Found F02 (confirmed)."
+
+["20261024-140256_realworld_b4_n4_g23rep2"]
+status = "valid"
+note = "B4 rep 2. Primary key. Healthy, budget-stopped, 96 steps, 31 states, 31% duplicates. Gate: 10 candidates, 7 confirmed. F01 candidate (POST comments 500) rejected by the gate (not reproduced), so 0/10 confirmed: recall-loss case. 1 policy error (recovered)."
+
+["20261024-141705_realworld_b4nog1_n4_g23rep2"]
+status = "invalid"
+note = "A-G1 rep 2. Stall 92 s (one slow step), 0 LLM failures, budget-stopped at 115 steps. Invalid under D20; re-run as 20261024-143711."
+
+["20261024-143711_realworld_b4nog1_n4_g23rep2"]
+status = "valid"
+note = "A-G1 rep 2 (re-run). Primary key. Healthy, budget-stopped, 113 steps, 31 states, 57% duplicates. Gate: 13 candidates, 9 confirmed; judge 3 bug / 5 wrong_expectation. Found F02 (confirmed). Its PUT /api/user -> 504 did not reproduce (untriaged, cf. I20)."
+
+["20261024-145604_realworld_b4_n4_g23rep3"]
+status = "valid"
+note = "B4 rep 3. Primary key. Healthy, budget-stopped, 100 steps, 34 states, 32% duplicates. Gate: 12 candidates, 9 confirmed. Found F02 (confirmed). GET /api/profiles/worker02 -> 500 did not reproduce (untriaged)."
+
+["20261024-183536_realworld_b4nog1_n4_g23rep3"]
+status = "valid"
+note = "A-G1 rep 3. Primary key. Re-run of 20261024-151007 (killed at step ~108 when the laptop entered Modern Standby; no summary, so not listed). Healthy, budget-stopped, 111 steps, 20 states, 67% duplicates. Gate: 12 candidates, 8 confirmed. Found F02 (confirmed)."
+
+["20261024-185243_realworld_b3v2local_n4_g1rep3"]
+status = "invalid"
+note = "B3v2-local rep 3. 20 x 403 PERMISSION_DENIED from minute 9.75: the primary key ran out of quota and key_fallback rotated to a blocked project (I17). 83 steps. Re-run as 20261024-191133."
+
+["20261024-191133_realworld_b3v2local_n4_g1rep3"]
+status = "valid"
+note = "B3v2-local rep 3 (re-run). GEMINI_API_KEY_4 (D41; same model and settings). Healthy, budget-stopped, 124 steps, 37 states, 38% duplicates. Found F02. Also DELETE favorite -> 500 (untriaged, ungated condition)."
+
+["20261024-192558_realworld_b4_n4_g23rep4"]
+status = "valid"
+note = "B4 rep 4. Key 4 (D41). Healthy, budget-stopped, 98 steps, 30 states, 30% duplicates. Checks 69 / 6 violated. Gate: 10 candidates, 6 confirmed; judge 3 x 'bug'. Found F01 and F02, both confirmed (F01 replayed 3/3 in 1 step)."
+
+["20261024-193933_realworld_b4nog1_n4_g23rep4"]
+status = "valid"
+note = "A-G1 rep 4. Key 4 (D41). Healthy, budget-stopped, 114 steps, 25 states, 62% duplicates; max step gap 49.8 s (under the 60 s rule). Gate: 11 candidates, 4 confirmed. No seeded fault found. Three 5xx (DELETE follow 500, GET /api/tags 500, PUT /api/user 504) did not reproduce (untriaged)."
+
+["20261024-195602_realworld_b3v2local_n4_g1rep4"]
+status = "invalid"
+note = "B3v2-local rep 4. Key 4. Stall 69 s: one LLM call needed 1 retry and 100.6 s (worker 3, step 95); 0 LLM failures, budget-stopped. Invalid under D20; re-run."
+
+["20261024-203129_realworld_b3v2local_n4_g1rep4"]
+status = "invalid"
+note = "B3v2-local rep 4 re-run. Key 4 out of daily quota: 20 x 429 from minute 5.3, 21 steps. Re-run on key 5 as 20261024-205906."
+
+["20261024-205906_realworld_b3v2local_n4_g1rep4"]
+status = "valid"
+note = "B3v2-local rep 4. GEMINI_API_KEY_5 (D41). Healthy, budget-stopped, 123 steps, 22 states, 52% duplicates, 16 LLM retries (no failures). Found F01 and F02."
+
+["20261024-211443_realworld_b4_n4_g23rep5"]
+status = "valid"
+note = "B4 rep 5. Key 5 (D41). Healthy, budget-stopped, 98 steps, 28 states, 36% duplicates. Gate: 8 candidates, 6 confirmed, 1 rejected. Candidates hit F01 and F02; F01 confirmed (3/3 in 1 step), F02 console-error candidate not confirmed (recall-loss case)."
+
+["20261024-213301_realworld_b4nog1_n4_g23rep5"]
+status = "valid"
+note = "A-G1 rep 5. Key 5 (D41). Healthy, budget-stopped, 113 steps, 35 states, 44% duplicates; max step gap 48.6 s. Gate: 10 candidates, 6 confirmed. Found F02 (confirmed). POST /api/articles -> 504 did not reproduce (untriaged)."
+
+["20261024-215010_realworld_b3v2local_n4_g1rep5"]
+status = "valid"
+note = "B3v2-local rep 5. Key 5 (D41). Healthy, budget-stopped, 112 steps, 26 states, 51% duplicates. Found F01. Completes B3v2-local n = 5, and with it the Phase 2 B4 / A-G1 / B3v2-local queue (5 valid reps each)."
+
+["20261025-001435_realworld_b4_n2_h2pilot"]
+status = "pilot"
+note = "Harness v2 pilot (D42-D44), not counted: B4, 2 workers, 5 min / 60k tokens, key 6. Healthy, 30 steps. Agents clicked Popular Tags and the comment trash icon (D43), and the backend markers recorded F06 and F10 firing (never reached in the 40 earlier valid runs); frontend markers F02, F09. Gate v2: 4/4 confirmed, replay reasons logged, replay.jsonl saved. `regate` twice: run 1 rejected one timing-sensitive 'Your Settings' check (replay of a fresh sign-up), run 2 matched the original labels exactly."
+
+["20261025-002754_realworld_b3v2_n4_h2rep1"]
+status = "valid"
+note = "B3v2 rep 1, harness v2 (D42-D44), key 6 (D41). Healthy, budget-stopped, 114 steps, 35 states, 9 routes, 28% duplicates. Faults fired (markers): F05, F06, F07, F08, F09, F10. Implicit-rule faults: none."
+
+["20261025-004138_realworld_b4_n4_h2rep1"]
+status = "valid"
+note = "B4 rep 1, harness v2 (D42-D44), key 6 (D41). Healthy, budget-stopped, 97 steps, 34 states, 9 routes, 28% duplicates. Faults fired (markers): F06, F08, F09, F10. Implicit-rule faults: F01. Gate v2: 13 candidates, 6 confirmed, 7 rejected, 7.71 min; confirmed faults: none; judge {bug: 4, wrong_expectation: 1}. The F01 candidate (POST comments 500) was rejected by the gate, correctly: the backend never fired F01 in this run (exposure markers), so the 500 was not the seeded fault (I36)."
+
+["20261025-010045_realworld_b4nog1_n4_h2rep1"]
+status = "valid"
+note = "A-G1 rep 1, harness v2 (D42-D44), key 6 (D41). Healthy, budget-stopped, 109 steps, 23 states, 8 routes, 56% duplicates. Faults fired (markers): F05, F06, F07, F08, F09, F10. Implicit-rule faults: none. Gate v2: 8 candidates, 7 confirmed, 1 rejected, 2.22 min; confirmed faults: none; judge {wrong_expectation: 6, bug: 1}."
+
+["20261025-011515_realworld_b4nog3_n4_h2rep1"]
+status = "valid"
+note = "A-G3 rep 1, harness v2 (D42-D44), key 6 (D41). Healthy, budget-stopped, 105 steps, 33 states, 10 routes, 28% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 2 candidates, 2 confirmed, 0 rejected, 0.44 min; confirmed faults: F02; judge {}."
+
+["20261025-014552_realworld_b3v2_n4_h2rep2"]
+status = "valid"
+note = "B3v2 rep 2, harness v2 (D42-D44), key 7 (D41). Healthy, budget-stopped, 109 steps, 30 states, 11 routes, 29% duplicates. Faults fired (markers): F01, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F01. Re-run of 20261025-012717 (killed at step 42 when key 6 ran out; no summary)."
+
+["20261025-015757_realworld_b4_n4_h2rep2"]
+status = "valid"
+note = "B4 rep 2, harness v2 (D42-D44), key 7 (D41). Healthy, budget-stopped, 96 steps, 30 states, 9 routes, 27% duplicates. Faults fired (markers): F02, F05, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 12 candidates, 10 confirmed, 2 rejected, 7.2 min; confirmed faults: F02; judge {wrong_expectation: 3, bug: 4}."
+
+["20261025-021544_realworld_b4nog1_n4_h2rep2"]
+status = "valid"
+note = "A-G1 rep 2, harness v2 (D42-D44), key 7 (D41). Healthy, budget-stopped, 109 steps, 34 states, 8 routes, 42% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults: F01, F02. Gate v2: 10 candidates, 7 confirmed, 3 rejected, 2.8 min; confirmed faults: F02; judge {wrong_expectation: 3, bug: 3}. Its F01 candidate (500 on a 58-char comment) was not F01 (no backend marker) and was rejected by the gate (I36)."
+
+["20261025-023033_realworld_b4nog3_n4_h2rep2"]
+status = "valid"
+note = "A-G3 rep 2, harness v2 (D42-D44), key 7 (D41). Healthy, budget-stopped, 119 steps, 27 states, 9 routes, 31% duplicates. Faults fired (markers): F02, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 3 candidates, 3 confirmed, 0 rejected, 2.18 min; confirmed faults: F02; judge {}."
+
+["20261025-024555_realworld_b3v2_n4_h2rep3"]
+status = "invalid"
+note = "B3v2 rep 3, key 7. Key 7 out of daily quota: 20 × 429, 51 steps. Re-run on key 9 as 20261025-031552."
+
+["20261025-031552_realworld_b3v2_n4_h2rep3"]
+status = "valid"
+note = "B3v2 rep 3, harness v2 (D42-D44), key 9 (D41). Healthy, budget-stopped, 125 steps, 35 states, 10 routes, 35% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults: F02."
+
+["20261025-032940_realworld_b4_n4_h2rep3"]
+status = "valid"
+note = "B4 rep 3, harness v2 (D42-D44), key 9 (D41). Healthy, budget-stopped, 91 steps, 23 states, 8 routes, 30% duplicates. Faults fired (markers): F01, F02, F05, F06, F08, F09, F10. Implicit-rule faults: F01, F02. Gate v2: 13 candidates, 13 confirmed, 0 rejected, 3.45 min; confirmed faults: F01, F02; judge {wrong_expectation: 4, bug: 5}. F01 confirmed 3/3 in a 1-step replay (real: 334-char comment, backend marker present)."
+
+["20261025-034306_realworld_b4nog1_n4_h2rep3"]
+status = "valid"
+note = "A-G1 rep 3, harness v2 (D42-D44), key 9 (D41). Healthy, budget-stopped, 109 steps, 29 states, 9 routes, 54% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 20 candidates, 10 confirmed, 10 rejected, 7.89 min; confirmed faults: F02; judge {bug: 4, wrong_expectation: 5}."
+
+["20261025-040315_realworld_b4nog3_n4_h2rep3"]
+status = "valid"
+note = "A-G3 rep 3, harness v2 (D42-D44), key 9 (D41). Healthy, budget-stopped, 109 steps, 28 states, 12 routes, 40% duplicates. Faults fired (markers): F06, F08, F09, F10. Implicit-rule faults: none. Gate v2: 2 candidates, 1 confirmed, 1 rejected, 0.47 min; confirmed faults: none; judge {}."
+
+["20261025-041600_realworld_b3v2_n4_h2rep4"]
+status = "invalid"
+note = "B3v2 rep 4, key 9. Key 9 out of daily quota: 20 × 429, 42 steps. Re-run on key 10 as 20261025-044537."
+
+["20261025-044537_realworld_b3v2_n4_h2rep4"]
+status = "valid"
+note = "B3v2 rep 4, harness v2 (D42-D44), key 10 (D41). Healthy, budget-stopped, 115 steps, 34 states, 9 routes, 30% duplicates. Faults fired (markers): F01, F02, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F01, F02."
+
+["20261025-045812_realworld_b4_n4_h2rep4"]
+status = "valid"
+note = "B4 rep 4, harness v2 (D42-D44), key 10 (D41). Healthy, budget-stopped, 94 steps, 21 states, 9 routes, 27% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 9 candidates, 7 confirmed, 2 rejected, 2.95 min; confirmed faults: F02; judge {wrong_expectation: 1, bug: 5}."
+
+["20261025-051133_realworld_b4nog1_n4_h2rep4"]
+status = "valid"
+note = "A-G1 rep 4, harness v2 (D42-D44), key 10 (D41). Healthy, budget-stopped, 111 steps, 21 states, 8 routes, 62% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 11 candidates, 7 confirmed, 4 rejected, 3.12 min; confirmed faults: F02; judge {bug: 5, wrong_expectation: 1}."
+
+["20261025-052705_realworld_b4nog3_n4_h2rep4"]
+status = "valid"
+note = "A-G3 rep 4, harness v2 (D42-D44), key 10 (D41). Healthy, budget-stopped, 113 steps, 31 states, 10 routes, 26% duplicates. Faults fired (markers): F05, F06, F09, F10. Implicit-rule faults: none. Gate v2: 1 candidates, 1 confirmed, 0 rejected, 0.3 min; confirmed faults: none; judge {}."
+
+["20261025-053952_realworld_b3v2_n4_h2rep5"]
+status = "invalid"
+note = "B3v2 rep 5, key 10. Key 10 out of daily quota: 23 × 429 and a 593 s stall, 49 steps. Re-run on key _OLD as 20261025-061538."
+
+["20261025-061538_realworld_b3v2_n4_h2rep5"]
+status = "valid"
+note = "B3v2 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped, 117 steps, 29 states, 10 routes, 36% duplicates. Faults fired (markers): F01, F02, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F01, F02."
+
+["20261025-062837_realworld_b4_n4_h2rep5"]
+status = "valid"
+note = "B4 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped, 92 steps, 26 states, 8 routes, 29% duplicates. Faults fired (markers): F02, F05, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 10 candidates, 10 confirmed, 0 rejected, 2.74 min; confirmed faults: F02; judge {wrong_expectation: 2, bug: 6}."
+
+["20261025-064127_realworld_b4nog1_n4_h2rep5"]
+status = "valid"
+note = "A-G1 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped, 110 steps, 26 states, 8 routes, 57% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults: F02. Gate v2: 11 candidates, 8 confirmed, 3 rejected, 3.72 min; confirmed faults: F02; judge {bug: 2, unsure: 1, wrong_expectation: 3}."
+
+["20261025-065726_realworld_b4nog3_n4_h2rep5"]
+status = "valid"
+note = "A-G3 rep 5, harness v2 (D42-D44), key OLD (D41). Healthy, budget-stopped, 125 steps, 31 states, 10 routes, 33% duplicates. Faults fired (markers): F01, F02, F05, F06, F07, F08, F09, F10. Implicit-rule faults: F01, F02. Gate v2: 6 candidates, 2 confirmed, 4 rejected, 2.28 min; confirmed faults: F02; judge {}. F01 was real (2,510-char comment, backend marker) but every replay window, the full prefix included, hit missing elements: probably a cross-worker dependency (I32/I36)."
+
+["20261025-130539_realworld_b4_n2_h3pilot"]
+status = "pilot"
+note = "Harness v3 pilot (D46), not counted: B4, 2 workers, 5 min / 60k tokens, primary key. Healthy, 28 steps, median step 12.7 s (v2 pilot 13.1 s). 9 automatic after-reload twins ran; one twin re-checked the message \"body can't be blank\" after reload, which is meant to vanish, so the twin rule was narrowed before the counted runs: shows twins only for text typed in that step (D46). F08 found again ('No articles are here... yet.' expected on Your Feed), and the judge again said wrong_expectation. Gate: 1 confirmed, 3 unverified (could not replay). Markers: F06, F08, F09, F10."
+
+["20261025-131331_realworld_b3v2_n4_h3rep1"]
+status = "valid"
+note = "B3v2 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 113 steps, 31 states, 8 routes, 40% duplicates. Faults fired (markers): F05, F06, F09, F10. Implicit-rule faults (marker-checked, D46): none."
+
+["20261025-132615_realworld_b4_n4_h3rep1"]
+status = "valid"
+note = "B4 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 92 steps, 24 states, 9 routes, 35% duplicates. Faults fired (markers): F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 7 candidates, 6 confirmed, 0 flaky, 1 rejected, 0 unverified, 4.0 min; judge {'wrong_expectation': 4, 'bug': 1}. Persistence twins: 9 run, 1 violated."
+
+["20261025-134022_realworld_b4nog1_n4_h3rep1"]
+status = "valid"
+note = "A-G1 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 106 steps, 18 states, 7 routes, 62% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 16 candidates, 13 confirmed, 0 flaky, 3 rejected, 0 unverified, 5.0 min; judge {'bug': 9, 'wrong_expectation': 3}. Persistence twins: 18 run, 4 violated."
+
+["20261025-135835_realworld_b4nog3_n4_h3rep1"]
+status = "valid"
+note = "A-G3 rep 1, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 120 steps, 31 states, 9 routes, 45% duplicates. Faults fired (markers): F02, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 3 candidates, 2 confirmed, 0 flaky, 1 rejected, 0 unverified, 0.84 min."
+
+["20261025-160106_realworld_b3v2_n4_h3rep2"]
+status = "valid"
+note = "B3v2 rep 2, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 117 steps, 36 states, 8 routes, 31% duplicates. Faults fired (markers): F01, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01. Re-run of 20261025-141239, 20261025-150022 and 20261025-152933 (all browser pages crashed / process tree ended mid-run, no summary; I39)."
+
+["20261025-161401_realworld_b4_n4_h3rep2"]
+status = "valid"
+note = "B4 rep 2, harness v3 (D46), primary key (D41). Healthy, budget-stopped, 91 steps, 31 states, 9 routes, 32% duplicates. Faults fired (markers): F02, F05, F06, F08, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 10 candidates, 9 confirmed, 0 flaky, 0 rejected, 1 unverified, 4.53 min; judge {'wrong_expectation': 6, 'bug': 1}. Persistence twins: 10 run, 1 violated."
+
+["20261025-162853_realworld_b4nog1_n4_h3rep2"]
+status = "invalid"
+note = "A-G1 rep 2, harness v3 (D46), primary key. Primary key: 403 \"project has been denied access\" from about step 92, then 429 on probing; workers stopped (policy_unavailable). Re-run on key 4 as 20261025-164711."
+
+["20261025-164711_realworld_b4nog1_n4_h3rep2"]
+status = "valid"
+note = "A-G1 rep 2, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 100 steps, 16 states, 7 routes, 62% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 13 candidates, 12 confirmed, 0 flaky, 1 rejected, 0 unverified, 5.23 min; judge {'bug': 9, 'wrong_expectation': 2}. Persistence twins: 24 run, 6 violated. Re-run of 20261025-162853 (primary key: 403 project denied, then 429)."
+
+["20261025-170324_realworld_b4nog3_n4_h3rep2"]
+status = "valid"
+note = "A-G3 rep 2, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 112 steps, 37 states, 9 routes, 32% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 5 candidates, 3 confirmed, 0 flaky, 1 rejected, 1 unverified, 2.54 min."
+
+["20261025-171907_realworld_b3v2_n4_h3rep3"]
+status = "valid"
+note = "B3v2 rep 3, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 115 steps, 26 states, 8 routes, 38% duplicates. Faults fired (markers): F01, F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02."
+
+["20261025-173350_realworld_b4_n4_h3rep3"]
+status = "valid"
+note = "B4 rep 3, harness v3 (D46), key 4 (D41). Healthy, budget-stopped, 91 steps, 27 states, 8 routes, 31% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 13 candidates, 10 confirmed, 0 flaky, 2 rejected, 1 unverified, 8.85 min; judge {'wrong_expectation': 3, 'bug': 5}. Persistence twins: 4 run, 0 violated."
+
+["20261025-175301_realworld_b4nog1_n4_h3rep3"]
+status = "invalid"
+note = "A-G1 rep 3, harness v3 (D46), key 4. Key 4 out of daily quota: 20 x 429, 63 steps. Re-run on key 5 as 20261025-182745."
+
+["20261025-182745_realworld_b4nog1_n4_h3rep3"]
+status = "valid"
+note = "A-G1 rep 3, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 104 steps, 22 states, 7 routes, 60% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 17 candidates, 15 confirmed, 0 flaky, 1 rejected, 1 unverified, 7.8 min; judge {'wrong_expectation': 4, 'bug': 10}. Persistence twins: 20 run, 4 violated. Re-run of 20261025-175301 (key 4 out of quota) and 20261025-182403 (browser crash 2 min in, no summary; I39)."
+
+["20261025-184718_realworld_b4nog3_n4_h3rep3"]
+status = "valid"
+note = "A-G3 rep 3, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 118 steps, 27 states, 9 routes, 40% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 3 candidates, 3 confirmed, 0 flaky, 0 rejected, 0 unverified, 0.91 min."
+
+["20261025-190116_realworld_b3v2_n4_h3rep4"]
+status = "valid"
+note = "B3v2 rep 4, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 122 steps, 31 states, 9 routes, 40% duplicates. Faults fired (markers): F02, F05, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02."
+
+["20261025-191444_realworld_b4_n4_h3rep4"]
+status = "valid"
+note = "B4 rep 4, harness v3 (D46), key 5 (D41). Healthy, budget-stopped, 90 steps, 33 states, 9 routes, 28% duplicates. Faults fired (markers): F01, F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02. Gate: 18 candidates, 10 confirmed, 0 flaky, 1 rejected, 7 unverified, 8.39 min; judge {'bug': 4, 'wrong_expectation': 5}. Persistence twins: 10 run, 1 violated."
+
+["20261025-193304_realworld_b4nog1_n4_h3rep4"]
+status = "invalid"
+note = "A-G1 rep 4, harness v3 (D46), key 5. Key 5 out of daily quota: 20 x 429, 24 steps. Re-run on key 6 as 20261025-195417."
+
+["20261025-195417_realworld_b4nog1_n4_h3rep4"]
+status = "valid"
+note = "A-G1 rep 4, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 102 steps, 27 states, 9 routes, 44% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 19 candidates, 8 confirmed, 1 flaky, 1 rejected, 9 unverified, 9.4 min; judge {'bug': 5, 'wrong_expectation': 3}. Persistence twins: 17 run, 2 violated. Re-run of 20261025-193304 (key 5 out of quota)."
+
+["20261025-201539_realworld_b4nog3_n4_h3rep4"]
+status = "valid"
+note = "A-G3 rep 4, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 111 steps, 34 states, 8 routes, 33% duplicates. Faults fired (markers): F06, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 2 candidates, 1 confirmed, 0 flaky, 0 rejected, 1 unverified, 0.93 min."
+
+["20261025-202853_realworld_b3v2_n4_h3rep5"]
+status = "valid"
+note = "B3v2 rep 5, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 112 steps, 25 states, 8 routes, 36% duplicates. Faults fired (markers): F02, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02."
+
+["20261025-204124_realworld_b4_n4_h3rep5"]
+status = "valid"
+note = "B4 rep 5, harness v3 (D46), key 6 (D41). Healthy, budget-stopped, 90 steps, 28 states, 9 routes, 29% duplicates. Faults fired (markers): F02, F06, F07, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F02. Gate: 14 candidates, 11 confirmed, 0 flaky, 2 rejected, 1 unverified, 5.31 min; judge {'bug': 7, 'wrong_expectation': 1}. Persistence twins: 8 run, 1 violated."
+
+["20261025-205644_realworld_b4nog1_n4_h3rep5"]
+status = "invalid"
+note = "A-G1 rep 5, harness v3 (D46), key 6. Key 6 out of daily quota: 19 x 429 + 1 connection error, 69 steps. Re-run on key 7 (20261025-213520, then 20261025-220122)."
+
+["20261025-213520_realworld_b4nog1_n4_h3rep5"]
+status = "invalid"
+note = "A-G1 rep 5, harness v3 (D46), key 7. Stall rule (D20): 98.7 s without any step (one LLM call 49.7 s with 2 retries on key 7, API slowdown); budget-stopped otherwise. Re-run as 20261025-220122."
+
+["20261025-220122_realworld_b4nog1_n4_h3rep5"]
+status = "valid"
+note = "A-G1 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 102 steps, 32 states, 7 routes, 49% duplicates. Faults fired (markers): F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): none. Gate: 15 candidates, 10 confirmed, 0 flaky, 2 rejected, 3 unverified, 12.76 min; judge {'wrong_expectation': 6, 'bug': 4}. Persistence twins: 20 run, 4 violated. Re-run of 20261025-205644 (key 6 out of quota) and 20261025-213520 (98.7 s stall, API slowdown)."
+
+["20261025-222542_realworld_b4nog3_n4_h3rep5"]
+status = "valid"
+note = "A-G3 rep 5, harness v3 (D46), key 7 (D41). Healthy, budget-stopped, 114 steps, 38 states, 8 routes, 24% duplicates. Faults fired (markers): F01, F02, F05, F06, F08, F09, F10. Implicit-rule faults (marker-checked, D46): F01, F02. Gate: 2 candidates, 2 confirmed, 0 flaky, 0 rejected, 0 unverified, 0.53 min."
+
+["20261026-002235_bookstack_b4_n4_bspilot"]
+status = "smoke"
+note = "BookStack pilot (harness v3, 8 min cap, 4 workers): runs end to end; 5 persistence twins, no injector errors, 4 findings all gate-confirmed. Nothing changed after it."
+
+["20261026-003614_bookstack_b0_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-010635_bookstack_b3v2_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-011617_bookstack_b4_n4_bsrep1"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 1 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-012706_bookstack_b0_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-015722_bookstack_b3v2_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-020708_bookstack_b4_n4_bsrep2"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 2 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-022253_bookstack_b0_n4_bsrep3"]
+status = "invalid"
+note = "All 4 workers crashed at login 24 s after the reset: /login still loading (I40). Re-run as 20261026-025239."
+
+["20261026-025239_bookstack_b0_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-032252_bookstack_b3v2_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap). Key 9."
+
+["20261026-033158_bookstack_b4_n4_bsrep3"]
+status = "invalid"
+note = "Key 9 out of daily quota (20 x 429 from step 13). Re-run on key 10 as 20261026-035308 (D41)."
+
+["20261026-035308_bookstack_b4_n4_bsrep3"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 3 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-040751_bookstack_b0_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-043805_bookstack_b3v2_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-044724_bookstack_b4_n4_bsrep4"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 4 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-050332_bookstack_b0_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B0 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap)."
+
+["20261026-053349_bookstack_b3v2_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B3V2 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+["20261026-054319_bookstack_b4_n4_bsrep5"]
+status = "valid"
+note = "BookStack Night 2, B4 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+# Night 3 (harness v4, locked 540887e; b3v3 vs b4; Conduit h4rep, BookStack bs4rep)
+
+["20261027-080349_realworld_b3v3_n4_h4rep1"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 1 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-081619_realworld_b4_n4_h4rep1"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 1 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-083847_realworld_b3v3_n4_h4rep2"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 2 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-085147_realworld_b4_n4_h4rep2"]
+status = "invalid"
+note = "Key 7 out of daily quota, then Docker Desktop stopped; the gate never finished and no summary was written (I48). Re-run as 20261027-191138 on key 9."
+
+["20261027-190712_realworld_b4_n4_h4rep2"]
+status = "invalid"
+note = "Queue rerun failed at start: app unreachable (Docker Desktop stopped, I48). No files. Re-run as 20261027-191138."
+
+["20261027-191138_realworld_b4_n4_h4rep2"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 2 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-193928_realworld_b3v3_n4_h4rep3"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 3 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-195413_realworld_b4_n4_h4rep3"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 3 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-202658_realworld_b3v3_n4_h4rep4"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 4 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-204009_realworld_b4_n4_h4rep4"]
+status = "invalid"
+note = "Key 9 out of daily quota (I48). Re-run on key _OLD as 20261027-205941 (D41)."
+
+["20261027-205941_realworld_b4_n4_h4rep4"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 4 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-213133_realworld_b3v3_n4_h4rep5"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 5 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-214443_realworld_b4_n4_h4rep5"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 5 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-220951_bookstack_b3v3_n4_bs4rep1"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 1 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 1 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-224820_bookstack_b3v3_n4_bs4rep2"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 2 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 2 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-231755_bookstack_b3v3_n4_bs4rep3"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 3 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 3 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-234306_bookstack_b3v3_n4_bs4rep4"]
+status = "invalid"
+note = "Key 10 out of daily quota after 6 runs (I48). Re-run on key 5 as 20261027-235907 (D41)."
+
+["20261027-235907_bookstack_b3v3_n4_bs4rep4"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 4 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 4 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-003851_bookstack_b3v3_n4_bs4rep5"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 5 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 5 (harness v4 540887e, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."

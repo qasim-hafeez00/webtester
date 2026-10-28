@@ -131,6 +131,10 @@ async def run_crawler(run: RunContext, session: BrowserSession, cfg: RunConfig, 
         seen.update(fired)
         after = await session.observe()
         nsid = register(after)
+        if run.graph is not None:  # passive state graph (v4, D49): the crawler records, never uses it
+            run.graph.visit(worker, cur, obs.url, step, obs.title)
+            run.graph.visit(worker, nsid, after.url, step, after.title)
+            run.graph.transition(worker, cur, done, nsid, by="crawler", signals=len(signals))
         new_state = nsid not in run.states_seen
         run.states_seen.add(nsid)
         # The restore navigation is part of the reproduction path (it is not counted as an action).
@@ -166,6 +170,7 @@ async def _perform(session, obs, cur, kind, key, filler, run) -> list[dict]:
         run.actions_seen.add(akey)
         res = await session.execute(action, el.id if el else None, value)
         done.append({"do": action, "id": el.id if el else None, "value": value, "el": el.describe() if el else None,
+                     "ekey": el.key() if el else None,
                      "key": akey, "dup": dup, "ok": res.ok, "error": res.error, "url_after": res.url_after,
                      "out_of_scope": res.out_of_scope})
         return res

@@ -1,0 +1,80 @@
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+10:27 done logs/experiments/v5dev/bs4rep/v4_on_20261027-221950_bookstack_b4_n4_bs4rep1.json
+10:32 done logs/experiments/v5dev/bs4rep/v5_on_20261027-221950_bookstack_b4_n4_bs4rep1.json
+10:37 done logs/experiments/v5dev/bs4rep/v4_on_20261027-230029_bookstack_b4_n4_bs4rep2.json
+10:42 done logs/experiments/v5dev/bs4rep/v5_on_20261027-230029_bookstack_b4_n4_bs4rep2.json
+10:47 done logs/experiments/v5dev/bs4rep/v4_on_20261027-232821_bookstack_b4_n4_bs4rep3.json
+10:51 done logs/experiments/v5dev/bs4rep/v5_on_20261027-232821_bookstack_b4_n4_bs4rep3.json
+10:55 done logs/experiments/v5dev/bs4rep/v4_on_20261028-000919_bookstack_b4_n4_bs4rep4.json
+10:59 done logs/experiments/v5dev/bs4rep/v5_on_20261028-000919_bookstack_b4_n4_bs4rep4.json
+11:05 done logs/experiments/v5dev/bs4rep/v4_on_20261028-004736_bookstack_b4_n4_bs4rep5.json
+11:10 done logs/experiments/v5dev/bs4rep/v5_on_20261028-004736_bookstack_b4_n4_bs4rep5.json
+11:15 done logs/experiments/v5dev/bs4rep/v4_off_20261027-221950_bookstack_b4_n4_bs4rep1.json
+11:19 done logs/experiments/v5dev/bs4rep/v5_off_20261027-221950_bookstack_b4_n4_bs4rep1.json
+11:24 done logs/experiments/v5dev/bs4rep/v4_off_20261027-230029_bookstack_b4_n4_bs4rep2.json
+11:29 done logs/experiments/v5dev/bs4rep/v5_off_20261027-230029_bookstack_b4_n4_bs4rep2.json
+11:34 done logs/experiments/v5dev/bs4rep/v4_off_20261027-232821_bookstack_b4_n4_bs4rep3.json
+11:39 done logs/experiments/v5dev/bs4rep/v5_off_20261027-232821_bookstack_b4_n4_bs4rep3.json
+11:43 done logs/experiments/v5dev/bs4rep/v4_off_20261028-000919_bookstack_b4_n4_bs4rep4.json
+11:47 done logs/experiments/v5dev/bs4rep/v5_off_20261028-000919_bookstack_b4_n4_bs4rep4.json
+11:51 done logs/experiments/v5dev/bs4rep/v4_off_20261028-004736_bookstack_b4_n4_bs4rep5.json
+11:55 done logs/experiments/v5dev/bs4rep/v5_off_20261028-004736_bookstack_b4_n4_bs4rep5.json
+down
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+11:58 done logs/experiments/v5dev/h4rep/v4_on_20261027-081619_realworld_b4_n4_h4rep1.json
+12:01 done logs/experiments/v5dev/h4rep/v5_on_20261027-081619_realworld_b4_n4_h4rep1.json
+12:04 done logs/experiments/v5dev/h4rep/v4_on_20261027-191138_realworld_b4_n4_h4rep2.json
+12:07 done logs/experiments/v5dev/h4rep/v5_on_20261027-191138_realworld_b4_n4_h4rep2.json
+12:10 done logs/experiments/v5dev/h4rep/v4_on_20261027-195413_realworld_b4_n4_h4rep3.json
+12:13 done logs/experiments/v5dev/h4rep/v5_on_20261027-195413_realworld_b4_n4_h4rep3.json
+12:16 done logs/experiments/v5dev/h4rep/v4_on_20261027-205941_realworld_b4_n4_h4rep4.json
+12:20 done logs/experiments/v5dev/h4rep/v5_on_20261027-205941_realworld_b4_n4_h4rep4.json
+12:23 done logs/experiments/v5dev/h4rep/v4_on_20261027-214443_realworld_b4_n4_h4rep5.json
+12:25 done logs/experiments/v5dev/h4rep/v5_on_20261027-214443_realworld_b4_n4_h4rep5.json
+up at http://127.0.0.1:4100 with faults: none
+12:28 done logs/experiments/v5dev/h4rep/v4_off_20261027-081619_realworld_b4_n4_h4rep1.json
+12:32 done logs/experiments/v5dev/h4rep/v5_off_20261027-081619_realworld_b4_n4_h4rep1.json
+12:35 done logs/experiments/v5dev/h4rep/v4_off_20261027-191138_realworld_b4_n4_h4rep2.json
+12:39 done logs/experiments/v5dev/h4rep/v5_off_20261027-191138_realworld_b4_n4_h4rep2.json
+12:42 done logs/experiments/v5dev/h4rep/v4_off_20261027-195413_realworld_b4_n4_h4rep3.json
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 105, in main
+    ctl.up(faults, build=args.build)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 71, in up
+    self._compose(*args, env=env, timeout=1800)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 34, in _compose
+    raise AppControlError(f"docker compose {' '.join(args)} failed:\n{proc.stderr[-2000:]}")
+webtester.appctl.AppControlError: docker compose up -d failed:
+unable to get image 'conduit-backend': error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/images/conduit-backend/json": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+keep logs/experiments/v5dev/h4rep/v4_on_20261027-081619_realworld_b4_n4_h4rep1.json
+keep logs/experiments/v5dev/h4rep/v5_on_20261027-081619_realworld_b4_n4_h4rep1.json
+keep logs/experiments/v5dev/h4rep/v4_on_20261027-191138_realworld_b4_n4_h4rep2.json
+keep logs/experiments/v5dev/h4rep/v5_on_20261027-191138_realworld_b4_n4_h4rep2.json
+keep logs/experiments/v5dev/h4rep/v4_on_20261027-195413_realworld_b4_n4_h4rep3.json
+keep logs/experiments/v5dev/h4rep/v5_on_20261027-195413_realworld_b4_n4_h4rep3.json
+keep logs/experiments/v5dev/h4rep/v4_on_20261027-205941_realworld_b4_n4_h4rep4.json
+keep logs/experiments/v5dev/h4rep/v5_on_20261027-205941_realworld_b4_n4_h4rep4.json
+keep logs/experiments/v5dev/h4rep/v4_on_20261027-214443_realworld_b4_n4_h4rep5.json
+keep logs/experiments/v5dev/h4rep/v5_on_20261027-214443_realworld_b4_n4_h4rep5.json
+up at http://127.0.0.1:4100 with faults: none
+keep logs/experiments/v5dev/h4rep/v4_off_20261027-081619_realworld_b4_n4_h4rep1.json
+keep logs/experiments/v5dev/h4rep/v5_off_20261027-081619_realworld_b4_n4_h4rep1.json
+keep logs/experiments/v5dev/h4rep/v4_off_20261027-191138_realworld_b4_n4_h4rep2.json
+keep logs/experiments/v5dev/h4rep/v5_off_20261027-191138_realworld_b4_n4_h4rep2.json
+keep logs/experiments/v5dev/h4rep/v4_off_20261027-195413_realworld_b4_n4_h4rep3.json
+19:53 done logs/experiments/v5dev/h4rep/v5_off_20261027-195413_realworld_b4_n4_h4rep3.json
+19:56 done logs/experiments/v5dev/h4rep/v4_off_20261027-205941_realworld_b4_n4_h4rep4.json
+19:59 done logs/experiments/v5dev/h4rep/v5_off_20261027-205941_realworld_b4_n4_h4rep4.json
+20:02 done logs/experiments/v5dev/h4rep/v4_off_20261027-214443_realworld_b4_n4_h4rep5.json
+20:05 done logs/experiments/v5dev/h4rep/v5_off_20261027-214443_realworld_b4_n4_h4rep5.json
+down
+2026-10-28 20:05 resweep v5 done
