@@ -118,3 +118,14 @@
 "bs4rep|consistency|R08|/shelves/*|touched|/shelves/shelf-scriptalert1script-x99|updated" = "fp"
 "bs4rep|consistency|R08|/shelves/*|touched|/shelves/shelf-test-bnameb-at|updated" = "fp"
 "bs4rep|consistency|R09|/shelves||-recently viewed" = "fp"
+
+# Conduit resweep completed 28 Oct 20:05 (I52 resumed); remaining signatures labelled by the D45 rule (by = claude)
+"h4rep|consistency|R07c|/|tab: your feed|/profile/dave" = "F08"
+"h4rep|consistency|R07c|/|tab: your feed|/profile/worker01" = "F08"
+"h4rep|consistency|R07c|/|tab: your feed|/profile/worker03" = "F08"
+"h4rep|consistency|I-submit|/article/*|create|a very long comment text designed to test boundary limits and robustness " = "F01"
+"h4rep|consistency|I-create|/article/*|a very long comment text..." = "fp"
+"h4rep|consistency|I-create|/article/*|long comment" = "fp"
+"h4rep|consistency|R09|/article/*|flaky tests are a smell, part two|-post comment" = "fp"
+"h4rep|consistency|R09|/|postgres indexes you forgot about|+postgres" = "fp"
+"h4rep|off|consistency|I-delete|/article/*|testuser03october <n>, <n>" = "fp"

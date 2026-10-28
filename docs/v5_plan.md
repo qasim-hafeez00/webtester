@@ -34,7 +34,7 @@ starves them is fixed.
 | Gate | replay from the worker's step log in a fresh context restored with cookies + local storage, data reset before every replay, windows up to the full prefix, k = 3; judge advisory | `gate.py` |
 | Offline re-check | `resweep` replays recorded runs with the current oracles, no LLM | `runner.py`, `scripts/resweep_v5.sh` |
 | Labels | fault id, `new:` (real, unseeded), `U#` (upstream), `fp`; Claude labels, user blind-checks 20% (D45) | `logs/experiments/finding_labels.toml` |
-| Numbers | v5 resweep: BookStack median 6/13 reachable, precision 95%, clean false alarms 0.6/run; Conduit (faulty pass) median 5/8, precision 100% on labelled findings (provisional, I52). Gate recall loss 21% (ISSTA plan K5) | `logs/experiments/v5dev/` |
+| Numbers | v5 resweep (complete): BookStack median 6/13 reachable, precision 95%, clean false alarms 0.6/run; Conduit median 6/8 (F08 now found by R07c), precision 99%, clean false alarms 0.4/run. Gate recall loss 21% in v3, 2.5-5% in v4 (Night 3) | `logs/experiments/v5dev/` |
 
 ## 3. Instrument the recall funnel first
 
@@ -160,7 +160,7 @@ so the stage with the lowest pass rate is where the next week of work goes.
 | O-4 | Probe caps (6 mutation forms, 4 toggle probes, 6 access probes per run) are fixed by judgment | Cap hits logged as `capped`; caps re-set from the funnel, then frozen (E9) | 1 |
 | O-5 | Locale and viewport fixed (`en-US`, 1280 x 900) | M10 replay axes (R71) | 4 |
 | O-6 | Conduit's server faults leave no exposure record | Add a log line to each Conduit fault (S2 of the funnel) | 0 |
-| O-7 | D55 left-overs: R08 on a renamed or permission-saved shelf (0.4/run), R09 'Recently Viewed' read as an item (0.2/run) | Fix with the v5.0 changes | 1 |
+| O-7 | D55 left-overs. BookStack: R08 on a renamed or permission-saved shelf (0.4/run), R09 'Recently Viewed' read as an item (0.2/run). Conduit: R09 reading the 'Post Comment' button as a list item; I-delete unable to tell apart two comment cards whose only text is author and date | Fix with the v5.0 changes: R09 ignores form controls inside a card; I-delete keys a card by its position among identical cards, or abstains when two cards match | 1 |
 
 ## 5. New checks, ordered by the stage they serve
 

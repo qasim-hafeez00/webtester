@@ -4,9 +4,9 @@
 |---|---|
 | **Status as of** | 28 Oct 2026, evening PKT |
 | **Harness version** | v4 locked at commit `29b0940` (branch `phase2-harness-v4`); **v5 in development** (D55-D58, not yet committed or locked, §7.5) |
-| **Experiments done** | Phase 1 (B0 vs B1), G1 (B2, B3 v1, B3 v2), G2/G3 on Conduit (harness v1, v2, v3), BookStack held-out (v3), v4 development resweeps and pilots, Night 3 (v4 on Conduit and BookStack, labelled), v5 development resweeps of Night 3 (BookStack complete; Conduit 15 of 20 replays, interrupted, I52) |
-| **Latest** | v5 resweep on BookStack (28 Oct): faults per run median 3 → 6 of 13 reachable, precision 51% → 95%, clean-app false alarms 4.0 → 0.6 per run (§11.8). Fault-family table (163 families, D56-D57) and a v5 plan by recall stage with an evidence layer (D58, `docs/v5_plan.md`) |
-| **Next milestones** | Finish the Conduit resweep; v5.0 lock (target 2 Nov) and Night 4 (Conduit, BookStack, PrestaShop held-out); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
+| **Experiments done** | Phase 1 (B0 vs B1), G1 (B2, B3 v1, B3 v2), G2/G3 on Conduit (harness v1, v2, v3), BookStack held-out (v3), v4 development resweeps and pilots, Night 3 (v4 on Conduit and BookStack, labelled), v5 development resweeps of Night 3 on both apps (complete, labelled) |
+| **Latest** | v5 resweeps (28 Oct), v4 → v5 on the same recorded runs: BookStack faults per run median 3 → 6 of 13, precision 51% → 95%, clean-app false alarms 4.0 → 0.6 per run; Conduit 5 → 6 of 8 (F08 now found), 85% → 99%, 2.8 → 0.4 (§11.8). Fault-family table (163 families, D56-D57) and a v5 plan by recall stage with an evidence layer (D58, `docs/v5_plan.md`) |
+| **Next milestones** | v5.0 lock (target 2 Nov) and Night 4 (Conduit, BookStack, PrestaShop held-out); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
 | **Course** | AI4015 Agentic AI, FAST-NUCES, Fall 2026 (seed G2, "Agentic AI and MCP for Intelligent Software Engineering") |
 
 This is a living document. It explains the whole project, from the idea to the code to the results, for a reader who has not seen it before. New progress is added; earlier sections keep their numbers. Parts marked *generated* are refilled from the code and logs by `python scripts/guide_gen.py`.
@@ -15,6 +15,7 @@ This is a living document. It explains the whole project, from the idea to the c
 
 | Date | Change | Sections |
 |---|---|---|
+| 28 Oct 2026 | Conduit v5 resweep finished and labelled (I52 closed): 5 → 6 faults per run (F08 found by R07c), precision 85% → 99%, clean false alarms 2.8 → 0.4 per run | header, 1, 11.8, 13, 14 |
 | 28 Oct 2026 | v5 plan by recall stage (D58, `docs/v5_plan.md`): recall funnel, check outcomes, gaps by stage with verdicts, phases to the v5.0 (2 Nov) and v5.1 (30 Nov) locks; evidence layer built behind `capture_evidence` (response bodies, network timeline, transient messages, R57, R51). Guide brought up to v5: new §7.5 (v5 and the fault families), §8.3.5 (evidence layer), §11.8 (v5 resweeps); §7 renamed v1 to v5 | header, 0, 1, 7, 8.1-8.6, 10, 11.8-11.9, 12, 13, 14, 15, A, generated parts |
 | 28 Oct 2026 | v5 BookStack resweep: precision 51% → 95%, clean false alarms 4.0 → 0.6 per run (D55); fault-family coverage table for generality, `docs/fault_families.md` (D56): 106 families over 13 workflow primitives and 13 app types; extended the same day from two reviewer chats (D57) to 163 families, 16 primitives, 16 app types and 14 check mechanisms | changelog only |
 | 28 Oct 2026 | Night 3 labelled: final results and precision in §11.7 (corrects the provisional '5 of 6 semantic' to 4 of 6); §13, §14 updated | header, 11.7, 13, 14 |
@@ -107,7 +108,7 @@ Every day's work is in [logs/progress/](../logs/progress/), and every number mea
 
 The BookStack result shaped **harness v4** (locked 27 Oct). v4 stops asking the model to predict outcomes. Instead it checks the agents' stated intents and the app's internal consistency with deterministic rules. On replays of recorded runs on the fault-free apps, these rules raise 0.33 (Conduit) and 0.60 (BookStack) definite false alarms per run. Night 3 measured v4 on both apps (§11.7): 5 Conduit and 2 BookStack faults per run, against 1 and 0 for crash-style oracles.
 
-**Harness v5** (in development, §7.5) fixes the causes of v4's false alarms and misses measured in Night 3. Replayed over the same recorded BookStack runs without any LLM call, it doubles the faults found per run (3 → 6 of 13) and raises precision from 51% to 95% (§11.8). Two further steps came with it:
+**Harness v5** (in development, §7.5) fixes the causes of v4's false alarms and misses measured in Night 3. Replayed over the same recorded runs without any LLM call, it doubles the BookStack faults found per run (3 → 6 of 13) and raises precision from 51% to 95%. On Conduit it finds one more fault per run (5 → 6 of 8) at 99% precision (§11.8). Two further steps came with it:
 - a **fault-family table** (163 families from published web-bug taxonomies), so the rules target kinds of bugs apps share, not our two apps;
 - a **v5 plan organised by where recall is lost** (reaching the page, capturing evidence, the rule, the gate), with a new evidence layer that keeps response bodies and short-lived messages.
 
@@ -1900,18 +1901,20 @@ The 5 valid Night 3 `b4` runs per app were replayed with the locked v4 rules and
 
 | | BookStack v4 | BookStack v5 | Conduit v4 | Conduit v5 |
 |---|---|---|---|---|
-| Faults per run (labelled) | 2, 2, 3, 3, 4 (median 3 of 13 reachable) | **5, 6, 6, 7, 7 (median 6)** | 4, 5, 5, 5, 6 (median 5 of 8) | 4, 5, 5, 5, 6 (median 5) |
-| Precision, faulty app (labelled findings) | 21/41 = 51% | **56/59 = 95%** | 67/78 = 86% | **60/60 = 100%** (provisional) |
-| False alarms per run, clean app | 4.0 | **0.6** | 1.67 (3 of 5 runs) | 0.0 (2 of 5 runs) |
+| Faults per run (labelled) | 2, 2, 3, 3, 4 (median 3 of 13 reachable) | **5, 6, 6, 7, 7 (median 6)** | 4, 5, 5, 5, 6 (median 5 of 8) | **5, 6, 6, 6, 7 (median 6)** |
+| Precision, faulty app (labelled findings) | 21/41 = 51% | **56/59 = 95%** | 67/79 = 85% | **66/67 = 99%** |
+| False alarms per run, clean app | 4.0 | **0.6** | 2.8 | **0.4** |
 
 - **BookStack (complete, 20 of 20 replays).**
   - The gain comes from the recall fixes: R03 2.0 → 3.8 findings per run, R04 1.0 → 2.8, R08 0.4 → 4.6.
   - The false alarms removed are I-create on login intents and R02 on hidden links.
   - v5's remaining clean-app false alarms are R08 on a renamed or permission-saved shelf (0.4 per run) and R09 reading "Recently Viewed" as an item (0.2); both are listed for the v5.0 lock.
-- **Conduit (provisional).**
-  - The faulty pass is complete (10 of 10). The clean pass stopped after 5 of 10 replays when the PC was shut down (I52), so its numbers cover 3 v4 and 2 v5 runs; 7 signatures are still unlabelled.
-  - v5 keeps every fault v4 found and drops its I-create, I-edit and R12 findings.
-  - R07c (follow feed) adds 1 finding per run.
+- **Conduit (complete, 20 of 20 replays; the clean pass was interrupted by a shutdown and resumed, I52).**
+  - v5 keeps every fault v4 found and drops v4's I-create, I-edit and R12 false alarms.
+  - The new follow-feed rule R07c finds **F08** ("Your Feed" lists authors the user does not follow) in all 5 runs. F08 was missed by v4 and in every Night 3 run, so v5 finds one more fault per run.
+  - v5's remaining false alarms are two patterns, both listed for the v5.0 lock:
+    - R09 read the "Post Comment" button as a list item (once on the faulty app, once on the clean one);
+    - I-delete could not tell apart two comment cards whose only text was author and date (whitespace-only bodies).
 - **Caveat:** development numbers. The v5 rules were written with these runs in view (D55). The test is the locked v5 on PrestaShop (Night 4).
 
 ### 11.9 Reserved
@@ -1960,7 +1963,7 @@ From [paper ledger §8](paper_ledger.md):
 | RQ2 (G2) | v3: 69% → 74% on Conduit, 18% → 19% on BookStack, recall loss 21%. v4: 82% → 88% on Conduit, 38% → 48% on BookStack, recall loss 2.5–5% | The gate now keeps nearly all real findings; precision still short of 0.90, and most v4 false alarms come from two rules (I-create, R09) |
 | RQ3 (G3) | v3: Conduit 4/6 semantic faults, BookStack 0/18. v4: Conduit 3 semantic per run (4/6 across runs), BookStack 2 per run (5/18 across runs), against 0 for implicit oracles (p = 0.008) | v4 turns the BookStack zero into a positive, but on apps it was developed on; PrestaShop decides |
 | v4 | Locked; Night 3 labelled (§11.7) | Strong on both development apps; the test is PrestaShop |
-| v5 | D55 fixes built; BookStack resweep 51% → 95% precision, faults per run 3 → 6 (§11.8); Conduit resweep 15 of 20 replays done (I52); fault-family table (163 families) and v5 plan (D58); evidence layer built, off by default | Promising on replays of recorded runs; not yet locked or run live. The plan puts measurement (recall funnel, check outcomes) before new rules |
+| v5 | D55 fixes built; resweeps complete (§11.8): BookStack 51% → 95% precision, faults per run 3 → 6 of 13; Conduit 85% → 99%, 5 → 6 of 8; fault-family table (163 families) and v5 plan (D58); evidence layer built, off by default | Promising on replays of recorded runs; not yet locked or run live. The plan puts measurement (recall funnel, check outcomes) before new rules |
 | Engineering | Harness, 2 apps, 106 tests, full logging, resweep and regate tools, evidence layer | Complete for the course; paper-scale runs need a VM and paid API |
 
 Overall, the system and the measurement pipeline are in place. There is one robust positive result (G1 duplicates) and one important negative held-out result (v3 G3 on BookStack). v4, and now v5, is the attempt to turn the negative into a general method. Whether the locked v5 holds on an app it was not designed on (PrestaShop) decides the paper's framing.
@@ -1970,7 +1973,7 @@ Overall, the system and the measurement pipeline are in place. There is one robu
 | When | Work |
 |---|---|
 | 27–28 Oct | Night 3 done and labelled (§11.7); v5 fixes (D55) and resweeps (§11.8); fault families (D56, D57); v5 plan and evidence layer (D58) |
-| 28–30 Oct | **v5 phase 0:** finish the Conduit resweep (I52) and label it; recall-funnel script; Conduit exposure log; family tracker; the author's blind 20% re-label |
+| 28–30 Oct | **v5 phase 0:** Conduit resweep finished and labelled (done 28 Oct); recall-funnel script; Conduit exposure log; family tracker; the author's blind 20% re-label |
 | 30 Oct–2 Nov | **v5 phase 1:** check-outcome log; evidence layer on and measured; waits that poll to a deadline; session storage in gate replays; harness-health check; the D55 left-overs and exploration pilots (E1-E3); the cheap rules that run on the development apps. Set up PrestaShop and write D51 (its pre-registered targets) before any run. **v5.0 lock**, then Night 4 (Conduit, BookStack, PrestaShop) |
 | 1–4 Nov | Course paper (submitted 4 Nov), with v5.0 numbers |
 | 5–9 Nov | **Framing decision**: Option A (if v5 holds on PrestaShop): deterministic consistency oracles from the agents' run memory plus an evidence gate, with G1 as a supporting result. Option B (if not): an empirical study of what spec-free LLM web testers find and why they miss what they miss |
