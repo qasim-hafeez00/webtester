@@ -572,3 +572,101 @@ note = "BookStack Night 2, B3V2 rep 5 (harness v3, N = 4, 190k tokens, 30 min ca
 ["20261026-054319_bookstack_b4_n4_bsrep5"]
 status = "valid"
 note = "BookStack Night 2, B4 rep 5 (harness v3, N = 4, 190k tokens, 30 min cap). Key 10."
+
+# Night 3 (harness v4, locked 29b0940; b3v3 vs b4; Conduit h4rep, BookStack bs4rep)
+
+["20261027-080349_realworld_b3v3_n4_h4rep1"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 1 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-081619_realworld_b4_n4_h4rep1"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 1 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-083847_realworld_b3v3_n4_h4rep2"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 2 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 7; no 429s; all workers stopped on the token budget."
+
+["20261027-085147_realworld_b4_n4_h4rep2"]
+status = "invalid"
+note = "Key 7 out of daily quota, then Docker Desktop stopped; the gate never finished and no summary was written (I48). Re-run as 20261027-191138 on key 9."
+
+["20261027-190712_realworld_b4_n4_h4rep2"]
+status = "invalid"
+note = "Queue rerun failed at start: app unreachable (Docker Desktop stopped, I48). No files. Re-run as 20261027-191138."
+
+["20261027-191138_realworld_b4_n4_h4rep2"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 2 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-193928_realworld_b3v3_n4_h4rep3"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 3 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-195413_realworld_b4_n4_h4rep3"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 3 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-202658_realworld_b3v3_n4_h4rep4"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 4 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 9; no 429s; all workers stopped on the token budget."
+
+["20261027-204009_realworld_b4_n4_h4rep4"]
+status = "invalid"
+note = "Key 9 out of daily quota (I48). Re-run on key _OLD as 20261027-205941 (D41)."
+
+["20261027-205941_realworld_b4_n4_h4rep4"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 4 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-213133_realworld_b3v3_n4_h4rep5"]
+status = "valid"
+note = "Conduit Night 3, B3V3 rep 5 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-214443_realworld_b4_n4_h4rep5"]
+status = "valid"
+note = "Conduit Night 3, B4 rep 5 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key _old; no 429s; all workers stopped on the token budget."
+
+["20261027-220951_bookstack_b3v3_n4_bs4rep1"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 1 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 1 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-224820_bookstack_b3v3_n4_bs4rep2"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 2 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 2 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-231755_bookstack_b3v3_n4_bs4rep3"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 3 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 3 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 10; no 429s; all workers stopped on the token budget."
+
+["20261027-234306_bookstack_b3v3_n4_bs4rep4"]
+status = "invalid"
+note = "Key 10 out of daily quota after 6 runs (I48). Re-run on key 5 as 20261027-235907 (D41)."
+
+["20261027-235907_bookstack_b3v3_n4_bs4rep4"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 4 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 4 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-003851_bookstack_b3v3_n4_bs4rep5"]
+status = "valid"
+note = "BookStack Night 3, B3V3 rep 5 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"]
+status = "valid"
+note = "BookStack Night 3, B4 rep 5 (harness v4 29b0940, N = 4, 190k tokens, 30 min cap). Key 5; no 429s; all workers stopped on the token budget."

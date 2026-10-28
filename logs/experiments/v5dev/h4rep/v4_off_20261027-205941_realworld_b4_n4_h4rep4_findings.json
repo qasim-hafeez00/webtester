@@ -1,0 +1,170 @@
+[
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/, http://127.0.0.1:4100/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 56,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/lessscriptgreateralert%281%29lessscriptgreater-1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R12|/article/*|markup|content with markdown and <i>italics</i>",
+    "kind": "consistency",
+    "message": "[R12 T2] typed markup 'Content with markdown and <i>italics</i>.' is rendered as HTML, not shown as text",
+    "first_step": 57,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/lessbgreaterSpecial-Titlelessbgreater-Q57-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R12|/article/*|markup|content with markdown and <i>italics</i>",
+      "rule": "R12",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 6,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/article/*|a very long comment text...",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'A very long comment text...': the app accepted the write, but 'A very long comment text...' is shown neither on the page it led to nor where the flow started",
+    "first_step": 20,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/article/*|a very long comment text...",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|great article on flaky tests!",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'Great article on flaky tests!' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 23,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|great article on flaky tests!",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|testuser03october <n>, <n>",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'testuser03October 28, 2026' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 48,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|testuser03october <n>, <n>",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R11|/|page|<n>",
+    "kind": "consistency",
+    "message": "[R11 T2] clicking page control '2' left the list 'Why your cache is lying to you' unchanged (10 items)",
+    "first_step": 87,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R11|/|page|<n>",
+      "rule": "R11",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

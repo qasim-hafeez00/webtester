@@ -1,0 +1,44 @@
+[
+  {
+    "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-scriptalert1script-x99|updated",
+    "kind": "consistency",
+    "message": "[R08 T2] '16 hours ago', but an agent changed it 0 min ago (step 16)",
+    "first_step": 23,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-scriptalert1script-x99",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-scriptalert1script-x99|updated",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Recent Activity Worker 02 updated permissions Shelf <script>alert(1)</script> X99 0 seconds ago Worker 02 updated shelf Shelf <script>alert(1)</script> X99 10 s"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/shelves||-recently viewed",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Recently Viewed' disappeared from 'a list' (revisit at step 25, last seen step 5) and no action explains it",
+    "first_step": 25,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/shelves||-recently viewed",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

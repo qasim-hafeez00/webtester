@@ -51,21 +51,33 @@ from urllib.parse import parse_qsl, urljoin, urlsplit
 
 from .browser import INNER_TEXT_JS, NET_TYPES, OBSERVE_JS, Element, Observation, Signal
 from .memory import (EVENT_FEED, OFF, PERSONAL, RECENCY, SEARCH_FIELD, TITLE_FIELD, TOGGLES, Event, RunMemory, age_kind,
-                     age_minutes, classify, entity_key, norm)
+                     age_minutes, classify, entity_key, list_key, norm)
 from .oracles import normalise_message
 from .state import route_shape, value_class
 from .stategraph import is_navigation
+from .evidence import rule_messages, rule_payload
 
 MAX_PROBES = 2  # fresh-tab probes per step per worker
 MAX_LINK_CHECKS = 3  # link status requests per step per worker
 MAX_ACCESS_PROBES = 6  # R13 edit-address probes per worker per run
 MAX_RELOAD_PAGES = 20  # G2 reload checks per worker per run (one per route shape)
 MAX_MUTATION_FORMS = 6  # R16/R17 forms per run (all workers); 3 fresh-tab submissions each
+MAX_TOGGLE_PROBES = 4  # R19 count controls per run (all workers); 2 clicks each, the second undoes the first
+MAX_FEED_PROBES = 4  # R07c author pages per run (all workers)
+# a person's page: an item whose only link is its author is not about the item (D55 A5)
+_PERSON = re.compile(r"/(user|users|profile|profiles|u|member|members|people|author|authors|account|accounts)/[^/?#]+/?$", re.I)
+# a list of what this account follows (D55 A9): 'Your Feed', 'Following'
+FOLLOW_FEED = re.compile(r"\b(your|my)\s+feed\b|\bfollowing\b|\bfollowed\b|\bsubscriptions?\b", re.I)
+# fields whose markup is meant to render (Markdown or rich-text bodies): no R12 for them (D55 P8)
+_RICH_FIELD = re.compile(r"markdown|\bbody\b|content|\bhtml\b|rich|editor|article", re.I)
+# a page that lists what a search or tag link asked for (D55 P6): its title is not the link's
+_SEARCH_DEST = re.compile(r"[?&](term|search|q|query|tag|tags|filter|keyword)=|/(search|tags?)(/|$)", re.I)
 TIER = {"R01": "T1", "R02": "T1", "R03": "T1", "R04": "T1", "R05": "T1", "R06": "T1", "R07": "T1",
         "I-create": "T1", "I-edit": "T1", "I-delete": "T1", "I-toggle": "T1", "I-logout": "T1", "R16": "T1",
-        "R07b": "T2", "R04b": "T2", "R08": "T2", "R09": "T2", "R10": "T2", "R11": "T2", "R12": "T2", "R13": "T2",
+        "R19": "T1", "R07b": "T2", "R07c": "T2", "R18": "T2", "R04b": "T2", "R08": "T2", "R09": "T2", "R10": "T2", "R11": "T2", "R12": "T2", "R13": "T2",
         "R17": "T2", "I-filter": "T2", "I-submit": "T2", "I-error": "T2", "G1": "T2", "G2": "T2", "G3": "T2",
-        "R15": "T3"}
+        "R15": "T3",
+        "R51": "T2", "R57": "T2"}  # v5 evidence layer (D58), only with capture_evidence
 LLM_RULES = {"R15"}
 
 # ---------------------------------------------------------------------------- page facts
@@ -83,77 +95,99 @@ AUDIT_JS = r"""
   const HEAD = 'h1, h2, h3, h4, h5, h6, [role=heading]';
   const hrefOf = (a) => a ? (a.getAttribute('href') || '') : null;
   const absOf = (a) => { try { return a && a.getAttribute('href') ? new URL(a.getAttribute('href'), location.href).href : ''; } catch (e) { return ''; } };
-  const firstLink = (el) => el.matches('a') ? el : el.querySelector('a');
+  // An item's links, visible only (a hidden placeholder <a hidden href="link"> is no link, D55 P2). The item's
+  // own link is the first one that is not to a person: 'Admin created page Page 1' is about Page 1 (D55 A5).
+  const USER = /\/(user|users|profile|profiles|u|member|members|people|author|authors|account|accounts)\/[^/?#]+\/?$/i;
+  const linksOf = (el) => (el.matches('a[href]') ? [el] : []).concat(Array.from(el.querySelectorAll('a[href]'))).filter(vis);
+  const firstLink = (el) => { const ls = linksOf(el); return ls.find((a) => !USER.test(absOf(a))) || ls[0] || null; };
   const nameOf = (el) => {
-    const h = el.querySelector(HEAD + ', strong, b, .title, .name, [class*=title], [class*=name]');
+    const h = Array.from(el.querySelectorAll(HEAD + ', strong, b, .title, .name, [class*=title], [class*=name]'))
+      .find((x) => vis(x) && x.innerText.trim());
     const a = firstLink(el);
     return clean((h && h.innerText) || (a && a.innerText) || el.innerText.split('\n')[0], 100);
   };
+  // headings inside a link are item names (BookStack's <h4> in each entity link), not list headings (D55 A2)
+  const heads = (s) => Array.from(s.querySelectorAll(HEAD)).filter((h) => !h.closest('a') && vis(h));
   const headingFor = (container, firstItem) => {
     for (const c of container.children) {   // a heading inside the container, before the items
       if (c === firstItem) break;
-      if (c.matches(HEAD) || c.querySelector(HEAD)) return clean(c.innerText, 80);
+      if (c.matches(HEAD) || heads(c).length) return clean(c.innerText, 80);
     }
     let n = container;
     for (let d = 0; d < 5 && n && n !== B; d++) {
       let s = n.previousElementSibling;
       for (let k = 0; k < 4 && s; k++, s = s.previousElementSibling) {
         if (!vis(s)) continue;
-        if (s.matches(HEAD)) return clean(s.innerText, 80);
-        const hs = s.querySelectorAll(HEAD);
+        if (s.matches(HEAD) && !s.closest('a')) return clean(s.innerText, 80);
+        const hs = heads(s);
         if (hs.length) return clean(hs[hs.length - 1].innerText, 80);
       }
       n = n.parentElement;
     }
     return '';
   };
-  // Repeated siblings with the same tag and classes, each holding a link: a list.
+  // Repeated siblings with the same tag and a shared class (or the same class set), each holding a link: a
+  // list. A shared class, not the exact set: BookStack's results are 'book entity-list-item', 'page
+  // entity-list-item', ... and a phantom result has its own type class (D55 A1).
   const lists = [];
-  const owners = new Set();
   for (const el of B.querySelectorAll('*')) {
     if (el.children.length < 2 || !vis(el)) continue;
+    const kids = Array.from(el.children).filter(vis);
     const groups = new Map();
-    for (const c of el.children) {
-      if (!vis(c)) continue;
-      const k = c.tagName + '.' + Array.from(c.classList).sort().join('.');
-      if (!groups.has(k)) groups.set(k, []);
-      groups.get(k).push(c);
+    for (const c of kids) {
+      const keys = [c.tagName + '.' + Array.from(c.classList).sort().join('.')].concat(
+        Array.from(c.classList).map((x) => c.tagName + ':' + x));
+      for (const k of keys) { if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); }
     }
     let best = null;
     for (const g of groups.values()) if (g.length >= 2 && (!best || g.length > best.length)) best = g;
     if (!best || !best.every((c) => firstLink(c))) continue;
-    if (best.length < 2) continue;
-    owners.add(el);
     lists.push({ el, items: best });
   }
+  // A list inside one item of another list is part of that item (an activity entry's author and object
+  // links), unless the inner lists are long (a wrapper of real lists, e.g. dashboard columns) (D55 A1).
+  const inner = (L) => lists.filter((M) => M !== L && L.items.some((c) => c.contains(M.el)));
+  const drop = new Set();
+  for (const L of lists) {
+    const ins = inner(L);
+    if (!ins.length) continue;
+    const holding = L.items.filter((c) => ins.some((M) => c.contains(M.el))).length;
+    const wrapper = holding * 2 >= L.items.length && ins.some((M) => M.items.length >= 4);
+    if (wrapper) drop.add(L); else ins.filter((M) => M.items.length <= 3).forEach((M) => drop.add(M));
+  }
+  const kept = lists.filter((L) => !drop.has(L));
   const out = [];
   // One address can show different lists by tab ('Your Feed', 'Global Feed', '#tag' all at '/'):
   // an unheaded list is named by the selected tab, so a revisit compares the same list (D54).
   const tab = B.querySelector('[role=tablist] [aria-selected=true], .nav-pills .active, .nav-tabs .active, .tabs .active');
   const tabName = tab ? clean(tab.innerText, 60) : '';
-  for (const L of lists) {
-    // a wrapper whose every item holds another list is not a list of entities
-    if (L.items.every((c) => lists.some((M) => M !== L && c.contains(M.el)))) continue;
+  const headOf = new Map();
+  for (const L of kept) {
+    const heading = headingFor(L.el, L.items[0]) || (tabName && !L.el.closest(NAV) ? 'tab: ' + tabName : '');
+    headOf.set(L, heading);
     out.push({
-      heading: headingFor(L.el, L.items[0]) || (tabName && !L.el.closest(NAV) ? 'tab: ' + tabName : ''),
-      nav: !!L.el.closest(NAV),
+      heading, nav: !!L.el.closest(NAV),
       items: L.items.slice(0, 60).map((c) => { const a = firstLink(c);
-        return { name: nameOf(c), href: hrefOf(a), abs: absOf(a), text: clean(c.innerText, 240) }; }),
+        return { name: nameOf(c), href: hrefOf(a), abs: absOf(a), text: clean(c.innerText, 240),
+                 link_text: clean(a ? a.innerText : '', 100),
+                 links: linksOf(c).map(absOf).filter((u) => u && u !== absOf(a)).slice(0, 4) }; }),
     });
   }
-  // Short counted labels: "3 Books", "Comments (2)".
+  // Short counted labels: "3 Books", "Comments (2)" ("15 hours ago" is an age, not a count).
   const counts = [];
   for (const el of B.querySelectorAll('span, small, strong, b, div, p, a, li, h2, h3, h4, h5, h6, dt, dd, td, label')) {
     if (el.children.length > 3 || !vis(el)) continue;
     const t = clean(el.innerText, 41);
-    if (t.length > 40 || / of /i.test(t)) continue;
+    if (t.length > 40 || / of /i.test(t) || /\bago$/i.test(t)) continue;
     let m = t.match(/^(\d[\d,]*)\s+([A-Za-z][A-Za-z ]{1,24})$/);
     if (m) { counts.push({ n: +m[1].replace(/,/g, ''), unit: m[2].trim(), text: t, nav: !!el.closest(NAV) }); continue; }
     m = t.match(/^([A-Za-z][A-Za-z ]{1,24}?)\s*\((\d[\d,]*)\)$/);
     if (m) counts.push({ n: +m[2].replace(/,/g, ''), unit: m[1].trim(), text: t, nav: !!el.closest(NAV) });
   }
-  const itemOf = (node) => { for (const L of lists) for (const c of L.items) if (c.contains(node)) { const a = firstLink(c);
-    return [absOf(a), clean(a ? a.innerText : '', 60)]; } return ['', '']; };
+  const itemOf = (node) => { for (const L of kept) for (const c of L.items) if (c.contains(node)) { const a = firstLink(c);
+    const ls = linksOf(c);
+    return [absOf(a), clean(a ? a.innerText : '', 60), clean(c.innerText, 160), headOf.get(L) || '',
+            ls.length >= 2 && ls.some((x) => USER.test(absOf(x)))]; } return ['', '', '', '', false]; };
   // Relative ages with the words around them ("Created 2 days ago by Admin").
   const times = [];
   const REL = /\b(just now|yesterday|(in\s+)?(\d+|an?|one)\s+(second|sec|minute|min|hour|hr|day|week|month|year)s?(\s+ago)?)\b/i;
@@ -165,8 +199,9 @@ AUDIT_JS = r"""
     const p = tn.parentElement;
     if (!p || !vis(p) || p.closest('pre, code, textarea, script, style')) continue;
     const ctxEl = p.parentElement || p;
-    const [item, itemName] = itemOf(p);
-    times.push({ text: clean(v, 60), context: clean(ctxEl.innerText, 140), item, item_name: itemName });
+    const [item, itemName, itemText, listHeading, byPerson] = itemOf(p);
+    times.push({ text: clean(v, 60), context: clean(ctxEl.innerText, 140), item, item_name: itemName,
+                 item_text: itemText, list: listHeading, by_person: byPerson });
   }
   const tables = [];
   for (const t of Array.from(B.querySelectorAll('table')).filter(vis).slice(0, 3)) {
@@ -251,15 +286,29 @@ PRE_JS = r"""
       item = up;
     }
     const near = el.parentElement ? clean(el.parentElement.innerText, 60) : '';
+    // the icon's classes name the control when its text is only a count (Conduit's heart button: <i class="ion-heart"> 0)
+    const icons = Array.from(el.querySelectorAll('i, svg, span[class*=icon], [data-icon]'))
+      .map((x) => (x.getAttribute('class') || '') + ' ' + (x.getAttribute('data-icon') || '')).join(' ');
+    // a page control sits in a pagination container or in a run of page numbers (D55 P4)
+    const box = el.closest('li, span, div') || el.parentElement;
+    const run = box && box.parentElement ? Array.from(box.parentElement.children)
+      .filter((c) => /^\s*(\d{1,3}|›|»|‹|«|next|prev(ious)?)\s*$/i.test(c.innerText || '')).length : 0;
+    const own = num(el.innerText);
     out.click = { text: clean(el.innerText || el.value || '', 80), pressed: el.getAttribute('aria-pressed'),
-                  cls: (el.getAttribute('class') || '').slice(0, 80), number: num(el.innerText) ?? num(near.length <= 40 ? near : ''),
+                  cls: ((el.getAttribute('class') || '') + ' ' + icons).slice(0, 160), number: own ?? num(near.length <= 40 ? near : ''),
+                  own_number: own !== null, link: el.matches('a[href]') && !/^(#.*|javascript:.*|)$/i.test(el.getAttribute('href') || ''),
+                  pager: !!el.closest('.pagination, [class*=paginat], [class*=pager], nav[aria-label*=pag i]') || run >= 2,
                   item: item ? clean(item.innerText, 160) : '', submit: el.type === 'submit' || !!el.closest('form') };
     const f = el.form || el.closest('form');
     if (f) out.form_valid = f.checkValidity();
   }
   const first = ids.fill ? document.querySelector('[data-wt-id="' + ids.fill + '"]') : el;
-  const form = first ? (first.form || first.closest('form')) : null;
+  const form = first ? (first.form || first.closest('form')) : (el ? (el.form || el.closest('form')) : null);
   if (form) {
+    // an account form (password field) and a GET/search form make no create or edit expectation (D55 P1, P7)
+    out.form_password = !!form.querySelector('input[type=password]');
+    out.form_get = (form.getAttribute('method') || '').toLowerCase() === 'get' || /search/i.test(form.getAttribute('action') || '')
+      || !!form.querySelector('input[type=search]');
     for (const i of form.querySelectorAll('input, textarea')) {
       const t = (i.getAttribute('type') || '').toLowerCase();
       if (['password', 'hidden', 'checkbox', 'radio', 'submit', 'button', 'file'].includes(t)) continue;
@@ -278,8 +327,9 @@ POST_JS = r"""
   const clean = (s, n) => (s || '').replace(/\s+/g, ' ').trim().slice(0, n);
   const num = (s) => { const m = (s || '').match(/(?<![\w.])-?\d[\d,]*(?![\w])/); return m ? +m[0].replace(/,/g, '') : null; };
   const near = el.parentElement ? clean(el.parentElement.innerText, 60) : '';
+  const own = num(el.innerText);
   return { text: clean(el.innerText || el.value || '', 80), pressed: el.getAttribute('aria-pressed'),
-           number: num(el.innerText) ?? num(near.length <= 40 ? near : '') };
+           number: own ?? num(near.length <= 40 ? near : ''), own_number: own !== null };
 }
 """
 
@@ -306,6 +356,39 @@ FORM_JS = r"""
     if (v.trim()) vals.push(v.trim().slice(0, 200));
   }
   return { url: location.href, fields: vals.slice(0, 30) };
+}
+"""
+
+
+# R19: the first visible favourite/like control that shows a count, outside the navigation.
+TOGGLE_JS = r"""
+() => {
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const clean = (s, n) => (s || '').replace(/\s+/g, ' ').trim().slice(0, n);
+  const num = (s) => { const m = (s || '').match(/(?<![\w.])-?\d[\d,]*(?![\w])/); return m ? +m[0].replace(/,/g, '') : null; };
+  const LIKE = /favou?rite|\blike\b|heart|star|upvote|thumbs/i;
+  for (const el of document.querySelectorAll('button, a, [role=button]')) {
+    if (!vis(el) || el.closest('nav, header, footer, [role=navigation]')) continue;
+    const icons = Array.from(el.querySelectorAll('i, svg, span, [data-icon]')).map((x) => (x.getAttribute('class') || '') + ' ' + (x.getAttribute('data-icon') || '')).join(' ');
+    const label = (el.innerText || '') + ' ' + (el.getAttribute('class') || '') + ' ' + icons + ' ' + (el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '');
+    const n = num(el.innerText);
+    if (n === null || !LIKE.test(label) || /follow|unfollow/i.test(label)) continue;
+    if (el.matches('a[href]') && !/^(#.*|javascript:.*|)$/i.test(el.getAttribute('href') || '')) continue;
+    el.setAttribute('data-wt-toggle', '1');
+    const item = el.closest('li, tr, article, [class*=item], [class*=card], [class*=preview], [class*=entry]');
+    return { number: n, text: clean(el.innerText, 40), verb: /like|upvote|thumbs/i.test(label) && !/favou?rite|heart|star/i.test(label) ? 'like' : 'favourite',
+             item: item ? clean(item.innerText, 160) : '' };
+  }
+  return null;
+}
+"""
+
+TOGGLE_READ_JS = r"""
+() => {
+  const el = document.querySelector('[data-wt-toggle="1"]');
+  if (!el) return null;
+  const m = (el.innerText || '').match(/(?<![\w.])-?\d[\d,]*(?![\w])/);
+  return m ? { number: +m[0].replace(/,/g, '') } : null;
 }
 """
 
@@ -412,21 +495,28 @@ def rule_junk(plain: str, typed: set[str]) -> list[Violation]:
 _GENERIC = re.compile(r"^(more|show (all|more)|see (all|more)|view (all|more)|load more|all|next|previous|prev|"
                       r"back|edit|view|open|details|read more|«|»|‹|›|\.\.\.|…|\d+)$", re.I)
 _DEAD = re.compile(r"^(#.*|javascript:.*|)$", re.I)
+# names of controls that JS handles with href="#" ('Add shelf', 'Load more'): not entities
+_ACTION_NAME = re.compile(r"^(add|create|new|load|show|hide|toggle|expand|collapse|select|choose|remove|delete|"
+                          r"clear|reset|cancel|close|sort|filter|copy|share|print|download|upload|import|export)\b", re.I)
 
 
 def rule_dead_items(facts: Facts) -> list[Violation]:
-    """R03: a list item without a real link while (nearly) all its siblings have one."""
+    """R03: a list item without a real link while (nearly) all its siblings have one. A 2-item list
+    counts too (BookStack's 'Recently Created Shelves' with one shelf and a phantom, BS07, D55 A3):
+    the items share their tag and class, so the dead one has its sibling's structure."""
     out = []
     for L in facts.content_lists():
-        items = L["items"]
-        if len(items) < 3:
+        # an in-page anchor ('#recent-pages') jumps to a section: neither an entity link nor a dead one
+        items = [i for i in L["items"] if not re.match(r"^#.+", (i["href"] or "").strip())]
+        if len(items) < 2:
             continue
         dead = [i for i in items if i["href"] is not None and _DEAD.match(i["href"].strip())]
         live = len(items) - len(dead)
-        if not dead or len(dead) * 3 > len(items) or live < 2:
+        if not dead or live < 1 or (len(items) >= 3 and (len(dead) * 3 > len(items) or live < 2)) \
+                or (len(items) == 2 and len(dead) != 1):
             continue
         for i in dead:
-            if i["name"] and not _GENERIC.match(i["name"].strip()):
+            if i["name"] and not _GENERIC.match(i["name"].strip()) and not _ACTION_NAME.match(i["name"].strip()):
                 out.append(Violation("R03", f"{L['heading']}|{i['name']}",
                                      f"list item {i['name']!r} in {L['heading'] or 'a list'!r} links nowhere "
                                      f"(href {i['href']!r}) while {live} siblings have real links", i["text"]))
@@ -451,13 +541,21 @@ def rule_counts(facts: Facts) -> list[Violation]:
             continue
         for L in lists:
             words = {_unit(w) for w in re.findall(r"[A-Za-z]+", L["heading"] or "")}
-            if unit not in words or norm(c["text"]) in norm(L["heading"] or ""):
-                continue  # a heading that holds the count itself is a summary block, not that kind's list
-            names = {norm(i["name"]) for i in L["items"] if i["name"]}
+            own = norm(c["text"]) and norm(c["text"]) in norm(L["heading"] or "")
+            if own:
+                # the count heads this list ('3 total results found', D55 A4), unless the heading holds several
+                # counts or the items are counts: then it is a summary block ('6 Pages 4 Chapters 3 Books', D53)
+                if len(re.findall(r"\d[\d,]*", L["heading"] or "")) != 1 or \
+                        any(re.match(r"^\d[\d,]*\s+\w", i["name"] or "") for i in L["items"]):
+                    continue
+            elif unit not in words:
+                continue
+            # distinct items by name and link: two results both named 'Book...' are two (BookStack search)
+            names = {(norm(i["name"]), i.get("href") or "") for i in L["items"] if i["name"]}
             if len(names) > c["n"]:
                 out.append(Violation("R04", f"{L['heading']}|{unit}",
                                      f"{c['text']!r} but {len(names)} {c['unit']} are listed under {L['heading']!r}",
-                                     "; ".join(sorted(names))[:300]))
+                                     "; ".join(sorted(n for n, _ in names))[:300]))
     s = facts.showing
     m = facts.main_list()
     if s and m and s["b"] >= s["a"] and s["b"] <= s["n"]:
@@ -583,6 +681,15 @@ def same_name(a: str, b: str) -> bool:
     return bool(ta and tb) and len(ta & tb) / len(ta | tb) >= 0.5
 
 
+def shown(obj: str, text: str) -> bool:
+    """The typed value is on the page: as typed, or with its markup rendered ('<b>Name</b>' shows as 'Name')."""
+    o, t = norm(obj), norm(text)
+    if not o:
+        return False
+    plain = norm(re.sub(r"<[^>]{0,200}>", "", obj))
+    return o in t or (len(plain) >= 3 and plain != o and plain in t)
+
+
 def item_matches(item: dict, name: str, key: str) -> bool:
     return (key and item.get("abs") and entity_key(item["abs"]) == key) or same_name(item.get("name", ""), name) \
         or (name and norm(name) in norm(item.get("text", "")))
@@ -596,12 +703,19 @@ def diff_lists(prev: list, now: list) -> tuple[list, list]:
     return added, removed
 
 
+_PRIOR = re.compile(r'value="([^"]+)"')
+
+
 def explained(events: list[Event], name: str, href: str) -> bool:
+    """Some recorded action (any worker's) is about this item: its link's entity, its name among the
+    typed values, or, for an edit, the value a field held before (a renamed shelf's old name, D55 P3)."""
     key = entity_key(href) if href else ""
     for e in events:
         if key and e.target and e.target == key:
             return True
         cands = [e.obj, *e.fields.values()]
+        if e.verb in ("edit", "delete"):
+            cands += [m.group(1) for k in e.fields for m in [_PRIOR.search(k)] if m]
         if any(c and same_name(c, name) for c in cands):
             return True
     return False
@@ -682,10 +796,10 @@ def view_diff(a: Facts, b: Facts, events: list[Event], volatile: set) -> list[Vi
         A, B = la[h]["items"], lb[h]["items"]
         if len(A) >= 60 or len(B) >= 60:  # AUDIT_JS keeps 60 items: a longer list is cut
             continue
-        na = {norm(i["name"]): i["name"] for i in A if i["name"]}
-        nb = {norm(i["name"]): i["name"] for i in B if i["name"]}
-        added = [nb[k] for k in nb.keys() - na.keys() if not explained(events, nb[k], "")]
-        removed = [na[k] for k in na.keys() - nb.keys() if not explained(events, na[k], "")]
+        na = {norm(i["name"]): i for i in A if i["name"]}
+        nb = {norm(i["name"]): i for i in B if i["name"]}
+        added = [nb[k]["name"] for k in nb.keys() - na.keys() if not explained(events, nb[k]["name"], nb[k].get("abs", ""))]
+        removed = [na[k]["name"] for k in na.keys() - nb.keys() if not explained(events, na[k]["name"], na[k].get("abs", ""))]
         if not added and not removed:
             continue
         if (len(added) + len(removed)) * 2 > max(len(na), len(nb)):
@@ -771,6 +885,12 @@ class SweepState:
         self.mutated: set[tuple] = set()  # (form route shape, naming field key)
         self.mutation_forms = 0
         self.mutation_submits = 0
+        # R07c, R19
+        self.feed_done: set[tuple] = set()  # (worker, list key)
+        self.feed_probes = 0
+        self.toggle_done: set[str] = set()  # route shapes whose count controls were probed
+        self.toggle_probes = 0
+        self.markup_ok: set[str] = set()  # values typed into Markdown/rich-text fields
 
 
 INTENT_VERBS = {"create": "create", "add": "create", "new": "create", "post": "create", "publish": "create",
@@ -803,6 +923,8 @@ class Sweeper:
         self.account_pages: list[str] = []  # URLs that showed this worker's account name
         self.budget = MAX_PROBES
         self.t_before = time.time()  # when the step's actions began (G2: events since then explain changes)
+        self.feed_todo: list[tuple[str, list]] = []  # R07c: follow feeds seen this step
+        self.net_mark = 0  # v5 evidence layer (D58): network timeline position when the step began
 
     # ---------- before and right after the actions ----------
     async def before(self, session, obs: Observation, actions: list[dict]) -> None:
@@ -813,6 +935,9 @@ class Sweeper:
         ids = {"click": clicks[-1]["id"] if clicks else None, "fill": fills[0]["id"] if fills else None}
         session.mutations.clear()
         self.t_before = time.time()
+        if getattr(session, "evidence", False):  # D58: this step's responses and messages only
+            self.net_mark = session.net_mark()
+            await session.drain_messages()
         try:
             self.pre = await session.page.evaluate(PRE_JS, ids)
         except PWError:
@@ -838,7 +963,9 @@ class Sweeper:
             self.writes = list(session.mutations)
         typed = [d["value"] for d in done if d["do"] in ("fill", "select") and d.get("value")]
         mem.typed.update(t for t in typed if t and t.strip())
-        facts = await audit(session, sorted(mem.typed))
+        self.st.markup_ok.update(d["value"] for d in done if d["do"] == "fill" and d.get("value")
+                                 and _RICH_FIELD.search(d.get("el") or ""))
+        facts = await audit(session, sorted(mem.typed - self.st.markup_ok))
         url = facts.url or session.page.url
         mem.remember_page(self.worker, url, facts.text)
         if self.account and self.account.username and self.account.username.lower() in facts.text.lower():
@@ -865,12 +992,21 @@ class Sweeper:
         if self.llm_rules and suspect:
             viol += self._suspect(suspect, facts)
         viol += await self._probes(session, facts)
+        viol += await self._feed_check(session)
+        viol += await self._toggle_probe(session, facts)
         viol += await self._mutate(session, obs, done, ev, step)
         viol += await self._access(session, facts)
         viol += await self._reload(session, obs, done, facts)
+        if getattr(session, "evidence", False):
+            viol += await self._evidence(session)
         self.last = facts
         self.pages = (self.pages + [(route_shape(url), facts.h1)])[-6:]
         return [signal_of(v, obs.url if v.rule.startswith("I-") else url) for v in viol]
+
+    async def _evidence(self, session) -> list[Violation]:
+        """D58: R57 (2xx answers with an error body) and R51 (success and error messages together)."""
+        await session.flush_bodies()
+        return rule_payload(session.net_since(self.net_mark)) + rule_messages(await session.drain_messages())
 
     # ---------- M1: what this step did ----------
     def _event(self, obs: Observation, done: list[dict], step: int, intent: dict | None, facts: Facts,
@@ -892,6 +1028,9 @@ class Sweeper:
             verb = classify(el_txt)
             if verb in TOGGLES and click_pre.get("pressed") == "true":
                 verb = TOGGLES[verb]
+        accepted = any(200 <= m["status"] < 400 for m in self.writes)
+        if verb in (*TOGGLES, *OFF) and click_pre.get("link") and not accepted:
+            verb, obj = "", ""  # a link that only navigates ('Favorited Posts' tab) is no toggle (D55 P9)
         if not verb and done[-1]["do"] == "press" and fills:
             verb = "save"
         search_fill = next((d for d in fills if SEARCH_FIELD.search(d.get("el") or "")), None)
@@ -904,7 +1043,14 @@ class Sweeper:
                     re.search(r"/(tags?|categor(y|ies)|topics?|labels?)/", href or "") or \
                     re.search(r"\btag-pill\b|\btag-default\b|\bchip\b", click_pre.get("cls") or ""):
                 verb, obj = "filter", click_pre.get("text") or _el_text(last)
-        accepted = any(200 <= m["status"] < 400 for m in self.writes)
+        if verb in ("search", "filter") and source == "intent":
+            # the term is what was typed or the link clicked, never the model's words or a checkbox label (D55 P7)
+            typed_term = next((d["value"] for d in fills if d["do"] == "fill"), "")
+            obj = typed_term or (_el_text(last) if last and click_pre.get("link") else "")
+        if verb in ("create", "edit", "save") and pre.get("form_password"):
+            # an account form (sign in, sign up, reset, password change) creates no content to look for (D55 P1)
+            signin = any("password" in (d.get("el") or "").lower() for d in done if d["do"] in ("fill", "type"))
+            verb, obj = ("login" if signin else "account"), ""
         if verb == "create" and not fills:
             if not accepted:
                 self.flow_start = obs.url  # 'New Book' opens the form: remember where the flow began
@@ -924,10 +1070,19 @@ class Sweeper:
             lab = re.sub(r"^\[\d+\]\s*", "", d.get("el") or "")[:60]
             if "password" not in lab.lower():
                 fields[lab] = d["value"]
-        if not obj and verb in ("create", "edit"):
-            title = next((v for k, v in fields.items() if TITLE_FIELD.search(k)), None)
-            obj = title or next((v for k, v in fields.items() if len(v.strip()) >= 3 and not NOT_A_NAME.search(k)), "")
+        if verb in ("create", "edit"):
+            # the object is named by what was typed: the model's own words ('special comment', 'session',
+            # 'worker02 settings') are not what the app will show (D55 P1, I49)
+            title = next((v for k, v in fields.items() if TITLE_FIELD.search(k) and v.strip()), None)
+            named = title or next((v for k, v in fields.items() if len(v.strip()) >= 3 and not NOT_A_NAME.search(k)), "")
+            if not (obj and any(norm(obj) and norm(obj) in norm(v) for v in fields.values())):
+                obj = named
         target = ""
+        if verb == "edit" and "*" in route_shape(obs.url):
+            # the item an edit form belongs to: '/shelves/shelf/edit' edits '/shelves/shelf' (D55 P3)
+            base = re.sub(r"/(edit|update|settings)/?$", "", urlsplit(obs.url).path)
+            if base != urlsplit(obs.url).path:
+                target = entity_key(base)
         if verb in ("delete", "add", *TOGGLES, *OFF):
             item = click_pre.get("item") or ""
             if not obj and item and norm(item) != norm(facts.h1):
@@ -968,16 +1123,21 @@ class Sweeper:
                 out.append(Violation("I-error", f"{e.verb}|{new_err[0][:60]}",
                                      f"{e.verb} {e.obj!r}: the app reports {new_err[0][:120]!r}", new_err[0]))
             if not accepted and not moved:
-                search_form = any(SEARCH_FIELD.search(k) for k in e.fields)
+                search_form = any(SEARCH_FIELD.search(k) for k in e.fields) or pre.get("form_get")
+                failed = [m for m in self.writes if m["status"] >= 500]
                 if e.verb in ("create", "edit") and e.fields and not search_form and facts.url == obs.url \
                         and pre.get("form_valid") is not False and click_pre.get("submit") \
                         and self.last is not None and norm(facts.text) == norm(self.last.text) and not new_err:
+                    what = (f"the write failed ({failed[0]['method']} {failed[0]['path']} -> HTTP {failed[0]['status']})"
+                            if failed else "nothing was sent") + " and the page did not change"
                     out.append(Violation("I-submit", f"{e.verb}|{e.obj}", f"{e.verb} {e.obj!r}: a valid form was "
-                                         "submitted, but nothing was sent and the page did not change"))
+                                         f"submitted, but {what}"))
                 e.status, e.note = "unknown", "nothing sent"
                 return out
         if (e.verb in TOGGLES or e.verb in OFF) and accepted:
             before, after = click_pre.get("number"), (self.post or {}).get("number")
+            if e.verb in ("follow", "unfollow") and not (click_pre.get("own_number") and (self.post or {}).get("own_number")):
+                before = after = None  # a follow button shows no count; a number beside it is something else (D55 P9)
             if before is not None and after is not None:
                 want = 1 if e.verb in TOGGLES else -1
                 if after - before != want:
@@ -987,10 +1147,13 @@ class Sweeper:
             e.status = "verified"
         if e.verb == "add" and accepted:
             e.status = "verified"
-        if e.verb in ("create", "edit") and e.obj and norm(e.obj) in norm(facts.text):
+        if e.verb in ("create", "edit") and e.obj and shown(e.obj, facts.text):
             e.status = "verified"
         if e.verb in ("create", "edit") and not e.target and moved:
             e.target = entity_key(facts.url)
+        if e.target and e.verb in ("create", "edit"):
+            ent = self.mem.entity(e.target)  # R08 compares the item's shown ages with this (D55 A7)
+            ent.touched, ent.last_step = e.t, e.step
         return out
 
     # ---------- pending effects, checked when due ----------
@@ -998,7 +1161,7 @@ class Sweeper:
         out = []
         for e in self.mem.pending(self.worker):
             if e.verb in ("create", "edit"):
-                if e.obj and norm(e.obj) in norm(facts.text):
+                if e.obj and shown(e.obj, facts.text):
                     e.status = "verified"
                     continue
                 if step < e.due or not e.written:
@@ -1017,7 +1180,7 @@ class Sweeper:
                     if text is None:
                         found = True  # could not load: no evidence against the app
                         break
-                    if norm(e.obj) in norm(text):
+                    if shown(e.obj, text):
                         found = True
                         break
                 e.status = "verified" if found else "conflict"
@@ -1142,6 +1305,8 @@ class Sweeper:
                   and not EVENT_FEED.search(L["heading"] or "")]
             ur = []
             for idx, r in removed:
+                if EVENT_FEED.search(L["heading"] or ""):
+                    continue  # new entries push old ones out of an activity feed (D55 P3; 6 BookStack false alarms)
                 if explained([e for e in evs if e.verb in ("delete", "edit", "unfavourite", "unfollow", "unlike")], r[0], r[1]):
                     continue
                 tail = all((norm(x[0]), x[1]) not in {(norm(n), h) for n, h in items} for x in prev.items[idx:])
@@ -1160,6 +1325,13 @@ class Sweeper:
             for r in ur:
                 out.append(Violation("R09", f"{L['heading']}|-{r[0]}", f"{r[0]!r} disappeared from {L['heading'] or 'a list'!r} "
                                      f"(revisit at step {step}, last seen step {prev.step}) and no action explains it"))
+        # R07c: a feed of what this account follows, to be checked against the authors' pages (D55 A9)
+        for L in facts.content_lists():
+            if FOLLOW_FEED.search(L["heading"] or "") and L["items"]:
+                k = (self.worker, list_key(facts.url, L["heading"]))
+                if k not in self.st.feed_done:
+                    self.st.feed_done.add(k)
+                    self.feed_todo.append((L["heading"], L["items"][:2]))
         # observed toggle states on this page (the viewer's own favourite/follow state)
         here = entity_key(facts.url)
         for t in facts.toggles:
@@ -1171,39 +1343,79 @@ class Sweeper:
         return out
 
     def _ages(self, facts: Facts, step: int) -> list[Violation]:
-        """R08: ages of the same item across pages, and of items an agent just touched."""
+        """R08: ages of the same item across pages, and of items an agent just touched. R18: time order
+        of one item: nothing about it is older than its creation, and its 'updated' age is not older
+        than an update entry in an activity feed (D55 A6; BookStack BS09-BS11). An activity entry
+        ('Admin created page Page 1 15 hours ago') is about its object link, not its author (A5)."""
         mem, out, now = self.mem, [], time.time()
+        page = entity_key(facts.url)
         for t in facts.times:
             minutes = age_minutes(t["text"])
             if minutes is None:
                 continue
             kind = age_kind(t["context"])
+            if kind == "other" and t.get("item_text"):
+                kind = age_kind(t["item_text"])
+            feed = bool(EVENT_FEED.search(t.get("list") or "")) or bool(t.get("by_person"))
             item = t["item"]
             name = t.get("item_name") or ""
             if item and name and re.search(r"\bby\s+" + re.escape(name), t["context"], re.I):
                 item = ""  # 'Created 2 days ago by Admin': the link is the author, not the item
+            if item and _PERSON.search(entity_key(item)) and not re.search(r"joined|registered|member since",
+                                                                           t["context"], re.I):
+                item = ""  # a time next to a person's link (a comment's author) is not the person's age
             if not item and "*" not in route_shape(facts.url):
                 continue  # a time on a list page that belongs to no list item: we cannot tell whose it is
-            key = entity_key(item) if item else entity_key(facts.url)
+            key = entity_key(item) if item else page
             if minutes < 0 and kind in ("created", "updated"):
                 out.append(Violation("R08", f"future|{key}", f"{kind} time in the future: {t['context'][:80]!r}"))
                 continue
-            ent = mem.entities.get(key)
-            if ent is None:
-                ent = mem.entity(key)
-            if ent.touched and kind in ("updated", "other"):
+            ent = mem.entities.get(key) or mem.entity(key)
+            if ent.touched:
                 since = (now - ent.touched) / 60
                 last_ev = next((e for e in reversed(mem.events) if e.target == key and e.verb in ("create", "edit")), None)
-                if last_ev and last_ev.status == "verified" and minutes > since + 60 and age_conflict(minutes, since, 0):
-                    out.append(Violation("R08", f"touched|{key}", f"{t['context'][:80]!r}, but an agent changed it "
-                                         f"{since:.0f} min ago (step {last_ev.step})"))
-            page = entity_key(facts.url)
-            for (k2, p2), (m2, txt2, w2, s2, t2) in list(ent.ages.items()):
-                if k2 == kind and kind != "other" and p2 != page and age_conflict(minutes, m2 + (now - t2) / 60, (now - t2) / 60):
-                    out.append(Violation("R08", f"views|{key}|{kind}", f"the same item shows {kind} {t['text']!r} here "
-                                         f"but {txt2!r} on {p2} (step {s2})", t["context"]))
+                # what the run created or changed minutes ago cannot read days old (created: own creates only)
+                ok_kind = kind in ("updated", "other") or (kind == "created" and last_ev is not None and last_ev.verb == "create")
+                if ok_kind and last_ev and last_ev.status == "verified" and minutes > since + 60 \
+                        and age_conflict(minutes, since, 0):
+                    out.append(Violation("R08", f"touched|{key}|{kind}", f"{t['context'][:80]!r}, but an agent "
+                                         f"{'created' if last_ev.verb == 'create' else 'changed'} it {since:.0f} min ago "
+                                         f"(step {last_ev.step})", t.get("item_text") or t["context"]))
+            for (k2, p2, f2), (m2, txt2, w2, s2, t2) in list(ent.ages.items()):
+                then = m2 + (now - t2) / 60  # that age, as of now
+                dt = (now - t2) / 60
+                if p2 == page and f2 == feed:
+                    continue
+                if k2 == kind == "created" and age_conflict(minutes, then, dt):
+                    out.append(Violation("R08", f"views|{key}|created", f"the same item shows created {t['text']!r} "
+                                         f"here but {txt2!r} on {p2} (step {s2})", t.get("item_text") or t["context"]))
                     break
-            ent.ages[(kind, page)] = (minutes, t["text"], self.worker, step, now)
+                if k2 == kind == "updated" and not feed and not f2 and p2 != page and age_conflict(minutes, then, dt):
+                    out.append(Violation("R08", f"views|{key}|updated", f"the same item shows updated {t['text']!r} "
+                                         f"here but {txt2!r} on {p2} (step {s2})", t["context"]))
+                    break
+                # R18: older than its own creation
+                if k2 == "created" and kind != "created" and (feed or kind == "updated") and minutes > then \
+                        and age_conflict(minutes, then, dt):
+                    out.append(Violation("R18", f"before-created|{key}", f"{t['text']!r} ({kind}"
+                                         f"{', activity' if feed else ''}) is older than the item itself, created "
+                                         f"{txt2!r} on {p2} (step {s2})", t.get("item_text") or t["context"]))
+                    break
+                if kind == "created" and k2 != "created" and (f2 or k2 == "updated") and then > minutes \
+                        and age_conflict(minutes, then, dt):
+                    out.append(Violation("R18", f"before-created|{key}", f"{txt2!r} ({k2} on {p2}, step {s2}) is "
+                                         f"older than the item itself, created {t['text']!r} here",
+                                         t.get("item_text") or t["context"]))
+                    break
+                # R18: the last update is not older than an update the activity feed shows
+                if kind == k2 == "updated" and feed != f2:
+                    last, entry = (minutes, then) if not feed else (then, minutes)
+                    if last > entry and age_conflict(last, entry, dt):
+                        out.append(Violation("R18", f"stale-updated|{key}", f"the item reads updated "
+                                             f"{(t['text'] if not feed else txt2)!r}, but an activity entry shows an "
+                                             f"update {(txt2 if not feed else t['text'])!r}", t.get("item_text") or t["context"]))
+                        break
+            ent.ages[(kind, page, feed)] = (minutes, t["text"], self.worker, step, now)
         return out
 
     def _link_vs_dest(self, obs: Observation, done: list[dict], facts: Facts) -> list[Violation]:
@@ -1214,12 +1426,13 @@ class Sweeper:
         if not href or _DEAD.match(href):
             return []
         dest = urljoin(obs.url, href)
-        if route_shape(facts.url) == route_shape(obs.url):
-            return []
+        if route_shape(facts.url) == route_shape(obs.url) or _SEARCH_DEST.search(dest) or _SEARCH_DEST.search(facts.url):
+            return []  # a tag or search link opens results, titled 'Search Results' by design (D55 P6)
         for L in self.last.content_lists():
             for i in L["items"]:
                 if i.get("abs") and entity_key(i["abs"]) == entity_key(dest) and i["name"] and not _GENERIC.match(i["name"]):
-                    if not same_name(i["name"], facts.h1) and not same_name(i["name"], facts.title):
+                    names = [i["name"], i.get("link_text") or ""]
+                    if not any(n and (same_name(n, facts.h1) or same_name(n, facts.title)) for n in names):
                         return [Violation("R10", f"{i['name']}", f"the link {i['name']!r} in {L['heading'] or 'a list'!r} "
                                           f"opens a page titled {facts.h1!r}")]
                     return []
@@ -1234,6 +1447,8 @@ class Sweeper:
             return []
         if (self.pre or {}).get("click", {}) and "active" in (done[0].get("el") or ""):
             return []
+        if not ((self.pre or {}).get("click") or {}).get("pager"):
+            return []  # a number outside a pager is a count (Conduit's favourite button '0', D55 P4)
         a, b = self.last.main_list(), facts.main_list()
         if not a or not b or len(a["items"]) < 3:
             return []
@@ -1280,6 +1495,8 @@ class Sweeper:
                 k = entity_key(u)
                 if k in self.st.link_status:
                     continue
+                if any(e.target == k and e.verb in ("edit", "delete") for e in self.mem.events):
+                    continue  # renamed (old slug) or deleted by an agent: a 404 is right (D55 P3)
                 st, _ = await self._fetch(session, u, body=False)
                 checks += 1
                 self.st.link_checks += 1
@@ -1330,6 +1547,85 @@ class Sweeper:
         if phantoms:
             return [Violation("R05", "phantom", f"a search for the made-up word {token!r} lists "
                               f"{', '.join(repr(p) for p in phantoms[:3])}", res.url)]
+        return []
+
+    # ---------- R07c: a follow feed against its authors' pages ----------
+    async def _feed_check(self, session) -> list[Violation]:
+        """'Your Feed' lists what this account follows: an item whose author's page offers 'Follow' (not
+        'Unfollow') to this session contradicts the feed (Conduit F08). One author page per feed list."""
+        todo, self.feed_todo = self.feed_todo, []
+        st = self.st
+        for heading, items in todo:
+            for i in items:
+                if st.feed_probes >= MAX_FEED_PROBES or self.budget < 1:
+                    return []
+                authors = [u for u in i.get("links") or [] if _PERSON.search(entity_key(u)) and session.in_scope(u)]
+                if not authors:
+                    continue
+                st.feed_probes += 1
+                self.budget -= 1
+                self.st.probes += 1
+                opened = await _open(session, authors[0])
+                if opened is None:
+                    continue
+                try:
+                    fresh = await audit(session, page=opened[0])
+                finally:
+                    await opened[0].close()
+                verbs = [classify(x) for x in fresh.toggles]
+                if "follow" in verbs and "unfollow" not in verbs and \
+                        not any(_LOGIN_CONTROL.match(x.strip()) for x in fresh.toggles):
+                    who = fresh.h1 or entity_key(authors[0])
+                    ctl = next(x for x in fresh.toggles if classify(x) == "follow")
+                    return [Violation("R07c", f"{heading}|{entity_key(authors[0])}",
+                                      f"{heading!r} lists {i['name']!r} by {who!r}, but this account does not follow "
+                                      f"{who!r}: their page offers {ctl!r}", authors[0])]
+        return []
+
+    # ---------- R19: a count control, clicked in a fresh tab ----------
+    async def _toggle_probe(self, session, facts: Facts) -> list[Violation]:
+        """A favourite/like control showing a count must change it by one when clicked and the app
+        accepts the write; the probe clicks it once more to undo (Conduit F05). One page kind per run."""
+        from playwright.async_api import Error as PWError
+
+        st = self.st
+        route = route_shape(facts.url)
+        if st.toggle_probes >= MAX_TOGGLE_PROBES or self.budget < 1 or route in st.toggle_done or _LOGINISH.search(route):
+            return []
+        if not any(classify(x) in ("favourite", "like") or re.fullmatch(r"\d[\d,]*", x.strip()) for x in facts.toggles):
+            return []
+        st.toggle_done.add(route)
+        opened = await _open(session, facts.url)
+        if opened is None:
+            return []
+        page, net, _ = opened
+        self.budget -= 1
+        st.probes += 1
+        try:
+            cand = await page.evaluate(TOGGLE_JS)
+            if not cand:
+                return []
+            st.toggle_probes += 1
+            loc = page.locator('[data-wt-toggle="1"]').first
+            net.reset()
+            await loc.click()
+            await net.quiet(max_s=5.0)
+            await asyncio.sleep(session.cfg.settle_ms / 1000)
+            after = await page.evaluate(TOGGLE_READ_JS)
+            writes, moved = list(net.writes), route_shape(page.url) != route
+            if not moved and after is not None:
+                net.reset()
+                await page.locator('[data-wt-toggle="1"]').first.click()  # undo
+                await net.quiet(max_s=5.0)
+        except PWError:
+            return []
+        finally:
+            await page.close()
+        if moved or after is None or not writes or not all(200 <= s < 400 for s in writes):
+            return []  # signed out, refused or navigated: no evidence
+        if after["number"] == cand["number"]:
+            return [Violation("R19", f"{cand['verb']}|count", f"clicking {cand['text']!r} on {route} (the app accepted "
+                              f"the write) left its count at {cand['number']}", f"item: {cand['item'][:120]}")]
         return []
 
     # ---------- R13: does the app's access agree with its own controls? ----------

@@ -1,0 +1,52 @@
+{
+  "run": "20261027-191138_realworld_b4_n4_h4rep2",
+  "faults": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+  ],
+  "steps_replayed": 91,
+  "missing_elements": 1,
+  "minutes": 3.0,
+  "findings": 15,
+  "by_rule": {
+    "R11": 1,
+    "I-filter": 4,
+    "I-submit": 3,
+    "R17": 2,
+    "R16": 1,
+    "I-create": 2,
+    "I-delete": 2
+  },
+  "probes": 39,
+  "link_checks": 9,
+  "access_probes": 3,
+  "reloads": 14,
+  "mutation_forms": 2,
+  "mutation_submits": 6,
+  "events": {
+    "login:verified": 6,
+    "view:verified": 6,
+    "filter:conflict": 6,
+    "search:verified": 1,
+    "create:unknown": 5,
+    "edit:verified": 4,
+    "create:verified": 6,
+    "favourite:unknown": 4,
+    "follow:unknown": 1,
+    "create:conflict": 2,
+    "delete:conflict": 2,
+    "delete:verified": 2,
+    "follow:verified": 3,
+    "unfollow:verified": 3,
+    "create:pending": 1
+  },
+  "file": "findings_resweep.json"
+}

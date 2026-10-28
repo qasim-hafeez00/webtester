@@ -1,0 +1,65 @@
+[
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 5,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/search?term|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 17,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/search?term=test",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/search?term|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02|/settings/customization|customization|/link",
+    "kind": "consistency",
+    "message": "[R02 T1] the link 'Customization' in 'tab: Light Mode' returns HTTP 404",
+    "first_step": 22,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/customization",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02|/settings/customization|customization|/link",
+      "rule": "R02",
+      "tier": "T1",
+      "evidence": "http://127.0.0.1:4200/link"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

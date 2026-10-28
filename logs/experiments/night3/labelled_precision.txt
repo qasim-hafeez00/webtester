@@ -1,0 +1,57 @@
+
+## h4rep
+b3v3  20261027-080349 n= 2 fp= 0 found_all=0 [] confirmed=- [] P raw=100% gated=- judged=- other={'U5': 2}
+b3v3  20261027-083847 n= 2 fp= 0 found_all=1 ['F02'] confirmed=- [] P raw=100% gated=- judged=- other={'U5': 1}
+b3v3  20261027-193928 n= 2 fp= 0 found_all=2 ['F01', 'F02'] confirmed=- [] P raw=100% gated=- judged=- other={}
+b3v3  20261027-202658 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+b3v3  20261027-213133 n= 3 fp= 0 found_all=1 ['F02'] confirmed=- [] P raw=100% gated=- judged=- other={'U5': 2}
+  pooled b3v3: raw 9/9 = 100%; gated -; judged -; faults over runs ['F01', 'F02']
+b4    20261027-081619 n=21 fp= 1 found_all=5 ['F01', 'F02', 'F06', 'F09', 'F10'] confirmed=5 ['F01', 'F02', 'F06', 'F09', 'F10'] P raw=95% gated=95% judged=95% other={'U3': 1, 'U5': 1}
+b4    20261027-191138 n=21 fp= 5 found_all=5 ['F01', 'F02', 'F06', 'F09', 'F10'] confirmed=5 ['F01', 'F02', 'F06', 'F09', 'F10'] P raw=76% gated=89% judged=89% other={'U3': 2}
+b4    20261027-195413 n=21 fp= 4 found_all=5 ['F01', 'F06', 'F07', 'F09', 'F10'] confirmed=5 ['F01', 'F06', 'F07', 'F09', 'F10'] P raw=81% gated=89% judged=89% other={'U3': 3, 'new': 2}
+b4    20261027-205941 n=20 fp= 3 found_all=6 ['F01', 'F02', 'F06', 'F07', 'F09', 'F10'] confirmed=6 ['F01', 'F02', 'F06', 'F07', 'F09', 'F10'] P raw=85% gated=88% judged=94% other={'U3': 2, 'U5': 1}
+b4    20261027-214443 n=15 fp= 5 found_all=4 ['F01', 'F06', 'F09', 'F10'] confirmed=4 ['F01', 'F06', 'F09', 'F10'] P raw=67% gated=71% judged=75% other={'U3': 2, 'new': 1}
+  pooled b4: raw 80/98 = 82%; gated 78/89 = 88%; judged 75/84 = 89%; faults over runs ['F01', 'F02', 'F06', 'F07', 'F09', 'F10']
+  b4 per rule (all: tp/n | confirmed: tp/n):
+    I-filter         18/18 | 18/18
+    I-delete         18/18 | 17/17
+    I-submit         9/11 | 9/9
+    R17              9/9 | 9/9
+    I-create         1/8 | 1/8
+    console_error    7/7 | 6/6
+    R11              5/6 | 5/6
+    R16              5/5 | 5/5
+    http_5xx         4/4 | 4/4
+    R09              0/4 | 0/0
+    I-edit           1/3 | 1/3
+    R13              2/2 | 2/2
+    oracle_violation 1/1 | 1/1
+    I-toggle         0/1 | 0/0
+    R12              0/1 | 0/1
+
+## bs4rep
+b3v3  20261027-220951 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+b3v3  20261027-224820 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+b3v3  20261027-231755 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+b3v3  20261027-235907 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+b3v3  20261028-003851 n= 0 fp= 0 found_all=- [] confirmed=- [] P raw=- gated=- judged=- other={}
+  pooled b3v3: raw -; gated -; judged -; faults over runs []
+b4    20261027-221950 n=12 fp= 7 found_all=3 ['BS05', 'BS06', 'BS10'] confirmed=3 ['BS05', 'BS06', 'BS10'] P raw=42% gated=50% judged=50% other={}
+b4    20261027-230029 n= 7 fp= 4 found_all=2 ['BS05', 'BS06'] confirmed=2 ['BS05', 'BS06'] P raw=43% gated=50% judged=60% other={}
+b4    20261027-232821 n= 6 fp= 3 found_all=2 ['BS05', 'BS06'] confirmed=2 ['BS05', 'BS06'] P raw=50% gated=50% judged=50% other={}
+b4    20261028-000919 n=11 fp= 5 found_all=4 ['BS03', 'BS04', 'BS05', 'BS06'] confirmed=4 ['BS03', 'BS04', 'BS05', 'BS06'] P raw=55% gated=50% judged=44% other={}
+b4    20261028-004736 n=16 fp=13 found_all=2 ['BS05', 'BS06'] confirmed=2 ['BS05', 'BS06'] P raw=19% gated=38% judged=43% other={}
+  pooled b4: raw 20/52 = 38%; gated 19/40 = 48%; judged 17/35 = 49%; faults over runs ['BS03', 'BS04', 'BS05', 'BS06', 'BS10']
+  b4 per rule (all: tp/n | confirmed: tp/n):
+    I-create         0/10 | 0/9
+    R03              10/10 | 10/10
+    R09              2/9 | 2/4
+    R02              1/6 | 0/3
+    R04              5/5 | 5/5
+    R08              2/2 | 2/2
+    R10              0/2 | 0/1
+    I-filter         0/2 | 0/1
+    G2               0/2 | 0/1
+    I-edit           0/2 | 0/2
+    oracle_violation 0/1 | 0/1
+    I-submit         0/1 | 0/1

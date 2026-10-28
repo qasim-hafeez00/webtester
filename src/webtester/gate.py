@@ -207,7 +207,8 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
     judge_usage = {"calls": 0, "tokens": 0}
     if gcfg.judge and llm is not None:
         for f in findings:
-            judged = f.kind == "oracle_violation" or (f.kind == "consistency" and f.detail.get("tier") in ("T2", "T3"))
+            # every consistency tier (D55): Night 3's worst rule (I-create) was T1 and never judged; reported only
+            judged = f.kind in ("oracle_violation", "consistency")
             if judged and f.status in ("confirmed", "flaky"):
                 f.judge = await _judge(llm, f, judge_usage)
                 run.trace.event("gate_judge", sig=f.sig, **f.judge)

@@ -1,0 +1,107 @@
+[
+  {
+    "sig": "consistency|I-create|/|login session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'Login session': the app accepted the write, but 'Login session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 5,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/|login session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/shelves/shelf/*|worker03@bookstack.test",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'worker03@bookstack.test': the app accepted the write, but 'worker03@bookstack.test' is shown neither on the page it led to nor where the flow started",
+    "first_step": 14,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf/create-book",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/shelves/shelf/*|worker03@bookstack.test",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/shelves/shelf|worker04 session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'worker04 session': the app accepted the write, but 'worker04 session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 7,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/shelves/shelf|worker04 session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-edit|/shelves/*|shelf test name! @#%",
+    "kind": "consistency",
+    "message": "[I-edit T1] edit 'Shelf Test Name! @#%': the app accepted the write, but 'Shelf Test Name! @#%' is shown neither on the page it led to nor where the flow started",
+    "first_step": 17,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-edit|/shelves/*|shelf test name! @#%",
+      "rule": "I-edit",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/shelves/shelf-test-bnameb-at, http://127.0.0.1:4200/shelves/shelf/edit"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Admin' disappeared from 'Recent Activity' (revisit at step 17, last seen step 10) and no action explains it",
+    "first_step": 17,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R09|/shelves/*|recent activity|-admin",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

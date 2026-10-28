@@ -29,7 +29,7 @@ max_output_tokens = 800
 json_mode = true
 min_interval_s = 6.5   # free tier is ~10 requests/minute
 key_fallback = true
-api_key_env = "GEMINI_API_KEY_7"   # 25 Oct Night 1 (h3rep): pin one key, rotate on 429 (D41): primary -> _1 -> _4 -> _5 -> _6 -> _7 -> _9 -> _10 -> _OLD
+api_key_env = "GEMINI_API_KEY_OLD"   # 27 Oct Night 3 (h4rep): key _OLD from 21:00 (key 9 out of quota in b4 rep 4); key 9 from 09:27 (key 7 out of quota in b4 rep 2). 25 Oct Night 1 (h3rep): pin one key, rotate on 429 (D41): primary -> _1 -> _4 -> _5 -> _6 -> _7 -> _9 -> _10 -> _OLD
 price_in = 0.0
 price_out = 0.0
 

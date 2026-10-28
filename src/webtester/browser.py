@@ -21,9 +21,11 @@ from urllib.parse import urlsplit
 from playwright.async_api import Browser, BrowserContext, Error as PWError, Page
 
 from .config import REPO_ROOT, Account, RunConfig
+from .evidence import DRAIN_MSGS_JS, MAX_BODY_BYTES, MAX_NET_RECORDS, MAX_POST_CHARS, MSG_JS
 
 FAULT_MARKER = "[wt-fault] "  # console line an injected fault logs when it first fires (exposure)
 NET_TYPES = ("xhr", "fetch", "document")  # requests `settle` waits for
+BODY_TYPES = ("xhr", "fetch")  # responses whose JSON body the evidence layer keeps (D58)
 QUIET_S, QUIET_MAX_S = 0.3, 3.0
 
 # Page text of a freshly loaded page for inferred checks (reload, /path): innerText plus the values
@@ -237,6 +239,11 @@ class BrowserSession:
         self._pending: set = set()  # in-flight xhr/fetch/document requests (settle waits for them, D46)
         self._last_net = 0.0
         self.mutations: list[dict] = []  # same-origin write requests (method != GET) and their status (v4, D49)
+        # v5 evidence layer (D58), only with cfg.capture_evidence: network timeline with JSON bodies
+        self.evidence = bool(getattr(cfg, "capture_evidence", False))
+        self.net: list[dict] = []
+        self._net_seq = 0
+        self._body_tasks: set = set()
 
     # ---------- lifecycle ----------
     async def start(self, storage_state: dict | None = None) -> None:
@@ -247,6 +254,8 @@ class BrowserSession:
         if self.cfg.app.fault_script and self.cfg.client_faults:
             await self.context.add_init_script(script=f"window.__WT_FAULTS__ = {json.dumps(list(self.cfg.client_faults))};")
             await self.context.add_init_script(path=str(REPO_ROOT / self.cfg.app.fault_script))
+        if self.evidence:
+            await self.context.add_init_script(script=MSG_JS)
         await self.context.route("**/*", self._route)
         self.page = await self.context.new_page()
         self._wire(self.page)
@@ -317,6 +326,8 @@ class BrowserSession:
         if req.method not in ("GET", "HEAD", "OPTIONS") and req.resource_type in NET_TYPES and self.in_scope(resp.url):
             self.mutations.append({"method": req.method, "path": urlsplit(resp.url).path, "status": resp.status})
             del self.mutations[:-50]
+        if self.evidence and req.resource_type in NET_TYPES and self.in_scope(resp.url):
+            self._record(resp)
         if resp.status >= 500 and self.in_scope(resp.url):
             req = resp.request
             self._signals.append(Signal(
@@ -333,6 +344,58 @@ class BrowserSession:
             "request_failed", f"{req.method} {urlsplit(req.url).path}: {failure}",
             self.page.url if self.page else "", {"url": req.url},
         ))
+
+    # ---------- v5 evidence layer (D58) ----------
+    def _record(self, resp) -> None:
+        req = resp.request
+        self._net_seq += 1
+        ctype = (resp.headers.get("content-type") or "").split(";")[0].strip().lower()
+        rec = {"seq": self._net_seq, "t": time.time(), "method": req.method, "url": resp.url,
+               "path": urlsplit(resp.url).path, "status": resp.status, "type": req.resource_type, "ctype": ctype,
+               "page": self.page.url if self.page else ""}
+        if req.method not in ("GET", "HEAD", "OPTIONS"):
+            rec["sent"] = (req.post_data or "")[:MAX_POST_CHARS]
+        self.net.append(rec)
+        del self.net[:-MAX_NET_RECORDS]
+        if req.resource_type in BODY_TYPES and "json" in ctype:
+            task = asyncio.get_running_loop().create_task(self._grab_body(resp, rec))
+            self._body_tasks.add(task)
+            task.add_done_callback(self._body_tasks.discard)
+
+    @staticmethod
+    async def _grab_body(resp, rec: dict) -> None:
+        try:
+            raw = await resp.body()
+        except Exception:  # noqa: BLE001 (redirects, closed pages, aborted requests carry no body)
+            rec["body_error"] = "unavailable"
+            return
+        if len(raw) > MAX_BODY_BYTES:
+            rec["body_error"] = f"too large ({len(raw)} bytes)"
+            return
+        try:
+            rec["body"] = json.loads(raw)
+        except ValueError:
+            rec["body_error"] = "not JSON"
+
+    async def flush_bodies(self, timeout_s: float = 2.0) -> None:
+        """Wait (bounded) for the bodies of responses already seen to be read."""
+        if self._body_tasks:
+            await asyncio.wait(set(self._body_tasks), timeout=timeout_s)
+
+    def net_mark(self) -> int:
+        return self._net_seq
+
+    def net_since(self, mark: int) -> list[dict]:
+        return [r for r in self.net if r["seq"] > mark]
+
+    async def drain_messages(self, page: Page | None = None) -> list[dict]:
+        """Transient messages (toasts, flashes, alerts) caught since the last drain, oldest first."""
+        if not self.evidence:
+            return []
+        try:
+            return await (page or self.page).evaluate(DRAIN_MSGS_JS)
+        except PWError:
+            return []
 
     def drain_signals(self) -> list[Signal]:
         out, self._signals = self._signals, []

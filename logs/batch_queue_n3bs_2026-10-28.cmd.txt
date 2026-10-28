@@ -1,0 +1,1 @@
+cd /c/Users/Seraphindra/Desktop/agenticproject && SKIP_CONDUIT=1 bash scripts/night3.sh >> logs/batch_queue_n3_2026-10-27.log 2>&1

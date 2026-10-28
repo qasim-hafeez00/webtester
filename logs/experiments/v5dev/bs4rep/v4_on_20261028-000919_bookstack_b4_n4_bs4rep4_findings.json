@@ -1,0 +1,233 @@
+[
+  {
+    "sig": "consistency|I-create|/|session",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'session': the app accepted the write, but 'session' is shown neither on the page it led to nor where the flow started",
+    "first_step": 5,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|I-create|/|session",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Chapter Title' in 'Recently Created Chapters View All' links nowhere (href '#') while 4 siblings have real links",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Chapter Title Custom Chapter Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Book Title' in 'Recently Created Books View All' links nowhere (href '#') while 3 siblings have real links",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Book Title Custom Book Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created books view all|book",
+    "kind": "consistency",
+    "message": "[R04 T1] '3 Books' but 4 Books are listed under 'Recently Created Books View All'",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 14,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created books view all|book",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "book; book1; book2; custom book title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-create|/search?term|login",
+    "kind": "consistency",
+    "message": "[I-create T1] create 'login': the app accepted the write, but 'login' is shown neither on the page it led to nor where the flow started",
+    "first_step": 16,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/search?term=Book1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-create|/search?term|login",
+      "rule": "I-create",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/, http://127.0.0.1:4200/login"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-submit|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[created_by]&filters[is_restricted]&filters[not_viewed_by_me]&filters[owned_by]&filters[updated_after]&filters[updated_before]&filters[updated_by]&filters[viewed_by_me]&search&tags[]&types[]|edit|",
+    "kind": "consistency",
+    "message": "[I-submit T2] edit '': a valid form was submitted, but nothing was sent and the page did not change",
+    "first_step": 67,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/search?search=Very+long+search+term+to+test+advanced+search+handling+and+limits+in+the+application+search+box+input+field&types%5B%5D=page&types%5B%5D=chapter&types%5B%5D=book&types%5B%5D=bookshelf&exact%5B%5D=&tags%5B%5D=&filters%5Bviewed_by_me%5D=true&filters%5Bnot_viewed_by_me%5D=true&filters%5Bis_restricted%5D=true&filters%5Bcreated_by%5D=me&filters%5Bupdated_by%5D=me&filters%5Bowned_by%5D=me&filters%5Bupdated_after%5D=2023-01-01&filters%5Bupdated_before%5D=2023-12-31&filters%5Bcreated_after%5D=&filters%5Bcreated_before%5D=2023-01-01&extras=",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-submit|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[created_by]&filters[is_restricted]&filters[not_viewed_by_me]&filters[owned_by]&filters[updated_after]&filters[updated_before]&filters[updated_by]&filters[viewed_by_me]&search&tags[]&types[]|edit|",
+      "rule": "I-submit",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/books|books|+book",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Book' appeared in 'Books' (revisit at step 20, last seen step 6) and no action explains it",
+    "first_step": 20,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/books|books|+book",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02|/books|book|/books/book-duplicate",
+    "kind": "consistency",
+    "message": "[R02 T1] the link 'Book' in 'Books' returns HTTP 404",
+    "first_step": 20,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02|/books|book|/books/book-duplicate",
+      "rule": "R02",
+      "tier": "T1",
+      "evidence": "http://127.0.0.1:4200/books/book-duplicate"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02|/settings/customization|customization|/link",
+    "kind": "consistency",
+    "message": "[R02 T1] the link 'Customization' in 'tab: Light Mode' returns HTTP 404",
+    "first_step": 45,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/settings/customization",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02|/settings/customization|customization|/link",
+      "rule": "R02",
+      "tier": "T1",
+      "evidence": "http://127.0.0.1:4200/link"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/|shelf|-page template",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Page Template' disappeared from 'Shelf' (revisit at step 18, last seen step 3) and no action explains it",
+    "first_step": 18,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/|shelf|-page template",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-edit|/settings/features|settings & security",
+    "kind": "consistency",
+    "message": "[I-edit T1] edit 'Settings & Security': the app accepted the write, but 'Settings & Security' is shown neither on the page it led to nor where the flow started",
+    "first_step": 66,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/features",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-edit|/settings/features|settings & security",
+      "rule": "I-edit",
+      "tier": "T1",
+      "evidence": "checked: http://127.0.0.1:4200/settings/features"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

@@ -131,6 +131,9 @@ class RunConfig:
     action_timeout_ms: int = 4000
     settle_ms: int = 400
     client_faults: tuple[str, ...] = ()  # set by the runner for apps with a fault_script
+    # v5 evidence layer (D58, evidence.py): response bodies, network timeline, transient messages.
+    # Off by default so runs and resweeps made before D58 replay unchanged.
+    capture_evidence: bool = False
 
     def with_overrides(self, **kw) -> "RunConfig":
         app_kw = {k[4:]: v for k, v in kw.items() if k.startswith("app_") and v is not None}

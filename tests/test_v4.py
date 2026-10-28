@@ -277,6 +277,9 @@ def test_pagination_noop_f09():
     sw = sweeper()
     items = [("A1", "/a1"), ("A2", "/a2"), ("A3", "/a3")]
     sw.last = Facts("http://h/", lists=[L("Global Feed", items)])
+    sw.pre = {"click": {"pager": False}}  # D55 P4: a number outside a pager is a count (Conduit's heart '0')
+    assert sw._pagination([{"do": "click", "el": '[11] button "0"'}], Facts("http://h/", lists=[L("Global Feed", items)])) == []
+    sw.pre = {"click": {"pager": True}}
     assert [v.rule for v in sw._pagination([{"do": "click", "el": '[30] a "2"'}],
                                            Facts("http://h/", lists=[L("Global Feed", items)]))] == ["R11"]
     assert sw._pagination([{"do": "click", "el": '[30] a "2"'}],

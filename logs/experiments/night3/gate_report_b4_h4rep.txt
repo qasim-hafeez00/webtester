@@ -1,0 +1,7 @@
+| Run | Candidates | Confirmed | Flaky | Rejected | Unverified | Precision raw | Precision gated | Faults raw | Faults confirmed | Gate min | Judge tokens (% of run) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `20261027-081619_realworld_b4_n4_h4rep1` | 21 | 21 | 0 | 0 | 0 | 95% | 95% | 5 | 5 | 12.6 | 3951 (2%) |
+| `20261027-191138_realworld_b4_n4_h4rep2` | 21 | 18 | 0 | 3 | 0 | 76% | 89% | 5 | 5 | 16.56 | 4100 (2%) |
+| `20261027-195413_realworld_b4_n4_h4rep3` | 21 | 19 | 0 | 2 | 0 | 81% | 89% | 5 | 5 | 22.64 | 2387 (1%) |
+| `20261027-205941_realworld_b4_n4_h4rep4` | 20 | 17 | 0 | 2 | 1 | 85% | 88% | 6 | 6 | 21.88 | 3667 (2%) |
+| `20261027-214443_realworld_b4_n4_h4rep5` | 15 | 14 | 0 | 1 | 0 | 67% | 71% | 4 | 4 | 14.43 | 1882 (1%) |

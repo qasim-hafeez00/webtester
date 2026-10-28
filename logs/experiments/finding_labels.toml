@@ -1821,3 +1821,640 @@ by = "claude"
 label = "fp"  # fp: 'New Page' opens the editor on a new draft, /books/*/draft/* (correct); wrong route guess | confirmed | judge bug
 by = "claude"
 
+
+# Night 3 (harness v4, h4rep / bs4rep), labelled by Claude 28 Oct (D45 rule)
+["20261027-080349_realworld_b3v3_n4_h4rep1"."console_error|ERROR {}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | candidate
+by = "claude"
+
+["20261027-080349_realworld_b3v3_n4_h4rep1"."console_error|ERROR {errors: Object}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | candidate
+by = "claude"
+
+["20261027-083847_realworld_b3v3_n4_h4rep2"."console_error|ERROR {}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | candidate
+by = "claude"
+
+["20261027-083847_realworld_b3v3_n4_h4rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | candidate
+by = "claude"
+
+["20261027-193928_realworld_b3v3_n4_h4rep3"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | candidate
+by = "claude"
+
+["20261027-193928_realworld_b3v3_n4_h4rep3"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # F01 | candidate
+by = "claude"
+
+["20261027-213133_realworld_b3v3_n4_h4rep5"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | candidate
+by = "claude"
+
+["20261027-213133_realworld_b3v3_n4_h4rep5"."console_error|ERROR {}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | candidate
+by = "claude"
+
+["20261027-213133_realworld_b3v3_n4_h4rep5"."console_error|ERROR {errors: Object}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | candidate
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-submit|/editor|create|test article alpha v1"]
+label = "F02"  # F02: tag with a space throws in addTag, so submit sends nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."console_error|ERROR {}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-delete|/article/*|<b>test comment</b> !@#$%^&*()"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|R11|/|page|<n>"]
+label = "F09"  # F09: page 2 does nothing | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-submit|/article/*|create|lorem ipsum dolor sit amet, consectetur adipiscing elit. integer nec odio"]
+label = "F01"  # F01: comment over 280 chars, POST returned 500 at this step | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-delete|/article/*|worker03@conduit.test"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|testing"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|frontend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|architecture"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|tooling"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-delete|/article/*|<script>alert(<n>)</script>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-delete|/profile/alice/favorites|test@example.com worker03october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|caching"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|css"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-081619_realworld_b4_n4_h4rep1"."consistency|I-filter|/|filter|ci"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R11|/|page|<n>"]
+label = "F09"  # F09: page 2 does nothing | confirmed | judge unsure
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."oracle_violation|shows|/article/*|now|lorem ipsum"]
+label = "F01"  # F01 | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-submit|/article/*|create|lorem ipsum dolor sit amet, consectetur adipiscing elit. sed do eiusmod t"]
+label = "F01"  # F01: comment over 280 chars, POST returned 500 at this step | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-create|/article/*|special comment"]
+label = "fp"  # fp: the intent object is a description, not the typed value; the comment/edit is shown | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-submit|/settings|edit|settings"]
+label = "fp"  # fp: settings submit not reproduced by the gate; no defect explains it | rejected
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-submit|/editor|create|very long article title test <h> <h> <h> <h> <h>"]
+label = "F02"  # F02: tag with a space throws in addTag, so submit sends nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-delete|/article/*|<b>test comment</b> !@#$%^&*() worker03october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-filter|/|filter|testing"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R09|/|tab: global feed|-flaky tests are a smell, part two"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R09|/|css grid in practice|+test"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-filter|/|filter|frontend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-filter|/|filter|architecture"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|R17|/article/*|blank|article title"]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-submit|/editor|create|long title xyz <h> <h> <h>"]
+label = "F02"  # F02: tag with a space throws in addTag, so submit sends nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-191138_realworld_b4_n4_h4rep2"."consistency|I-delete|/article/*|comment test"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R17|/article/*|blank|article title"]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-create|/|login"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-delete|/article/*|<b>test comment</b> <s> \\o/ worker01october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-submit|/article/*|create|long comment"]
+label = "F01"  # F01: comment over 280 chars, POST returned 500 at this step | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-create|/article/*|whitespace comment"]
+label = "U3"  # U3: whitespace-only value accepted | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R11|/|page|<n>"]
+label = "F09"  # F09: page 2 does nothing | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-delete|/article/*|test unicode/emoji: 🚀✨ worker01october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-delete|/article/*|<script>alert(<n>)</script> & <b>bold</b> \\\"' worker01october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R09|/|conduit|+worker03"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R09|/|conduit|+test article z9-<n> <script>alert(<n>)</script>"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-delete|/article/*|a very long comment string meant to test boundary handling and storage limits fo"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-filter|/|filter|testing"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|R13|/article/*|offered|/editor/*"]
+label = "F07"  # F07: Edit Article offered to a non-author | confirmed | judge bug
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # new: whitespace username accepted, then the profile is unreachable | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-edit|/|worker01_special"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # new: whitespace username accepted, then the profile is unreachable | confirmed
+by = "claude"
+
+["20261027-195413_realworld_b4_n4_h4rep3"."consistency|I-delete|/article/*|great review comment from worker02!"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-submit|/editor|create|test article x9"]
+label = "F02"  # F02: tag with a space throws in addTag, so submit sends nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."http_5xx|POST /api/articles/*/comments|500"]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-submit|/article/*|create|a very long comment text..."]
+label = "F01"  # F01: comment over 280 chars, POST returned 500 at this step | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-delete|/article/*|great article on flaky tests!"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R11|/|page|<n>"]
+label = "F09"  # F09: page 2 does nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-toggle|/profile/alice|follow|count"]
+label = "fp"  # fp: Follow button has no count; the number read was not its count | rejected
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-delete|/article/*|testuser03@conduit.test testuser03october <n>, <n>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-filter|/|filter|testing"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-submit|/editor|create|<script>alert(<n>)</script>"]
+label = "F02"  # F02: tag with a space throws in addTag, so submit sends nothing | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R13|/article/*|offered|/editor/*"]
+label = "F07"  # F07: Edit Article offered to a non-author | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R12|/article/*|markup|content with markdown and <i>italics</i>"]
+label = "fp"  # fp: Markdown body renders inline HTML by design | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|R17|/article/*|blank|article title"]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."console_error|ERROR {errors: Object}"]
+label = "U5"  # U5: uncaught ERROR on a missing/forbidden article or profile | rejected
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-delete|/|<b>special comment & chars!</b>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-205941_realworld_b4_n4_h4rep4"."consistency|I-delete|/article/*|test comment with special chars <script>alert(<s>)</script> worker01_updatedocto"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | unverified
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|R17|/article/*|blank|article title"]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # F01 | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # U3: whitespace-only value accepted | confirmed | judge bug
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-create|/article/*|test comment with symbols & quotes ' \""]
+label = "fp"  # fp: the intent object drops the typed markup, so it never matches the shown text | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-delete|/article/*|this is a very long comment to test the comment form's ability to handle extende"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-edit|/profile/*|worker02 settings"]
+label = "fp"  # fp: the intent object is a description, not the typed value; the comment/edit is shown | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-filter|/|filter|testing"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-submit|/settings|edit|"]
+label = "fp"  # fp: settings submit not reproduced by the gate; no defect explains it | rejected
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."console_error|ERROR <!DOCTYPE html>\n<html lang=<s>>\n<head>\n<meta charset=<s>>\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/profiles/</pre>\n</body>\n</html>\n"]
+label = "new: whitespace-only settings values accepted (username, email, password)"  # new: whitespace username accepted, then the profile is unreachable | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-delete|/article/*|<h>"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|R11|/|page|<n>"]
+label = "F09"  # F09: page 2 does nothing | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-delete|/|special chars test !@#$%^&*()_+-=[]{}|;':\",./<>?"]
+label = "F06"  # F06: comment delete acknowledged, comment still shown | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|R11|/profile/*|page|<n>"]
+label = "fp"  # fp: R11 took the favourite button '0' for a page control | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-edit|/profile/*|worker03 settings email"]
+label = "fp"  # fp: the intent object is a description, not the typed value; the comment/edit is shown | confirmed
+by = "claude"
+
+["20261027-214443_realworld_b4_n4_h4rep5"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # F10: tag filter lists an article without the tag | confirmed | judge bug
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R03|/user/admin|recently created chapters view all|custom chapter title"]
+label = "BS06"  # BS06: phantom 'Custom Chapter Title' | confirmed
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R03|/user/admin|recently created books view all|custom book title"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R04|/user/admin|recently created books view all|book"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."oracle_violation|shows|/shelves/shelf/edit|/shelves/shelf|shelf <script>alert(<n>)</script> x99"]
+label = "fp"  # fp: BookStack 25.x has no redirect from a renamed shelf's old slug (checked live with no faults) | confirmed | judge bug
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R09|/user/admin|recently created shelves view all|-shelf"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|created"]
+label = "BS10"  # BS10: shelf Details read '2 days ago' | confirmed | judge bug
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R08|/shelves|views|/shelves/test-shelf-alpha-w04|updated"]
+label = "BS10"  # BS10: shelf Details read '2 days ago' | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R09|/shelves/*|recent activity|-admin"]
+label = "fp"  # fp: Recent Activity rotates as new activity is recorded | confirmed | judge bug
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|R10|/search?term|env"]
+label = "fp"  # fp: a tag link opens Search Results by design | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|I-filter|/search?term|search|viewed by me"]
+label = "fp"  # fp: search filter checkbox label taken as the search term | confirmed | judge bug
+by = "claude"
+
+["20261027-221950_bookstack_b4_n4_bs4rep1"."consistency|I-filter|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[updated_after]&filters[updated_before]&filters[viewed_by_me]&search&tags[]&types[]|filter|not viewed by me"]
+label = "fp"  # fp: search filter checkbox label taken as the search term | rejected
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|R03|/user/admin|recently created chapters view all|custom chapter title"]
+label = "BS06"  # BS06: phantom 'Custom Chapter Title' | confirmed
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|R03|/user/admin|recently created books view all|custom book title"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|R04|/user/admin|recently created books view all|book"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|R02|/settings/customization|customization|/link"]
+label = "fp"  # fp: hidden page-picker placeholder <a hidden href=/link>, not a user link (checked live) | confirmed
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|R09|/|page|-recently updated pages"]
+label = "fp"  # fp: list changed through other workers' actions | rejected
+by = "claude"
+
+["20261027-230029_bookstack_b4_n4_bs4rep2"."consistency|G2|/settings/users|count|seconds ago"]
+label = "fp"  # fp: relative time advancing between visits | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|R03|/user/admin|recently created chapters view all|custom chapter title"]
+label = "BS06"  # BS06: phantom 'Custom Chapter Title' | confirmed
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|R03|/user/admin|recently created books view all|custom book title"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|R04|/user/admin|recently created books view all|book"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|I-create|/search?term|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261027-232821_bookstack_b4_n4_bs4rep3"."consistency|R02|/settings/customization|customization|/link"]
+label = "fp"  # fp: hidden page-picker placeholder <a hidden href=/link>, not a user link (checked live) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|I-create|/|session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R03|/user/admin|recently created chapters view all|custom chapter title"]
+label = "BS06"  # BS06: phantom 'Custom Chapter Title' | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R03|/user/admin|recently created books view all|custom book title"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R04|/user/admin|recently created books view all|book"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|I-create|/search?term|login"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R09|/|shelf|-page template"]
+label = "BS03"  # BS03: 'Page Template' gone from the dashboard list on the worker's 2nd arrival (steps 7 -> 18) | confirmed | judge unsure
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R09|/books|books|+book"]
+label = "BS04"  # BS04: phantom card 'Book' -> /books/book-duplicate on the 2nd arrival at Books | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R02|/books|book|/books/book-duplicate"]
+label = "BS04"  # BS04: phantom card 'Book' -> /books/book-duplicate on the 2nd arrival at Books | rejected
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|R02|/settings/customization|customization|/link"]
+label = "fp"  # fp: hidden page-picker placeholder <a hidden href=/link>, not a user link (checked live) | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|I-edit|/settings/features|settings & security"]
+label = "fp"  # fp: the intent object is a description, not the typed value; the comment/edit is shown | confirmed
+by = "claude"
+
+["20261028-000919_bookstack_b4_n4_bs4rep4"."consistency|I-submit|/search?exact[]&extras&filters[created_after]&filters[created_before]&filters[created_by]&filters[is_restricted]&filters[not_viewed_by_me]&filters[owned_by]&filters[updated_after]&filters[updated_before]&filters[updated_by]&filters[viewed_by_me]&search&tags[]&types[]|edit|"]
+label = "fp"  # fp: GET search form re-submitted with the same results; not a write | confirmed | judge bug
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|I-create|/|login session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|I-create|/shelves/shelf|worker04 session"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|I-create|/password/email|worker03@bookstack.test"]
+label = "fp"  # fp: password-reset request; BookStack does not echo the email on the next page | rejected
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R03|/user/admin|recently created chapters view all|custom chapter title"]
+label = "BS06"  # BS06: phantom 'Custom Chapter Title' | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R03|/user/admin|recently created books view all|custom book title"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R04|/user/admin|recently created books view all|book"]
+label = "BS05"  # BS05: phantom 'Custom Book Title' (dead link / count mismatch) | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R02|/user/admin|shelf|/shelves/shelf"]
+label = "fp"  # fp: BookStack 25.x has no redirect from a renamed shelf's old slug (checked live with no faults) | rejected
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|G2|/user/admin|recently created shelves view all|-shelf"]
+label = "fp"  # fp: BookStack 25.x has no redirect from a renamed shelf's old slug (checked live with no faults) | rejected
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|I-create|/shelves/shelf/*|worker03@bookstack.test"]
+label = "fp"  # fp: I-create on a login intent (signing in creates no content) | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|I-edit|/shelves/*|shelf test name! @#%"]
+label = "fp"  # fp: the intent object drops the typed markup, so it never matches the shown text | confirmed
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R09|/shelves/*|recent activity|-admin"]
+label = "fp"  # fp: Recent Activity rotates as new activity is recorded | confirmed | judge wrong_expectation
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R10|/shelves/*|recently viewed"]
+label = "fp"  # fp: R10 named the link after its list; the link opens the shelf it names | unverified
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R09|/user/admin|recently created shelves view all|-shelf"]
+label = "fp"  # fp: BookStack 25.x has no redirect from a renamed shelf's old slug (checked live with no faults) | rejected
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R02|/books/*/*|default page template|/link"]
+label = "fp"  # fp: hidden page-picker placeholder <a hidden href=/link>, not a user link (checked live) | unverified
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R09|/user/admin|recent activity|-page template"]
+label = "fp"  # fp: Recent Activity rotates as new activity is recorded | rejected
+by = "claude"
+
+["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R09|/shelves/*|recent activity|-worker <n>"]
+label = "fp"  # fp: Recent Activity rotates as new activity is recorded | unverified
+by = "claude"
