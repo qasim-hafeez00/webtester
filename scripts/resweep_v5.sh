@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # D55 development check: replay Night 3's b4 runs (h4rep Conduit, bs4rep BookStack) with the v4 oracles
-# (29b0940, via scripts/webtester_v4oracles.py) and the v5 oracles, on the faulty and on the clean app,
+# (540887e, via scripts/webtester_v4oracles.py) and the v5 oracles, on the faulty and on the clean app,
 # no LLM. Outputs per (version, pass, run) in logs/experiments/v5dev/<label>/: the counts (.json) and the
 # findings (_findings.json). Resumable: a result already there is kept.
 # Usage: bash scripts/resweep_v5.sh            (BookStack, then Conduit; SKIP_BS=1 / SKIP_CONDUIT=1)

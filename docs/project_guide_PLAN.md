@@ -105,7 +105,7 @@ Planning notes for `docs/project_guide.md`, not the guide itself.
 - 7.4 v4:
   - state graph, run memory, consistency oracles R01–R17 and the I-rules, FrontierV3 travel, the gate on signatures;
   - pre-lock fixes D50, D53, D54;
-  - locked `29b0940`.
+  - locked `540887e`.
 - Then a version × condition matrix.
 
 ### Part C: The code

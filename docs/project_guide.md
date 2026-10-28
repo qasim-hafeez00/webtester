@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Status as of** | 28 Oct 2026, evening PKT |
-| **Harness version** | v4 locked at commit `29b0940` (branch `phase2-harness-v4`); **v5 in development** (D55-D58, not yet committed or locked, §7.5) |
+| **Harness version** | v4 locked at commit `540887e` (branch `phase2-harness-v4`); **v5 in development** (D55-D58, not yet committed or locked, §7.5) |
 | **Experiments done** | Phase 1 (B0 vs B1), G1 (B2, B3 v1, B3 v2), G2/G3 on Conduit (harness v1, v2, v3), BookStack held-out (v3), v4 development resweeps and pilots, Night 3 (v4 on Conduit and BookStack, labelled), v5 development resweeps of Night 3 on both apps (complete, labelled) |
 | **Latest** | v5 resweeps (28 Oct), v4 → v5 on the same recorded runs: BookStack faults per run median 3 → 6 of 13, precision 51% → 95%, clean-app false alarms 4.0 → 0.6 per run; Conduit 5 → 6 of 8 (F08 now found), 85% → 99%, 2.8 → 0.4 (§11.8). Fault-family table (163 families, D56-D57) and a v5 plan by recall stage with an evidence layer (D58, `docs/v5_plan.md`) |
 | **Next milestones** | v5.0 lock (target 2 Nov) and Night 4 (Conduit, BookStack, PrestaShop held-out); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
@@ -448,7 +448,7 @@ timeline
   24 Oct : v1 · B4, A-G1, B3v2-local (g23rep)
   25 Oct : v2 · re-runs (h2rep) · then v3 (h3rep), Conduit labelled
   26 Oct : v3 · BookStack held-out (bsrep) · v4 designed
-  27 Oct : v4 locked (29b0940) · pilots · Night 3 (h4rep, bs4rep)
+  27 Oct : v4 locked (540887e) · pilots · Night 3 (h4rep, bs4rep)
   28 Oct : v5 fixes (D55) · v4 vs v5 resweeps · fault families (D56, D57) · v5 plan and evidence layer (D58)
 ```
 
@@ -463,13 +463,13 @@ timeline
 - **B4 (15 Oct):** inferred checks (D27) and gate v1 (D28), frozen after its pilot (D40).
 - **Run batches:** Phase 1 (12 Oct), G1 (`g1rep`, 14–15 Oct), G2/G3 (`g23rep`, 24 Oct).
 
-### 7.2 v2 (25 Oct, commit `a1795ff`, label `h2rep`)
+### 7.2 v2 (25 Oct, commit `aab8118`, label `h2rep`)
 Fixes from the v1 results:
 - **Observation v2** (D43): elements with a computed `cursor: pointer` are also extracted. Angular click handlers had left `<a>` without `href` and icon buttons invisible, so faults F06, F08 and F10 could never be reached in 40 runs (I33).
 - **Gate v2** (D42): a full-prefix window (replay the worker's whole log) rebuilds data the worker created earlier, which a reset wipes (I32). The replay log is saved, so `webtester regate` can re-run the gate offline.
 - **Exposure markers** (D44): each seeded fault logs when it fires, so "never reached" and "reached but not noticed" can be told apart.
 
-### 7.3 v3 (25 Oct, commits `7784d6c`, `d6094ef`, labels `h3rep`, `bsrep`)
+### 7.3 v3 (25 Oct, commits `85e0bdc`, `64fffd5`, labels `h3rep`, `bsrep`)
 Fixes from the labelled v2 results (D46):
 1. `settle()` waits until no request has been in flight for 300 ms. In a single-page app, "network idle" returned at once, so checks ran before the app answered.
 2. Already-selected controls are marked `active`, and a "no change" check on them is inconclusive.
@@ -482,7 +482,7 @@ Fixes from the labelled v2 results (D46):
 
 A rule fixed before the runs (D47) decided whether the check changes stay for BookStack. They did.
 
-### 7.4 v4 (26–27 Oct, locked at `29b0940`, labels `h4rep`, `bs4rep`)
+### 7.4 v4 (26–27 Oct, locked at `540887e`, labels `h4rep`, `bs4rep`)
 v4 is a change of approach, motivated by BookStack. All 32 BookStack false alarms were wrong guesses about design: where Save leads, what a heading says (I43). And the LLM checks found none of BookStack's faults, which are wrong content *on arrival*, not wrong effects of the agent's own action. v4 therefore separates **what the agent meant to do** (its intent, which it knows) from **how the app shows the result** (which it can only guess). It checks the effect with facts the harness reads from the pages (D49). New parts:
 
 - **Abstract state graph** (`stategraph.py`):
@@ -1843,7 +1843,7 @@ R17 (26 clean) is Conduit's own weakness: articles and comments of only spaces a
 | BookStack b3v3 | 2,306 (2,344) | 1 | 3 | – |
 | BookStack b4 | 2,731 (2,740) | 1.0 | 2 | 3 candidates, 2 confirmed, 2.4 min |
 
-v4 was locked at `29b0940` after the pilots, with all 80 tests passing.
+v4 was locked at `540887e` after the pilots, with all 80 tests passing.
 
 ### 11.7 Night 3: v4 on Conduit and BookStack (27–28 Oct)
 `b3v3` (implicit oracles only) and `b4` (full system) × 5 on each app, 4 workers, 190k tokens, labels `h4rep` (Conduit) and `bs4rep` (BookStack). **20 of 20 valid.** Four attempts were lost to key quota and a Docker stop (I48) and re-run. All 159 findings are labelled (by Claude, D45 rule; the author's blind 20% check is pending). Full tables: [phase2_v4_night3_results.md](../logs/experiments/phase2_v4_night3_results.md).
@@ -2139,7 +2139,7 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | D46 | 25 Oct | Harness v3, frozen before any v3 run; applies to every condition |
 | D47 | 25 Oct | Pre-registered rule for the v3 check changes (prompt v3 + persistence twin), fixed before the v3 runs |
 | D48 | 26 Oct | Label `env: <what>` for findings caused by the test deployment, not the app (first use: BookStack's missing mail setting, I42) |
-| D49 | 26 Oct | Harness v4 design, locked 27 Oct 2026 at commit `29b0940` (after D53/D54; clean T1 false alarms per run 0.33 Conduit, 0.60 BookStack; pilots `h4pilot`, `bs4pilot` healthy) |
+| D49 | 26 Oct | Harness v4 design, locked 27 Oct 2026 at commit `540887e` (after D53/D54; clean T1 false alarms per run 0.33 Conduit, 0.60 BookStack; pilots `h4pilot`, `bs4pilot` healthy) |
 | D50 | 26 Oct | Three deterministic oracles added to harness v4 before the lock (user: "build all 3", after the technique review in `logs/progress/2026-10-26.md`) |
 | D53 | 26 Oct | v4 oracle and harness fixes before the lock, from the D50 resweep and the first D53 resweep (clean app) |
 | D54 | 27 Oct | Two more v4 fixes before the lock, from the D53 Conduit resweep (15 clean runs: R09 2.07, I-delete 1.20 per run) |

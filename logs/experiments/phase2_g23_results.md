@@ -69,7 +69,7 @@ Precision (raw / gate-confirmed / confirmed minus judge `wrong_expectation`) wai
 
 # Harness v2 re-runs (25 Oct, label `h2rep`)
 
-Harness v2 = observation v2 (D43, cursor:pointer elements), gate v2 (D42, full-prefix window), exposure markers (D44). Commit `a1795ff` (branch `phase2-harness-v2`). n = 5 valid runs each, N = 4, 190k tokens, 30-min cap, all 10 faults on, `gemini-3.5-flash-lite`. Keys 6 → 7 → 9 → 10 → _OLD (D41); the 3 runs lost to quota exhaustion (429) were re-run and stay listed as invalid. Generated with `compare <a> <b> --workers 4 --label-contains h2rep` and `gate-report`.
+Harness v2 = observation v2 (D43, cursor:pointer elements), gate v2 (D42, full-prefix window), exposure markers (D44). Commit `aab8118` (branch `phase2-harness-v2`). n = 5 valid runs each, N = 4, 190k tokens, 30-min cap, all 10 faults on, `gemini-3.5-flash-lite`. Keys 6 → 7 → 9 → 10 → _OLD (D41); the 3 runs lost to quota exhaustion (429) were re-run and stay listed as invalid. Generated with `compare <a> <b> --workers 4 --label-contains h2rep` and `gate-report`.
 
 **Status:** exploration and exposure rows are final. Fault and precision rows need the hand labels (`finding_labels.toml`: 131 new blank entries from these runs, plus the 113 from 24 Oct).
 
@@ -178,7 +178,7 @@ The explorer reaches these faults but proposes the wrong check (F05), the right 
 
 # Harness v3 runs (25 Oct, label `h3rep`, D46): exploration and gate (labels pending)
 
-Harness v3 (D46), commits `7784d6c`/`d6094ef`. n = 5 valid runs each, N = 4, 190k tokens, 30-min cap, all 10 faults on, `gemini-3.5-flash-lite`. Keys: primary → 4 → 5 → 6 → 7 (D41). 25 runs with summaries (20 valid, 5 invalid: 3 quota, 1 primary-key 403/429, 1 stall) plus 4 attempts killed with no summary (I39: process tree ended; probable cause the memory commit limit). Generated with `compare <a> <b> --workers 4 --label-contains h3rep` and `gate-report`.
+Harness v3 (D46), commits `85e0bdc`/`64fffd5`. n = 5 valid runs each, N = 4, 190k tokens, 30-min cap, all 10 faults on, `gemini-3.5-flash-lite`. Keys: primary → 4 → 5 → 6 → 7 (D41). 25 runs with summaries (20 valid, 5 invalid: 3 quota, 1 primary-key 403/429, 1 stall) plus 4 attempts killed with no summary (I39: process tree ended; probable cause the memory commit limit). Generated with `compare <a> <b> --workers 4 --label-contains h3rep` and `gate-report`.
 
 **Status:** exploration and gate rows final; fault and precision rows need labels (next step, D45 process), then the D47 rule.
 

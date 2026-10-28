@@ -1,6 +1,6 @@
 # Phase 2, harness v4: Night 3 results (labelled)
 
-Harness v4 locked at `29b0940` (D49–D54). Night 3, 27–28 Oct: B3V3 (implicit oracles only, v4 harness) vs B4 (full system), N = 4 workers, 190k tokens per run, 30 min cap, 5 reps per condition and app. Conduit = development app (`h4rep`), BookStack = second app (`bs4rep`; it shaped v4's rules, so it is no longer held out; PrestaShop is the held-out test).
+Harness v4 locked at `540887e` (D49–D54). Night 3, 27–28 Oct: B3V3 (implicit oracles only, v4 harness) vs B4 (full system), N = 4 workers, 190k tokens per run, 30 min cap, 5 reps per condition and app. Conduit = development app (`h4rep`), BookStack = second app (`bs4rep`; it shaped v4's rules, so it is no longer held out; PrestaShop is the held-out test).
 
 20 of 20 valid (run notes in `run_notes.toml`); 4 invalid attempts (key quota, Docker stop; I48). No 429s in any valid run; every worker stopped on its token budget.
 
