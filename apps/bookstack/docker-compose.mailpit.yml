@@ -1,0 +1,17 @@
+# O9 (D60): a local mail catcher for BookStack, so mail flows (password reset, notifications) can be checked
+# (I42: mail went to the log driver). Use with:
+#   docker compose -f docker-compose.yml -f docker-compose.mailpit.yml up -d
+# Mailpit's web UI and API: http://127.0.0.1:4210 (GET /api/v1/messages). Untested until the first start (I55).
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "4210:8025"
+  webapp:
+    environment:
+      - MAIL_DRIVER=smtp
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+      - MAIL_ENCRYPTION=null
+      - MAIL_FROM=bookstack@bookstack.test

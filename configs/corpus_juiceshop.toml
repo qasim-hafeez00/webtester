@@ -1,0 +1,47 @@
+# E4 (D60) clean corpus app: OWASP Juice Shop, non-security pages only. False alarms only.
+# Its deliberate vulnerabilities are out of scope (D1); blocked_text keeps agents off the score board and
+# the challenge pages. Untested until `app up` (I55).
+
+[app]
+name = "juiceshop"
+base_url = "http://127.0.0.1:4400"
+compose_dir = "apps/corpus/juiceshop"
+health_path = "/"
+reset_compose_args = ["restart", "juiceshop"]
+app_type = "Shop"
+blocked_text = ["Score Board", "Hacking Instructor", "Privacy & Security", "Two Factor"]
+crawler_avoid_text = ["logout"]
+# seeded customer of Juice Shop's default data
+account_template = { username = "jim", email = "jim@juice-sh.op", password = "ncc-1701" }
+
+[app.login]
+path = "/#/login"
+fields = { "Email" = "{email}", "Password" = "{password}" }
+submit = "Log in"
+
+[llm]
+# Free tier first (see docs/00_research_plan.md section 12). Any OpenAI-compatible
+# provider works: gemini | groq | openrouter | cerebras | openai | ollama.
+provider = "gemini"
+model = "gemini-3.5-flash-lite"   # 2.5-flash is closed to new keys; 3.8-flash timed out on 11 Oct
+temperature = 0.2
+max_output_tokens = 800
+json_mode = true
+min_interval_s = 6.5   # free tier is ~10 requests/minute
+key_fallback = true
+api_key_env = "GEMINI_API_KEY"   # set per night, as for the dev apps
+price_in = 0.0
+price_out = 0.0
+
+[budget]
+max_steps = 300
+max_minutes = 15
+max_tokens = 1500000
+
+[run]
+seed = 1
+headless = true
+out_dir = "runs"
+# v5 evidence layer (D58, D59): network timeline with JSON bodies, sent data of writes, transient
+# messages (R57, R51). On from 28 Oct for every v5 run; runs and resweeps before D59 had it off.
+capture_evidence = true

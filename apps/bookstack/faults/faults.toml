@@ -1,3 +1,4 @@
+# severity (E8, D60): data (data loss, wrong data stored, money, access) | function (a feature fails) | display
 # Ground truth for the injected faults in BookStack (second subject app, decisions D31-D35).
 #
 # Source: the 27 BookStack bug scripts of the WebTestPilot benchmark
@@ -23,6 +24,7 @@
 
 [[fault]]
 id = "BS01"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["favourite_book", "favourite_chapter", "favourite_page", "favourite_page_template", "unfavourite_shelf"]
 class = "missing-element"
 trigger = "Open My Favourites (/favourites)"
@@ -31,6 +33,7 @@ reachable = true
 
 [[fault]]
 id = "BS02"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["recently_viewed_book", "recently_viewed_page", "recently_viewed_page_template", "recently_viewed_shelf"]
 class = "missing-element"
 trigger = "Arrive on the dashboard (/) for the 2nd time"
@@ -39,6 +42,7 @@ reachable = true
 
 [[fault]]
 id = "BS03"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["recently_viewed_chapter"]
 class = "missing-element"
 trigger = "Arrive on the dashboard (/) for the 2nd time"
@@ -47,6 +51,7 @@ reachable = true
 
 [[fault]]
 id = "BS04"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["delete_book"]
 class = "data"
 trigger = "Arrive on the Books list (heading 'Books') for the 2nd time"
@@ -55,6 +60,7 @@ reachable = true
 
 [[fault]]
 id = "BS05"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["count_recently_created_books"]
 class = "data"
 trigger = "A user profile page, /user/<slug> (it has the 'Recently Created Pages' heading, h2#recent-pages)"
@@ -64,6 +70,7 @@ note = "The script only appends to a non-empty list: a fresh worker's own profil
 
 [[fault]]
 id = "BS06"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["count_recently_created_chapters"]
 class = "data"
 trigger = "A user profile page, /user/<slug>"
@@ -73,6 +80,7 @@ note = "The script only appends to a non-empty list: a fresh worker's own profil
 
 [[fault]]
 id = "BS07"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["count_recently_created_shelves"]
 class = "data"
 trigger = "A user profile page, /user/<slug>"
@@ -82,6 +90,7 @@ note = "The script only appends to a non-empty list: a fresh worker's own profil
 
 [[fault]]
 id = "BS08"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["count_recently_created_pages"]
 class = "data"
 trigger = "A Search Results page (heading 'Search Results'), e.g. 'View All' next to a profile's Recently Created Pages"
@@ -90,6 +99,7 @@ reachable = true
 
 [[fault]]
 id = "BS09"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["recent_activity_all"]
 class = "data"
 trigger = "A user profile page (its Recent Activity block, #recent-user-activity)"
@@ -99,6 +109,7 @@ note = "A worker's own profile lists only its own activity, so the effect shows 
 
 [[fault]]
 id = "BS10"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["recent_activity_chapter", "recent_activity_page", "recent_activity_shelf"]
 class = "data"
 trigger = "A book or shelf page, e.g. /books/book1 (in 25.2.1 only these show both 'Recent Activity' and 'Details')"
@@ -108,6 +119,7 @@ reachable = true
 
 [[fault]]
 id = "BS11"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["recent_activity_page_template"]
 class = "data"
 trigger = "A page view (its Details block, #page-details), e.g. /books/book/page/page-template"
@@ -116,6 +128,7 @@ reachable = true
 
 [[fault]]
 id = "BS12"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["search"]
 class = "data"
 trigger = "Open the book 'Book2' (/books/book2)"
@@ -124,6 +137,7 @@ reachable = true
 
 [[fault]]
 id = "BS13"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["settings"]
 class = "missing-element"
 trigger = "Settings > Sorting (/settings/sorting)"
@@ -132,6 +146,7 @@ reachable = true
 
 [[fault]]
 id = "BS14"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["comment"]
 class = "data"
 trigger = "A comment with the text 'I like this template' is shown"
@@ -141,6 +156,7 @@ needs = "comment text 'I like this template'"
 
 [[fault]]
 id = "BS15"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["create_book"]
 class = "data"
 trigger = "Arrive on the Books list for the 2nd time, with a book named 'New Book'"
@@ -150,6 +166,7 @@ needs = "book name 'New Book'"
 
 [[fault]]
 id = "BS16"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["create_page"]
 class = "data"
 trigger = "Open the page at /books/book/page/new-page"
@@ -159,6 +176,7 @@ needs = "a page titled 'New Page' in the book 'Book'"
 
 [[fault]]
 id = "BS17"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["create_sort_rule"]
 class = "data"
 trigger = "Arrive on Settings > Sorting for the 2nd time, with a rule named 'New Sort Rule'"
@@ -168,6 +186,7 @@ needs = "sort rule name 'New Sort Rule'"
 
 [[fault]]
 id = "BS18"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 scripts = ["update_book"]
 class = "data"
 trigger = "Arrive on the Books list for the 2nd time, with a book named 'Updated Book'"

@@ -102,8 +102,9 @@ def test_condition_table_keeps_g1_conditions_and_defines_b4_family():
     assert "b1" not in FRONTIERS and "b4nog1" not in FRONTIERS  # no frontier: B2 and A-G1
     # harness v4 (D49): the B4 family explores like b3v3
     assert FRONTIERS["b4"] == FRONTIERS["b4nog3"] == FRONTIERS["b4det"] == FRONTIERS["b3v3"] == (FrontierV3, True)
-    assert INFERRED == {"b4", "b4nog1"} and CONSISTENCY == {"b4", "b4det", "b4nog1"}
-    assert GATED == {"b4", "b4det", "b4nog1", "b4nog3"}
+    # v5 (D60): B5 = B4 with worker roles, in every B4 set
+    assert INFERRED == {"b4", "b4nog1", "b5"} and CONSISTENCY == {"b4", "b4det", "b4nog1", "b5", "b4annot"}  # D61: O11 ablation
+    assert GATED == {"b4", "b4det", "b4nog1", "b4nog3", "b5", "b4annot"} and FRONTIERS["b5"] == FRONTIERS["b4"]
     assert set(GATED) <= set(LLM_AGENTS) <= set(AGENTS)
 
 
@@ -170,7 +171,7 @@ def test_gate_minimises_then_confirms_and_judges(tmp_path, monkeypatch):
     # the oracle finding's message is its sig; map it to scenario B
     outcomes["oracle_violation|changes|/|now|"] = outcomes.pop("B")
     judge = _FakeLLM({"verdict": "wrong_expectation", "reason": "a no-op is fine here"})
-    out = asyncio.run(gate.run_gate(None, None, ctx, None, judge, gate.GateConfig(k=3, windows=(1, 4))))
+    out = asyncio.run(gate.run_gate(None, None, ctx, None, judge, gate.GateConfig(k=3, windows=(1, 4), ddmin=False)))
     by = {f.message: f for f in ctx.findings.all()}
     assert by["A"].status == "confirmed" and by["A"].gate["minimal_steps"] == 4 and by["A"].gate["reproduced"] == 3
     assert by["oracle_violation|changes|/|now|"].status == "flaky"

@@ -1,0 +1,85 @@
+Error occurred in event listener
+Traceback (most recent call last):
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\asyncio.py", line 79, in _emit_run
+    coro: Any = f(*args, **kwargs)
+                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_browser_context.py", line 181, in <lambda>
+    lambda params: self._on_response(
+                   ~~~~~~~~~~~~~~~~~^
+        from_channel(params["response"]),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        from_nullable_channel(params.get("page")),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ),
+    ^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_browser_context.py", line 730, in _on_response
+    page.emit(Page.Events.Response, response)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\asyncio.py", line 70, in emit
+    return super().emit(event, *args, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\base.py", line 220, in emit
+    handled = self._call_handlers(event, args, kwargs)
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\base.py", line 196, in _call_handlers
+    self._emit_run(f, args, kwargs)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\asyncio.py", line 81, in _emit_run
+    self.emit("error", exc)
+    ~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\asyncio.py", line 70, in emit
+    return super().emit(event, *args, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\base.py", line 223, in emit
+    self._emit_handle_potential_error(event, args[0] if args else None)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\base.py", line 181, in _emit_handle_potential_error
+    raise error
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\pyee\asyncio.py", line 79, in _emit_run
+    coro: Any = f(*args, **kwargs)
+                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_impl_to_api_mapping.py", line 123, in wrapper_func
+    return handler(
+        *list(map(lambda a: self.from_maybe_impl(a), args))[:arg_count]
+    )
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\browser.py", line 524, in _on_response
+    self._record(resp)
+    ~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\browser.py", line 551, in _record
+    rec["sent"] = (req.post_data or "")[:MAX_POST_CHARS]
+                   ^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\async_api\_generated.py", line 156, in post_data
+    return mapping.from_maybe_impl(self._impl_obj.post_data)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\.venv\Lib\site-packages\playwright\_impl\_network.py", line 214, in post_data
+    return base64.b64decode(base64_post_data).decode()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0x89 in position 735: invalid start byte
+{
+  "run": "20261027-232821_bookstack_b4_n4_bs4rep3",
+  "faults": [],
+  "steps_replayed": 68,
+  "missing_elements": 1,
+  "minutes": 5.8,
+  "findings": 4,
+  "by_rule": {
+    "R23m": 2,
+    "R43": 1,
+    "R01x": 1
+  },
+  "probes": 76,
+  "link_checks": 27,
+  "access_probes": 2,
+  "reloads": 17,
+  "mutation_forms": 2,
+  "mutation_submits": 7,
+  "events": {
+    "login:verified": 4,
+    "search:verified": 17,
+    "edit:unknown": 5,
+    "create:unknown": 1,
+    "create:verified": 3,
+    "view:verified": 1,
+    "add:verified": 1
+  },
+  "file": "findings_resweep_clean.json"
+}

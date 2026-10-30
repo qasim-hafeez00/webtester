@@ -241,12 +241,15 @@ def sanitize_actions(raw: object) -> list[dict]:
     return out
 
 
+SEQUENCE_EVERY = 6  # R11: one prompt in six carries the sequence goals (token cost)
+
+
 class LLMPolicy:
     name = "llm"
 
     def __init__(self, llm: LLMClient, account: Account, max_steps: int,
                  frontier: "Frontier | None" = None, worker: int = 0, inferred: bool = False,
-                 intents: bool = False, notes=None):
+                 intents: bool = False, notes=None, role: str = "", profile_after: int = 0, sequences: bool = False):
         """`inferred`: the model may add checks and cited contradictions (v4: b4, b4nog1).
         `intents`: the model states intents that the harness verifies (v4 B4 family, D49).
         `notes`: callable returning the worker's memory lines for the prompt (M5)."""
@@ -262,8 +265,43 @@ class LLMPolicy:
             self.system_prompt = SYSTEM_PROMPT + INTENT_PROMPT + (CHECKS_PROMPT if inferred else "")
         else:
             self.system_prompt = SYSTEM_PROMPT + ORACLE_PROMPT if inferred else SYSTEM_PROMPT
+        # v5 X4 (D60, condition B5): a worker role adds its paragraph to the system prompt
+        from .reach import ROLE_PROMPTS
+
+        self.role = role
+        self.system_prompt += ROLE_PROMPTS.get(role, "")
+        self.profile_after = profile_after  # X5: 0 = no app profile step
+        self.sequences = sequences  # R11 (D61): generated action sequences as goal flows, every SEQUENCE_EVERY steps
+        self.last_profile: dict | None = None
         self.last_suggestion: str | None = None
         self._prepared = False
+
+    async def _profile(self) -> "Usage | None":
+        """X5: once per run (the first worker to get there), after `profile_after` routes, the LLM names the
+        app type and the primitives it saw; the profile goes on the shared frontier. It adds goal flows to
+        every worker's prompt and is logged; it never switches rules off (v5 plan X5)."""
+        f = self.frontier
+        if not self.profile_after or f is None or getattr(f, "profile", "absent") is not None \
+                or len(f.routes) < self.profile_after:
+            return None
+        from .families import app_types, primitives
+        from .reach import PROFILE_PROMPT, parse_profile
+
+        f.profile = {"pending": True}
+        graph = getattr(f, "graph", None)
+        pages = "\n".join(f"{r}: {(graph.pages[r].name or graph.pages[r].heading) if graph and r in graph.pages else ''}"
+                          for r, _ in f.routes.most_common(30))
+        types, prims = sorted(app_types()), sorted(primitives())
+        try:
+            data, usage = await self.llm.complete_json("You classify web applications. Reply with JSON only.",
+                                                       PROFILE_PROMPT.format(types="; ".join(types), prims=", ".join(prims),
+                                                                             pages=pages))
+        except LLMError as e:
+            f.profile = {"error": str(e)[:200]}
+            return None
+        f.profile = parse_profile(data, types, prims)
+        self.last_profile = f.profile
+        return usage
 
     def prepare(self, sid: str) -> tuple[str, str] | None:
         """Frontier v2+: work out this step's focus area once. Returns it when it is newly assigned
@@ -284,12 +322,28 @@ class LLMPolicy:
             self.last_suggestion = f"{focus[0]} {focus[1]}" if focus else None
         else:
             self.last_suggestion = self.frontier.suggest(self.worker, sid) if self.frontier else None
+        prof_usage = await self._profile()
         prompt = build_user_prompt(obs, mem, self.account, step, self.max_steps, self.frontier, self.worker, sid,
                                    self.last_suggestion, self.notes() if self.notes else None)
+        prof = getattr(self.frontier, "profile", None)
+        if prof and prof.get("primitives"):
+            from .reach import goal_lines, rank_primitives
+
+            goals = goal_lines(rank_primitives(prof["primitives"], getattr(self.frontier, "checks", None)))
+            if goals:
+                prompt += "\nGoal flows for this kind of app (" + prof["app_type"] + "):\n- " + "\n- ".join(goals) + "\n"
+        if self.sequences and step % SEQUENCE_EVERY == 0:
+            from .reach import sequence_goals
+
+            seq = sequence_goals(getattr(self.frontier, "graph", None))
+            if seq:
+                prompt += "\nOrder-dependent checks worth one try now:\n- " + "\n- ".join(seq) + "\n"
         try:
             data, usage = await self.llm.complete_json(self.system_prompt, prompt)
         except LLMError as e:
-            return Decision([], error=str(e)[:300])
+            return Decision([], error=str(e)[:300], usage=prof_usage)
+        if prof_usage is not None:
+            usage.add(prof_usage)
         actions = sanitize_actions(data.get("actions"))
         if not actions and isinstance(data.get("action"), dict):
             actions = sanitize_actions([data["action"]])

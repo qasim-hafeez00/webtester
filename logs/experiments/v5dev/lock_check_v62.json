@@ -1,0 +1,2538 @@
+{
+ "ver": "v62",
+ "ref": "v5",
+ "apps": {
+  "bookstack": {
+   "faulty_runs": 5,
+   "clean_runs": 5,
+   "recall": {
+    "mutation_score": {
+     "killed": 8,
+     "seeded": 13,
+     "score": 0.6154
+    },
+    "ref_mutation_score": {
+     "killed": 8,
+     "seeded": 13,
+     "score": 0.6154
+    },
+    "median_total": 0.4615,
+    "ref_median_total": 0.4615,
+    "ok": true
+   },
+   "precision": {
+    "tp": 91,
+    "n": 95,
+    "precision": 0.9579,
+    "ci95": [
+     0.8957,
+     0.9884
+    ],
+    "unlabelled": 0,
+    "ok": true
+   },
+   "false_alarms": {
+    "n": 4,
+    "per_run": 0.8,
+    "ci95": [
+     0.218,
+     2.0483
+    ],
+    "unlabelled": 0,
+    "by_rule": {
+     "R08": 2,
+     "R21b": 1,
+     "R09": 1
+    },
+    "ok": false
+   },
+   "found": [
+    "BS04",
+    "BS05",
+    "BS06",
+    "BS07",
+    "BS08",
+    "BS09",
+    "BS10",
+    "BS11"
+   ],
+   "ok": false
+  },
+  "realworld": {
+   "faulty_runs": 5,
+   "clean_runs": 5,
+   "recall": {
+    "mutation_score": {
+     "killed": 7,
+     "seeded": 8,
+     "score": 0.875
+    },
+    "ref_mutation_score": {
+     "killed": 7,
+     "seeded": 8,
+     "score": 0.875
+    },
+    "median_total": 0.75,
+    "ref_median_total": 0.75,
+    "ok": true
+   },
+   "precision": {
+    "tp": 65,
+    "n": 100,
+    "precision": 0.65,
+    "ci95": [
+     0.5482,
+     0.7427
+    ],
+    "unlabelled": 0,
+    "ok": false
+   },
+   "false_alarms": {
+    "n": 26,
+    "per_run": 5.2,
+    "ci95": [
+     3.3968,
+     7.6192
+    ],
+    "unlabelled": 0,
+    "by_rule": {
+     "R30": 15,
+     "R50m": 5,
+     "R09d": 2,
+     "R68t": 2,
+     "I-delete": 1,
+     "R12c": 1
+    },
+    "ok": false
+   },
+   "found": [
+    "F01",
+    "F02",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10"
+   ],
+   "ok": false
+  }
+ },
+ "rules": {
+  "G1": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "G2": {
+   "fixture_test": true,
+   "check_rows": 317,
+   "armed": 317,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "G3": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "I-create": {
+   "fixture_test": true,
+   "check_rows": 149,
+   "armed": 95,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "I-delete": {
+   "fixture_test": true,
+   "check_rows": 32,
+   "armed": 41,
+   "seeded_family": true,
+   "findings": 13,
+   "tp": 13,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 1,
+   "faults": [
+    "F06"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "I-edit": {
+   "fixture_test": true,
+   "check_rows": 62,
+   "armed": 14,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "I-error": {
+   "fixture_test": true,
+   "check_rows": 151,
+   "armed": 309,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "I-filter": {
+   "fixture_test": true,
+   "check_rows": 120,
+   "armed": 70,
+   "seeded_family": true,
+   "findings": 14,
+   "tp": 14,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F10"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "I-logout": {
+   "fixture_test": true,
+   "check_rows": 12,
+   "armed": 10,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "I-submit": {
+   "fixture_test": true,
+   "check_rows": 17,
+   "armed": 16,
+   "seeded_family": true,
+   "findings": 10,
+   "tp": 8,
+   "precision": 0.8,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F01",
+    "F02"
+   ],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "I-toggle": {
+   "fixture_test": true,
+   "check_rows": 38,
+   "armed": 7,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R01": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R01x": {
+   "fixture_test": true,
+   "check_rows": 580,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 3,
+   "tp": 3,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R02": {
+   "fixture_test": true,
+   "check_rows": 224,
+   "armed": 258,
+   "seeded_family": true,
+   "findings": 1,
+   "tp": 1,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "BS04"
+   ],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R02d": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R02h": {
+   "fixture_test": true,
+   "check_rows": 578,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 3,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R02m": {
+   "fixture_test": true,
+   "check_rows": 592,
+   "armed": 1463,
+   "seeded_family": false,
+   "findings": 1,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R02s": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R03": {
+   "fixture_test": true,
+   "check_rows": 634,
+   "armed": 915,
+   "seeded_family": true,
+   "findings": 20,
+   "tp": 20,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "BS05",
+    "BS06",
+    "BS07",
+    "BS08"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R04": {
+   "fixture_test": true,
+   "check_rows": 634,
+   "armed": 126,
+   "seeded_family": true,
+   "findings": 15,
+   "tp": 15,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "BS05",
+    "BS06",
+    "BS08"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R04b": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R05": {
+   "fixture_test": true,
+   "check_rows": 228,
+   "armed": 228,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R06": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R06c": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 158,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R06s": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R07": {
+   "fixture_test": true,
+   "check_rows": 44,
+   "armed": 114,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R07b": {
+   "fixture_test": true,
+   "check_rows": 44,
+   "armed": 114,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R07c": {
+   "fixture_test": true,
+   "check_rows": 9,
+   "armed": 9,
+   "seeded_family": true,
+   "findings": 5,
+   "tp": 5,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F08"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R08": {
+   "fixture_test": true,
+   "check_rows": 642,
+   "armed": 286,
+   "seeded_family": true,
+   "findings": 23,
+   "tp": 21,
+   "precision": 0.913,
+   "unlabelled": 0,
+   "clean_false_alarms": 2,
+   "faults": [
+    "BS09",
+    "BS10",
+    "BS11"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R09": {
+   "fixture_test": true,
+   "check_rows": 510,
+   "armed": 434,
+   "seeded_family": true,
+   "findings": 3,
+   "tp": 1,
+   "precision": 0.3333,
+   "unlabelled": 0,
+   "clean_false_alarms": 1,
+   "faults": [
+    "BS04"
+   ],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R09d": {
+   "fixture_test": true,
+   "check_rows": 15,
+   "armed": 35,
+   "seeded_family": false,
+   "findings": 2,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 2,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R09r": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R10": {
+   "fixture_test": true,
+   "check_rows": 58,
+   "armed": 55,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R10x": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R11": {
+   "fixture_test": true,
+   "check_rows": 22,
+   "armed": 16,
+   "seeded_family": true,
+   "findings": 5,
+   "tp": 5,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F09"
+   ],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R12": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R12b": {
+   "fixture_test": true,
+   "check_rows": 612,
+   "armed": 1336,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R12c": {
+   "fixture_test": true,
+   "check_rows": 578,
+   "armed": 2,
+   "seeded_family": false,
+   "findings": 1,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 1,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R13": {
+   "fixture_test": true,
+   "check_rows": 46,
+   "armed": 65,
+   "seeded_family": true,
+   "findings": 1,
+   "tp": 1,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F07"
+   ],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R15": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R16": {
+   "fixture_test": true,
+   "check_rows": 45,
+   "armed": 45,
+   "seeded_family": true,
+   "findings": 4,
+   "tp": 4,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [
+    "F01"
+   ],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R16i": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R16u": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 2,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R17": {
+   "fixture_test": true,
+   "check_rows": 45,
+   "armed": 45,
+   "seeded_family": true,
+   "findings": 8,
+   "tp": 8,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R18": {
+   "fixture_test": true,
+   "check_rows": 580,
+   "armed": 286,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R19": {
+   "fixture_test": true,
+   "check_rows": 28,
+   "armed": 19,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R20": {
+   "fixture_test": true,
+   "check_rows": 586,
+   "armed": 141,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R20d": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R20f": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R20t": {
+   "fixture_test": true,
+   "check_rows": 16,
+   "armed": 127,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R20u": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R21a": {
+   "fixture_test": true,
+   "check_rows": 10,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R21b": {
+   "fixture_test": true,
+   "check_rows": 19,
+   "armed": 10,
+   "seeded_family": true,
+   "findings": 1,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 1,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R21s": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R22": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R22g": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R22v": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R23": {
+   "fixture_test": true,
+   "check_rows": 68,
+   "armed": 22,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R23m": {
+   "fixture_test": true,
+   "check_rows": 240,
+   "armed": 20,
+   "seeded_family": false,
+   "findings": 10,
+   "tp": 10,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R24": {
+   "fixture_test": true,
+   "check_rows": 48,
+   "armed": 48,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R24b": {
+   "fixture_test": true,
+   "check_rows": 8,
+   "armed": 8,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R25": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 4,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R26": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R26p": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R27": {
+   "fixture_test": true,
+   "check_rows": 7,
+   "armed": 10,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R28": {
+   "fixture_test": true,
+   "check_rows": 20,
+   "armed": 20,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R29": {
+   "fixture_test": true,
+   "check_rows": 25,
+   "armed": 25,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R29k": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R30": {
+   "fixture_test": true,
+   "check_rows": 27,
+   "armed": 43,
+   "seeded_family": false,
+   "findings": 17,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 15,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R31": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R32": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R32d": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R33": {
+   "fixture_test": true,
+   "check_rows": 7,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R33g": {
+   "fixture_test": true,
+   "check_rows": 15,
+   "armed": 9,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R34": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R34c": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R35": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R36": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R36b": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R36p": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R36r": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R37": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R37i": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R38": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R38c": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R39": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R40": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 32,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R40c": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R40m": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R41": {
+   "fixture_test": true,
+   "check_rows": 629,
+   "armed": 915,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R42": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R43": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 696,
+   "seeded_family": false,
+   "findings": 19,
+   "tp": 19,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R44": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R45": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R46": {
+   "fixture_test": true,
+   "check_rows": 25,
+   "armed": 25,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R46c": {
+   "fixture_test": true,
+   "check_rows": 4,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R46w": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 2,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R47": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R47m": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R47r": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R48": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R48c": {
+   "fixture_test": true,
+   "check_rows": 20,
+   "armed": 20,
+   "seeded_family": false,
+   "findings": 5,
+   "tp": 5,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T1",
+   "enters": true,
+   "why_not": []
+  },
+  "R48s": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R48u": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R49": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 1,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R49a": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R50": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R50m": {
+   "fixture_test": true,
+   "check_rows": 8,
+   "armed": 8,
+   "seeded_family": false,
+   "findings": 3,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 5,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R51": {
+   "fixture_test": true,
+   "check_rows": 608,
+   "armed": 114,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R51c": {
+   "fixture_test": true,
+   "check_rows": 66,
+   "armed": 86,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R52": {
+   "fixture_test": true,
+   "check_rows": 4,
+   "armed": 4,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R52f": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R53": {
+   "fixture_test": true,
+   "check_rows": 9,
+   "armed": 9,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R54": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R55": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R56": {
+   "fixture_test": true,
+   "check_rows": 3,
+   "armed": 3,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R57": {
+   "fixture_test": true,
+   "check_rows": 626,
+   "armed": 663,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R57e": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R58": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 2,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R59": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R60": {
+   "fixture_test": true,
+   "check_rows": 21,
+   "armed": 23,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R61": {
+   "fixture_test": true,
+   "check_rows": 250,
+   "armed": 20,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R62": {
+   "fixture_test": true,
+   "check_rows": 22,
+   "armed": 22,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R63": {
+   "fixture_test": true,
+   "check_rows": 106,
+   "armed": 78,
+   "seeded_family": false,
+   "findings": 2,
+   "tp": 2,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R64": {
+   "fixture_test": true,
+   "check_rows": 580,
+   "armed": 8,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R65": {
+   "fixture_test": true,
+   "check_rows": 589,
+   "armed": 1578,
+   "seeded_family": false,
+   "findings": 4,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R66": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R67": {
+   "fixture_test": true,
+   "check_rows": 9,
+   "armed": 9,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R67f": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R68": {
+   "fixture_test": true,
+   "check_rows": 2,
+   "armed": 4,
+   "seeded_family": false,
+   "findings": 1,
+   "tp": 1,
+   "precision": 1.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R68t": {
+   "fixture_test": true,
+   "check_rows": 37,
+   "armed": 75,
+   "seeded_family": false,
+   "findings": 1,
+   "tp": 0,
+   "precision": 0.0,
+   "unlabelled": 0,
+   "clean_false_alarms": 2,
+   "faults": [],
+   "tier": "T2",
+   "enters": true,
+   "why_not": []
+  },
+  "R69": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R70": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R71": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R72": {
+   "fixture_test": true,
+   "check_rows": 582,
+   "armed": 1568,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R72c": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R73": {
+   "fixture_test": true,
+   "check_rows": 86,
+   "armed": 44,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R74": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": false,
+   "why_not": [
+    "never armed"
+   ]
+  },
+  "R75": {
+   "fixture_test": true,
+   "check_rows": 576,
+   "armed": 696,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "R77": {
+   "fixture_test": true,
+   "check_rows": 240,
+   "armed": 20,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "http_5xx": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "page_error": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": true,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  },
+  "request_failed": {
+   "fixture_test": true,
+   "check_rows": 0,
+   "armed": 0,
+   "seeded_family": false,
+   "findings": 0,
+   "tp": 0,
+   "precision": null,
+   "unlabelled": 0,
+   "clean_false_alarms": 0,
+   "faults": [],
+   "tier": "-",
+   "enters": true,
+   "why_not": []
+  }
+ },
+ "without": {
+  "dropped": [
+   "R02h",
+   "R02m",
+   "R09",
+   "R09d",
+   "R12c",
+   "R21b",
+   "R30",
+   "R50m",
+   "R65",
+   "R68t"
+  ],
+  "apps": {
+   "bookstack": {
+    "faulty_runs": 5,
+    "clean_runs": 5,
+    "recall": {
+     "mutation_score": {
+      "killed": 8,
+      "seeded": 13,
+      "score": 0.6154
+     },
+     "ref_mutation_score": {
+      "killed": 8,
+      "seeded": 13,
+      "score": 0.6154
+     },
+     "median_total": 0.4615,
+     "ref_median_total": 0.4615,
+     "ok": true
+    },
+    "precision": {
+     "tp": 90,
+     "n": 92,
+     "precision": 0.9783,
+     "ci95": [
+      0.9237,
+      0.9974
+     ],
+     "unlabelled": 0,
+     "ok": true
+    },
+    "false_alarms": {
+     "n": 2,
+     "per_run": 0.4,
+     "ci95": [
+      0.0484,
+      1.4449
+     ],
+     "unlabelled": 0,
+     "by_rule": {
+      "R08": 2
+     },
+     "ok": true
+    },
+    "found": [
+     "BS04",
+     "BS05",
+     "BS06",
+     "BS07",
+     "BS08",
+     "BS09",
+     "BS10",
+     "BS11"
+    ],
+    "ok": true
+   },
+   "realworld": {
+    "faulty_runs": 5,
+    "clean_runs": 5,
+    "recall": {
+     "mutation_score": {
+      "killed": 7,
+      "seeded": 8,
+      "score": 0.875
+     },
+     "ref_mutation_score": {
+      "killed": 7,
+      "seeded": 8,
+      "score": 0.875
+     },
+     "median_total": 0.75,
+     "ref_median_total": 0.75,
+     "ok": true
+    },
+    "precision": {
+     "tp": 65,
+     "n": 67,
+     "precision": 0.9701,
+     "ci95": [
+      0.8963,
+      0.9964
+     ],
+     "unlabelled": 0,
+     "ok": true
+    },
+    "false_alarms": {
+     "n": 1,
+     "per_run": 0.2,
+     "ci95": [
+      0.0051,
+      1.1143
+     ],
+     "unlabelled": 0,
+     "by_rule": {
+      "I-delete": 1
+     },
+     "ok": true
+    },
+    "found": [
+     "F01",
+     "F02",
+     "F06",
+     "F07",
+     "F08",
+     "F09",
+     "F10"
+    ],
+    "ok": true
+   }
+  }
+ }
+}

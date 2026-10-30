@@ -1,0 +1,7 @@
+# E4 (D60) clean corpus: OWASP Juice Shop, its non-security pages only (blocked_text keeps agents off the
+# challenge pages). Juice Shop rebuilds its database on start, so a restart restores it.
+services:
+  juiceshop:
+    image: bkimminich/juice-shop:latest
+    ports:
+      - "4400:3000"

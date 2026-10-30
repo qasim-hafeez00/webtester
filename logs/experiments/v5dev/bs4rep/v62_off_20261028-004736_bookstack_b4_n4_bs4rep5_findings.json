@@ -1,0 +1,275 @@
+[
+  {
+    "sig": "consistency|R23m|/settings/features|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 19,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/settings/features",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/settings/features|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23m|/user/admin|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 23,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/user/admin|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/page/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 64,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/books/book-beta-99/page/page-bgammab-99",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|R43|/books/*/page/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/page/*/revisions|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 72,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/books/book-beta-99/page/page-bgammab-99/revisions",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*/page/*/revisions|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/password/email|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 4,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/password/email",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/password/email|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/login|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 8,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/login",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/login|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/shelves/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 22,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/shelves/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/shelves/*/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 26,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at/create-book",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/shelves/*/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 31,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/new-test-book-alpha",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 35,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/new-test-book-alpha/create-chapter",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/chapter/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 40,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/new-test-book-alpha/chapter/chapter-one-alpha",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*/chapter/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/draft/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 44,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/new-test-book-alpha/draft/10",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/books/*/draft/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-test-bnameb-at|updated",
+    "kind": "consistency",
+    "message": "[R08 T2] '1 day ago', but an agent changed it 0 min ago (step 10)",
+    "first_step": 25,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/shelves/shelf-test-bnameb-at",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/shelves/*|touched|/shelves/shelf-test-bnameb-at|updated",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Recent Activity Worker 04 updated permissions Shelf Test <b>Name</b>! @#% 0 seconds ago Worker 04 updated shelf Shelf Test <b>Name</b>! @#% 15 seconds ago Admin"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

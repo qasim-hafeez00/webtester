@@ -142,12 +142,17 @@ class FrontierV2(Frontier):
         self.route_url: dict[str, str] = {}  # route shape -> last URL seen for it
         self.focus_of: dict[int, tuple[str, int]] = {}  # worker -> (route, steps spent on it)
         self.reassignments = 0
+        self.revisits = False  # E1/E3 (D60): switched on by FrontierV3
+        self.entity_paths: dict[str, set] = defaultdict(set)  # area -> item paths linked from pages seen
+        self.visited_paths: set[str] = set()
+        self.discovered: dict[str, str] = {}  # R7: path -> source (sitemap, robots, feed, network)
 
     # ---------- updates ----------
     def visit(self, worker: int, sid: str, obs: Observation) -> None:
         super().visit(worker, sid, obs)
         info = self.states[sid]
         self.route_url[info.route] = obs.url
+        self.visited_paths.add(self._path(obs.url))
         origin = urlsplit(obs.url).netloc
         for e in obs.elements:
             if e.disabled:
@@ -157,6 +162,8 @@ class FrontierV2(Frontier):
                 target = urljoin(obs.url, e.href)
                 if urlsplit(target).netloc == origin:
                     self.links.setdefault(route_shape(target), self._path(target))
+                    if "*" in route_shape(target):
+                        self.entity_paths[self.area(route_shape(target))].add(self._path(target))
 
     def record(self, worker: int, sid: str, key: str, do: str | None = None, value: str | None = None) -> None:
         super().record(worker, sid, key)
@@ -195,10 +202,21 @@ class FrontierV2(Frontier):
         return any(r in self.routes for r in self._area_routes(area))
 
     def area_work(self, worker: int, area: str) -> int:
-        """Untouched non-global elements over the area's states; an unvisited area counts as fresh work."""
+        """Untouched non-global elements over the area's states; an unvisited area counts as fresh work.
+        v5 (D60): a list page seen only once counts 2 more (E1: second-arrival faults, R09 needs a revisit),
+        and unvisited item pages of the area count 1 each, up to 3 (E3)."""
         if not self.area_visited(area):
             return 5
-        return sum(self.untouched(worker, sid) for sid, i in self.states.items() if self.area(i.route) == area)
+        work = sum(self.untouched(worker, sid) for sid, i in self.states.items() if self.area(i.route) == area)
+        if getattr(self, "revisits", False):
+            routes = self._area_routes(area)
+            if sum(self.routes.get(r, 0) for r in routes) == 1:
+                work += 2
+            work += min(3, sum(1 for p in self.entity_paths.get(area, ()) if p not in self.visited_paths))
+        checks = getattr(self, "checks", None)
+        if checks is not None and not (self._area_routes(area) & checks.armed_routes):
+            work += 2  # R10 (D61): no rule has run on this area's pages yet (check-outcome log)
+        return work
 
     def unvisited_routes(self) -> list[str]:
         return sorted({self.area(r) for r in self.links if not self.area_visited(self.area(r))})
@@ -238,8 +256,24 @@ class FrontierV2(Frontier):
         self.reassignments += 1
         return best, self._area_path(best)
 
+    def add_discovered(self, paths: dict[str, list[str]]) -> int:
+        """R7: routes from sitemap, robots, feeds and the network join the links (as unvisited work)."""
+        n = 0
+        for src, ps in paths.items():
+            for p in ps:
+                if p and p.startswith("/") and route_shape(p) not in self.links:
+                    self.links[route_shape(p)] = p
+                    self.discovered[p] = src
+                    n += 1
+        return n
+
     def _area_path(self, area: str) -> str:
-        """A concrete path into the area: the last URL seen there, else a link to it."""
+        """A concrete path into the area: an item page not visited yet (E3, D60), else the last URL seen
+        there, else a link to it."""
+        if getattr(self, "revisits", False):
+            fresh = sorted(p for p in self.entity_paths.get(area, ()) if p not in self.visited_paths)
+            if fresh:
+                return fresh[0]
         seen = [r for r in self._area_routes(area) if r in self.route_url]
         if seen:
             return self._path(self.route_url[max(seen, key=lambda r: self.routes[r])])
@@ -250,7 +284,10 @@ class FrontierV2(Frontier):
 
     def stats(self) -> dict:
         return {**super().stats(), "version": 2, "focus_reassignments": self.reassignments,
-                "global_elements": sum(1 for k in self.key_states if self.is_global(k))}
+                "global_elements": sum(1 for k in self.key_states if self.is_global(k)),
+                "discovered": len(self.discovered),
+                "entity_pages_unvisited": sum(1 for ps in self.entity_paths.values() for p in ps
+                                              if p not in self.visited_paths)}
 
 
 class FrontierV3(FrontierV2):
@@ -261,6 +298,8 @@ class FrontierV3(FrontierV2):
 
     version = 3
 
-    def __init__(self, shared: bool, graph=None, **kw):
+    def __init__(self, shared: bool, graph=None, revisits: bool = True, **kw):
         super().__init__(shared, **kw)
         self.graph = graph
+        self.revisits = revisits  # v5 E1/E3 (D60)
+        self.profile: dict | None = None  # X5: the app profile, once the LLM gave it

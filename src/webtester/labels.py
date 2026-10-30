@@ -37,7 +37,9 @@ def label_of(labels: dict, run_id: str, sig: str) -> str:
 
 
 def is_true_positive(label: str) -> bool:
-    return bool(label) and label.lower() != "fp"
+    # `harness:` = a false alarm the harness caused (its own typed data, a 429, an expired CSRF token, D59):
+    # not a true positive, and counted apart from app false alarms
+    return bool(label) and label.lower() != "fp" and not label.lower().startswith("harness")
 
 
 def suggest(f: dict, catalog: dict, enabled: list[str]) -> str:

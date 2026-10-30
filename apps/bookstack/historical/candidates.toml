@@ -1,0 +1,9 @@
+# Real historical BookStack faults (E5 a): fill by the protocol in README.md. One table per bug:
+# [[bug]]
+# id = "H01"
+# issue = "https://github.com/BookStackApp/BookStack/issues/NNNN"
+# fix = "<commit>"
+# last_affected = "v24.xx"
+# symptom = ""
+# family = ""
+# reachable = true

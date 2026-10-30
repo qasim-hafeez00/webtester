@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
@@ -50,8 +51,54 @@ INNER_TEXT_JS = "() => document.body ? document.body.innerText : ''"
 # returns their descriptors, plus a skeleton of the visible DOM in which text
 # and attributes are dropped and siblings with identical structure are merged
 # (the "merge" idea from Judge, TOSEM'26), so lists of any length collapse.
+# D61, once per URL: interaction modalities the harness cannot drive (R6, reported as coverage gaps), signs of a
+# development build (O4), and the centre of the main list's first row (hovered so hover-only controls show)
+# R4 (D61): the active context a page is in, from a context switcher outside any form: a select whose label,
+# name or id names a workspace, team, store, project and the like (its selected option), or a control whose text
+# reads 'Workspace: Acme'. Empty when the page has none (most apps put the context in the address).
+CONTEXT_JS = r"""() => {
+  const rx = /\b(workspace|organi[sz]ation|org|team|tenant|store|shop|project|company|branch|space|board|site)\b/i;
+  const vis = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  for (const s of document.querySelectorAll('select')) {
+    if (s.form || !vis(s)) continue;
+    const lab = (s.labels && s.labels[0] ? s.labels[0].innerText : '') + ' ' + (s.name || '') + ' ' + (s.id || '') + ' ' +
+      (s.getAttribute('aria-label') || '');
+    if (rx.test(lab) && s.selectedOptions[0]) return lab.trim().split(/\s+/)[0].toLowerCase() + '=' + s.selectedOptions[0].text.trim().slice(0, 40);
+  }
+  for (const b of document.querySelectorAll('header button, nav button, header [aria-haspopup], nav [aria-haspopup]')) {
+    const m = (b.innerText || '').trim().match(/^([A-Za-z ]{2,20}):\s*(.{1,40})$/);
+    if (m && rx.test(m[1]) && vis(b)) return m[1].trim().toLowerCase() + '=' + m[2].trim();
+  }
+  return '';
+}"""
+LOOK_JS = r"""() => {
+  const n = s => document.querySelectorAll(s).length;
+  const modalities = {canvas: n('canvas'), drag: n('[draggable=true]'), context_menu: n('[oncontextmenu], [data-context-menu]'),
+    shortcuts: n('[accesskey], kbd'), media: n('video, audio'), long_press: n('[data-long-press], [data-longpress]'),
+    file_drop: n('[class*=dropzone], [class*=drop-zone]')};
+  const dev = [];
+  for (const sc of document.querySelectorAll('script[src]')) {
+    const m = /@vite\/client|webpack-dev-server|__webpack_hmr|react-refresh|sockjs-node|livereload|_debugbar/.exec(sc.src);
+    if (m) dev.push(m[0]);
+  }
+  if (document.querySelector('.phpdebugbar, #__next-build-watcher, [data-nextjs-toast]')) dev.push('dev-overlay');
+  let best = null;
+  for (const l of document.querySelectorAll('tbody, ul, ol, [role=list], [role=grid]')) {
+    const rows = [...l.children].filter(r => r.getBoundingClientRect().height > 0);
+    if (rows.length >= 2 && (!best || rows.length > best.length)) best = rows;
+  }
+  let row = null;
+  if (best) { const r = best[0].getBoundingClientRect(); if (r.top >= 0 && r.bottom <= innerHeight) row = [r.left + r.width / 2, r.top + r.height / 2]; }
+  return {modalities, dev: [...new Set(dev)], row};
+}"""
+
 OBSERVE_JS = r"""
-(maxEls) => {
+(arg) => {
+  // v5 (D60): `arg` is {max, pierce} (or a number: v4). Up to `max` candidates are read; the session then
+  // ranks them (not yet activated first) and keeps cfg.max_elements. pierce: open shadow roots and
+  // same-origin iframes (one level); an iframe element's id is '<frame>.<n>' and its iframe carries data-wt-frame.
+  const maxEls = typeof arg === 'number' ? arg : arg.max;
+  const pierce = typeof arg === 'object' && !!arg.pierce;
   const visible = (el) => {
     if (el.checkVisibility) { if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false; }
     const r = el.getBoundingClientRect();
@@ -70,16 +117,28 @@ OBSERVE_JS = r"""
     return pointerCursor.get(el);
   };
   const byCursor = (el) => isPointer(el) && !isPointer(el.parentElement) && !(el.parentElement && el.parentElement.closest(SEL));
-  document.querySelectorAll('[data-wt-id]').forEach((e) => e.removeAttribute('data-wt-id'));
   const clean = (s, n) => (s || '').replace(/\s+/g, ' ').trim().slice(0, n);
   const els = [];
-  let next = 1;
-  for (const el of document.body ? document.body.querySelectorAll('*') : []) {
-    if (els.length >= maxEls) break;
+  let next = 1, frames = 0, candidates = 0;
+  const walk = function* (root, frame) {
+    for (const el of root.querySelectorAll('*')) {
+      if (el.hasAttribute('data-wt-id')) el.removeAttribute('data-wt-id');
+      yield [el, frame];
+      if (pierce && el.shadowRoot) yield* walk(el.shadowRoot, frame);
+      if (pierce && frame === null && el.tagName === 'IFRAME') {
+        let doc = null;
+        try { doc = el.contentDocument; } catch (e) { doc = null; }
+        if (doc && doc.body) { const k = frames++; el.setAttribute('data-wt-frame', String(k)); yield* walk(doc.body, k); }
+      }
+    }
+  };
+  for (const [el, frame] of document.body ? walk(document.body, null) : []) {
     const std = el.matches(SEL);
     if (!std && !byCursor(el)) continue;
     if (!visible(el)) continue;
-    const id = String(next++);
+    candidates++;
+    if (els.length >= maxEls) continue;
+    const id = frame === null ? String(next++) : frame + '.' + String(next++);
     el.setAttribute('data-wt-id', id);
     const tag = el.tagName.toLowerCase();
     let label = '';
@@ -107,7 +166,7 @@ OBSERVE_JS = r"""
       checked: (el.type === 'checkbox' || el.type === 'radio') ? !!el.checked : null,
       disabled: !!el.disabled,
       options,
-      form: form ? Array.from(document.querySelectorAll('form')).indexOf(form) : -1,
+      form: form ? Array.from((el.ownerDocument || document).querySelectorAll('form')).indexOf(form) : -1,
       cls: (el.getAttribute('class') || '').slice(0, 80),
     });
   }
@@ -134,11 +193,57 @@ OBSERVE_JS = r"""
     url: location.href,
     title: document.title,
     elements: els,
+    candidates,
     skeleton: document.body ? sig(document.body, 0) : '',
     text: clean(document.body ? document.body.innerText : '', 4000),
   };
 }
 """
+
+
+SCROLL_JS = """async () => {
+  const H = () => (document.scrollingElement || document.body).scrollHeight;
+  let y = 0;
+  for (let i = 0; i < 10 && y < H(); i++) { y += innerHeight; scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); }
+  scrollTo(0, 0);
+  return y;
+}"""
+# R9: a cookie wall or newsletter pop-up, closed by a known button text inside a container that says what it is
+POPUP_JS = r"""() => {
+  const RX = /^(accept( all)?( cookies)?|allow( all)?( cookies)?|i agree|agree|got it|ok|okay|no,? thanks|not now|close|dismiss|\u00d7|\u2715)$/i;
+  const BOX = /cookie|consent|gdpr|onetrust|cc-banner|newsletter|subscribe|popup|promo|chat-widget|intercom/i;
+  const out = [];
+  for (const b of document.querySelectorAll('button, a[role=button], [role=button], input[type=button]')) {
+    const t = (b.innerText || b.value || b.getAttribute('aria-label') || '').trim();
+    if (!RX.test(t)) continue;
+    let c = b, hit = false;
+    for (let i = 0; i < 6 && c && c.getAttribute; i++, c = c.parentElement) {
+      const cls = typeof c.className === 'string' ? c.className : '';
+      if (BOX.test((c.id || '') + ' ' + cls + ' ' + (c.getAttribute('aria-label') || ''))) { hit = true; break; }
+    }
+    const r = b.getBoundingClientRect();
+    if (hit && r.width > 0 && r.height > 0) { b.click(); out.push(t); if (out.length >= 2) break; }
+  }
+  return out;
+}"""
+# R12 (D60, measured only, cfg.coverage_metrics): elements given a click-like listener, and which of them a
+# click reached. The listener count misses handlers set by property (onclick=) on elements SEL already takes.
+LISTENERS_JS = r"""(() => {
+  const CLICKY = new Set(['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'keydown']);
+  const orig = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (type, fn, opts) {
+    try { if (CLICKY.has(type) && this instanceof Element) this.setAttribute('data-wt-l', '1'); } catch (e) {}
+    return orig.call(this, type, fn, opts);
+  };
+  orig.call(document, 'click', (ev) => {
+    for (let n = ev.target; n && n.setAttribute; n = n.parentElement) if (n.hasAttribute('data-wt-l')) n.setAttribute('data-wt-hit', '1');
+  }, true);
+})();"""
+HANDLER_COUNT_JS = "() => [document.querySelectorAll('[data-wt-l]').length, document.querySelectorAll('[data-wt-hit]').length]"
+SESSION_STORAGE_JS = "() => ({origin: location.origin, items: Object.fromEntries(Object.entries(sessionStorage))})"
+# O4: console lines that dev servers and frameworks print in development builds; not app failures
+DEV_NOISE = re.compile(r"\[HMR\]|\[vite\]|\[WDS\]|webpack|Download the React DevTools|development mode|"
+                       r"Lit is in dev mode|DevTools failed to load source map|\[Fast Refresh\]", re.I)
 
 
 @dataclass
@@ -196,6 +301,8 @@ class Observation:
     skeleton: str
     text: str
     ts: float = field(default_factory=time.time)
+    candidates: int = 0  # X1: interactive elements on the page before the cap (dropped = candidates - len(elements))
+    context: str = ""  # R4 (D61): the active workspace, team or store of a context switcher ('' = none)
 
     def element(self, eid: str) -> Element | None:
         return next((e for e in self.elements if e.id == str(eid)), None)
@@ -244,23 +351,71 @@ class BrowserSession:
         self.net: list[dict] = []
         self._net_seq = 0
         self._body_tasks: set = set()
+        # v5 (D60): reach and safety bookkeeping, reported in the trace's `session` event
+        self.activated: dict[str, set] = {}  # X1: route shape -> element keys acted on (ranked last)
+        self._scrolled: set[str] = set()
+        self._popup_checked: set[str] = set()
+        self.dismissed: list[str] = []  # R9
+        self.dialogs: list[dict] = []  # R6
+        self.blocked: list[dict] = []  # S1: writes the execution mode refused
+        self.owned: set[str] = set()  # S1 reversible: paths of items this worker created
+        self.dropped = 0  # X1: elements beyond the cap, summed over observations
+        self.settle_times: list[float] = []  # O3: seconds until an intent's effect showed in a fresh view
+        self.handlers: dict[str, tuple] = {}  # R12: route shape -> (elements with listeners, of them clicked)
+        self._cdp = None  # JS coverage (Chromium CDP Profiler), only with cfg.coverage_metrics
+        self.js_coverage: dict | None = None
+        # D61: R6 hover, unsupported modalities, O4 build mode, safety counters (group 11)
+        self._looked: set[str] = set()
+        self.modalities: dict[str, set] = {}  # kind -> route shapes where the page offers it
+        self.dev_markers: set[str] = set()
+        self.out_of_scope_blocked = 0
+        self.seen: dict[str, set] = {}  # X1: route shape -> element keys observed
+        self.mode_violations: list[dict] = []
 
     # ---------- lifecycle ----------
-    async def start(self, storage_state: dict | None = None) -> None:
-        """`storage_state` (cookies + localStorage) restores a session: used by the evidence gate's replays."""
-        self.context = await self.browser.new_context(viewport={"width": 1280, "height": 900}, locale="en-US",
-                                                      storage_state=storage_state)
+    async def start(self, storage_state: dict | None = None, session_storage: dict | None = None,
+                    context_kw: dict | None = None) -> None:
+        """`storage_state` (cookies + localStorage) restores a session: used by the evidence gate's replays.
+        `session_storage` ({origin, items}, C1) is restored once per tab by an init script. `context_kw`
+        overrides context options (M10 axes: timezone_id, locale, viewport)."""
+        kw = {"viewport": {"width": 1280, "height": 900}, "locale": "en-US", **(context_kw or {})}
+        self.context = await self.browser.new_context(storage_state=storage_state, **kw)
+        if session_storage and session_storage.get("items"):
+            await self.context.add_init_script(script=(
+                f"if (location.origin === {json.dumps(session_storage.get('origin', ''))} && "
+                "!sessionStorage.getItem('__wt_ss')) { const d = " + json.dumps(session_storage["items"]) +
+                "; for (const k in d) sessionStorage.setItem(k, d[k]); sessionStorage.setItem('__wt_ss', '1'); }"))
         self.context.set_default_timeout(self.cfg.action_timeout_ms)
         if self.cfg.app.fault_script and self.cfg.client_faults:
             await self.context.add_init_script(script=f"window.__WT_FAULTS__ = {json.dumps(list(self.cfg.client_faults))};")
             await self.context.add_init_script(path=str(REPO_ROOT / self.cfg.app.fault_script))
+        for path in getattr(self.cfg.app, "init_scripts", ()) or ():
+            await self.context.add_init_script(path=str(REPO_ROOT / path))
+        if getattr(self.cfg, "coverage_metrics", False):
+            await self.context.add_init_script(script=LISTENERS_JS)
         if self.evidence:
             await self.context.add_init_script(script=MSG_JS)
         await self.context.route("**/*", self._route)
         self.page = await self.context.new_page()
         self._wire(self.page)
+        if getattr(self.cfg, "coverage_metrics", False):
+            try:
+                self._cdp = await self.context.new_cdp_session(self.page)
+                await self._cdp.send("Profiler.enable")
+                await self._cdp.send("Profiler.startPreciseCoverage", {"callCount": True, "detailed": False})
+            except PWError:
+                self._cdp = None  # not Chromium
 
     async def close(self) -> None:
+        if self._cdp is not None:
+            try:
+                res = await self._cdp.send("Profiler.takePreciseCoverage")
+                fns = [f for sc in res.get("result", []) if self.in_scope(sc.get("url") or "") and sc.get("url")
+                       for f in sc.get("functions", [])]
+                self.js_coverage = {"functions": len(fns),
+                                    "executed": sum(1 for f in fns if any(r.get("count", 0) > 0 for r in f.get("ranges", [])))}
+            except PWError:
+                pass
         if self.context:
             await self.context.close()
 
@@ -271,10 +426,33 @@ class BrowserSession:
         return f"{u.scheme}://{u.netloc}" in self.origins
 
     async def _route(self, route) -> None:
-        if self.in_scope(route.request.url):
-            await route.continue_()
-        else:
+        req = route.request
+        if not self.in_scope(req.url):
+            self.out_of_scope_blocked += 1
             await route.abort("blockedbyclient")
+            return
+        why = self.mode_refuses(req.method, req.url)
+        if why:
+            self.blocked.append({"method": req.method, "path": urlsplit(req.url).path, "why": why})
+            await route.abort("blockedbyclient")
+            return
+        await route.fallback()  # D61: to a handler registered before this one (a served test app), else the network
+
+    def mode_refuses(self, method: str, url: str) -> str:
+        """S1, enforced here rather than in the prompt: read-only refuses every write but the login form;
+        reversible refuses deletes and updates of items this worker did not create; controlled allows all."""
+        mode = getattr(self.cfg, "mode", "controlled")
+        if mode == "controlled" or method in ("GET", "HEAD", "OPTIONS"):
+            return ""
+        path = urlsplit(url).path
+        login = self.cfg.app.login.path if self.cfg.app.login else "/login"
+        if path.rstrip("/").endswith(login.rstrip("/")) or re.search(r"/(login|session|auth|token)\b", path):
+            return ""
+        if mode == "read-only":
+            return "read-only"
+        if mode == "reversible" and method in ("DELETE", "PUT", "PATCH") and not any(o and o in path for o in self.owned):
+            return "reversible: not created by this run"
+        return ""
 
     def _wire(self, page: Page) -> None:
         page.on("pageerror", lambda exc: self._signals.append(
@@ -285,6 +463,16 @@ class BrowserSession:
         page.on("request", self._on_request)
         page.on("requestfinished", self._on_request_done)
         page.on("requestfailed", self._on_request_done)
+        page.on("dialog", self._on_dialog)
+
+    def _on_dialog(self, dialog) -> None:
+        """R6: native alert/confirm/prompt are logged and accepted (Playwright would dismiss them silently,
+        so a delete behind confirm() never happened); never left blocking."""
+        accept = bool(getattr(self.cfg, "accept_dialogs", True))
+        self.dialogs.append({"type": dialog.type, "message": dialog.message[:200], "url": self.page.url if self.page else "",
+                             "accepted": accept})
+        del self.dialogs[:-50]
+        asyncio.ensure_future(dialog.accept() if accept else dialog.dismiss())
 
     def _on_request(self, req) -> None:
         if req.resource_type in NET_TYPES:
@@ -310,6 +498,10 @@ class BrowserSession:
             return
         if msg.type != "error":
             return
+        if DEV_NOISE.search(text):
+            self.dev_markers.add("console")  # O4: the app runs a development build
+        if getattr(self.cfg, "dev_noise", True) and DEV_NOISE.search(text):
+            return  # O4: dev-server and framework development-build messages
         # Requests we aborted ourselves (scope gate) are not app failures.
         if "ERR_BLOCKED_BY_CLIENT" in text:
             return
@@ -326,6 +518,8 @@ class BrowserSession:
         if req.method not in ("GET", "HEAD", "OPTIONS") and req.resource_type in NET_TYPES and self.in_scope(resp.url):
             self.mutations.append({"method": req.method, "path": urlsplit(resp.url).path, "status": resp.status})
             del self.mutations[:-50]
+            if self.mode_refuses(req.method, resp.url):  # group 11: a write the mode forbids reached the server
+                self.mode_violations.append({"method": req.method, "path": urlsplit(resp.url).path})
         if self.evidence and req.resource_type in NET_TYPES and self.in_scope(resp.url):
             self._record(resp)
         if resp.status >= 500 and self.in_scope(resp.url):
@@ -427,19 +621,147 @@ class BrowserSession:
             await asyncio.sleep(0.05)
 
     async def observe(self) -> Observation:
+        await self._first_look()
+        pool = max(1, int(getattr(self.cfg, "observe_pool", 1)))
+        pierce = bool(getattr(self.cfg, "pierce", False))
+        arg = {"max": self.cfg.max_elements * pool, "pierce": pierce} if pool > 1 or pierce else self.cfg.max_elements
         for attempt in range(3):
             try:
-                raw = await self.page.evaluate(OBSERVE_JS, self.cfg.max_elements)
+                raw = await self.page.evaluate(OBSERVE_JS, arg)
                 break
             except PWError:
                 if attempt == 2:
                     raise
                 await self.settle()  # page navigated mid-evaluation
         blocked = tuple(t.lower() for t in self.cfg.app.blocked_text)
-        els = [Element(**e) for e in raw["elements"]]
+        els = [Element(**{k: v for k, v in e.items() if k in Element.__dataclass_fields__}) for e in raw["elements"]]
         if blocked:
             els = [e for e in els if not any(b in (e.text + " " + e.label).lower() for b in blocked)]
-        return Observation(raw["url"], raw["title"], els, raw["skeleton"], raw["text"])
+        from .state import route_shape as _rs
+
+        self.seen.setdefault(_rs(raw["url"]), set()).update(e.key() for e in els)  # X1: controls seen per page kind
+        els = self._rank(raw["url"], els)
+        if getattr(self.cfg, "coverage_metrics", False):
+            try:
+                n, hit = await self.page.evaluate(HANDLER_COUNT_JS)
+                from .state import route_shape
+
+                r = route_shape(raw["url"])
+                old = self.handlers.get(r, (0, 0))
+                self.handlers[r] = (max(old[0], n), max(old[1], hit))
+            except PWError:
+                pass
+        cand = raw.get("candidates", len(els))
+        self.dropped += max(0, cand - len(els))
+        try:
+            ctx = await self.page.evaluate(CONTEXT_JS) or ""
+        except PWError:
+            ctx = ""
+        return Observation(raw["url"], raw["title"], els, raw["skeleton"], raw["text"], candidates=cand, context=ctx)
+
+    def _rank(self, url: str, els: list[Element]) -> list[Element]:
+        """X1: keep cfg.max_elements of the pool: the first 15 in page order (header and navigation), then
+        elements not yet acted on in this kind of page, then the rest; shown in page order."""
+        cap = self.cfg.max_elements
+        if len(els) <= cap:
+            return els
+        from .state import route_shape
+
+        done = self.activated.get(route_shape(url), set())
+        head, rest = els[:15], els[15:]
+        rest = [e for e in rest if e.key() not in done] + [e for e in rest if e.key() in done]
+        keep = {id(e) for e in head + rest[:cap - len(head)]}
+        return [e for e in els if id(e) in keep]
+
+    def note_activated(self, url: str, key: str) -> None:
+        from .state import route_shape
+
+        self.activated.setdefault(route_shape(url), set()).add(key)
+
+    async def _first_look(self) -> None:
+        """Once per URL: close a cookie wall or newsletter pop-up (R9), then scroll to the end and back so
+        lazy content loads (X1)."""
+        url = (self.page.url or "").split("#")[0]
+        if not url.startswith("http"):
+            return
+        try:
+            if getattr(self.cfg, "dismiss_popups", False) and url not in self._popup_checked:
+                self._popup_checked.add(url)
+                hit = await self.page.evaluate(POPUP_JS)
+                if hit:
+                    self.dismissed += [f"{url} {t}" for t in hit]
+                    await self.settle()
+            if getattr(self.cfg, "scroll_once", False) and url not in self._scrolled:
+                self._scrolled.add(url)
+                await self.page.evaluate(SCROLL_JS)
+                await self.wait_quiet()
+            if url not in self._looked:
+                self._looked.add(url)
+                from .state import route_shape
+
+                look = await self.page.evaluate(LOOK_JS)
+                for k, n in look["modalities"].items():
+                    if n:
+                        self.modalities.setdefault(k, set()).add(route_shape(url))
+                self.dev_markers.update(look["dev"])
+                if getattr(self.cfg, "hover_rows", False) and look.get("row"):  # R6: hover-only row controls
+                    await self.page.mouse.move(look["row"][0], look["row"][1])
+                    await asyncio.sleep(0.15)
+        except PWError:
+            pass
+
+    async def session_storage(self) -> dict:
+        """C1: this tab's session storage ({origin, items}), saved with each step record."""
+        try:
+            return await self.page.evaluate(SESSION_STORAGE_JS)
+        except PWError:
+            return {}
+
+    async def fresh_text_until(self, url: str, pred, deadline_s: float | None = None) -> str | None:
+        """O3: like fresh_text, but re-reads the page every 0.5 s until `pred(text)` holds or the deadline
+        passes (a fixed wait gives false alarms on slow apps and wastes time on fast ones). The time it
+        took is kept in settle_times."""
+        deadline_s = getattr(self.cfg, "poll_deadline_s", 8.0) if deadline_s is None else deadline_s
+        page = await self.context.new_page()
+        t0 = time.monotonic()
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            text = ""
+            while True:
+                await asyncio.sleep(self.cfg.settle_ms / 1000 if not text else 0.5)
+                text = await page.evaluate(TEXT_JS)
+                if pred(text) or time.monotonic() - t0 >= deadline_s:
+                    self.settle_times.append(round(time.monotonic() - t0, 2))
+                    return text
+        except PWError:
+            return None
+        finally:
+            await page.close()
+
+    def locator(self, eid: str):
+        """The element with this observation id; ids '<frame>.<n>' live in a same-origin iframe (R6)."""
+        sel = f'[data-wt-id="{eid}"]'
+        if "." in str(eid):
+            frame = str(eid).split(".", 1)[0]
+            return self.page.frame_locator(f'iframe[data-wt-frame="{frame}"]').locator(sel)
+        return self.page.locator(sel)
+
+    def report(self) -> dict:
+        """Reach and safety counters for the trace (X1, R6, R9, S1, O3)."""
+        st = sorted(self.settle_times)
+        h_all = sum(n for n, _ in self.handlers.values())
+        h_hit = sum(h for _, h in self.handlers.values())
+        cov = {"handler_elements": h_all, "handler_elements_clicked": h_hit} if self.handlers else {}
+        return {**cov, **({"js_coverage": self.js_coverage} if self.js_coverage else {}),
+                "dropped_elements": self.dropped, "dialogs": len(self.dialogs), "dismissed": self.dismissed[:20],
+                "blocked_writes": self.blocked[:50], "settle_s_median": st[len(st) // 2] if st else None,
+                "settle_over_3s": sum(1 for x in st if x > 3),
+                "modalities": {k: len(v) for k, v in sorted(self.modalities.items())},
+                "build_mode": "dev" if self.dev_markers else "prod", "dev_markers": sorted(self.dev_markers),
+                "out_of_scope_blocked": self.out_of_scope_blocked, "mode_violations": self.mode_violations[:20],
+                "pages_looked": len(self._looked),
+                "controls_seen": sum(len(v) for v in self.seen.values()),
+                "controls_activated": sum(len(self.activated.get(r, set()) & v) for r, v in self.seen.items())}
 
     async def storage_state(self) -> dict:
         return await self.context.storage_state()
@@ -488,7 +810,7 @@ class BrowserSession:
             else:
                 if not eid:
                     return ActionResult(False, f"'{do}' needs an element id", before, before)
-                loc = page.locator(f'[data-wt-id="{eid}"]')
+                loc = self.locator(eid)
                 if await loc.count() == 0:
                     return ActionResult(False, f"no element [{eid}] on the current page", before, before)
                 if do == "click":

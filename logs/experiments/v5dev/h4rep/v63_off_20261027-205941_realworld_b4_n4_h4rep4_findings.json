@@ -1,0 +1,233 @@
+[
+  {
+    "sig": "consistency|R48c|/|null-storage",
+    "kind": "consistency",
+    "message": "[R48c T2] with 'null' in its local storage the app shows a blank page",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R48c|/|null-storage",
+      "rule": "R48c",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R30|/settings|logged-out|/",
+    "kind": "consistency",
+    "message": "[R30 T2] the session ended without a logout: / led to a login page",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R30|/settings|logged-out|/",
+      "rule": "R30",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 56,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/lessscriptgreateralert%281%29lessscriptgreater-1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 6,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R50m|/article/*|retry|/article/*",
+    "kind": "consistency",
+    "message": "[R50m T2] after a lost response, the retry of /article/* made another record of 'A very long comment text designed to test boundary limits and robustness of the comment input field when submitted with '",
+    "first_step": 17,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R50m|/article/*|retry|/article/*",
+      "rule": "R50m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|I-delete|/article/*|great article on flaky tests!",
+    "kind": "consistency",
+    "message": "[I-delete T1] deleted 'Great article on flaky tests!' (the app accepted the write), but it is still shown when http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20 is opened again",
+    "first_step": 23,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|I-delete|/article/*|great article on flaky tests!",
+      "rule": "I-delete",
+      "tier": "T1",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R68t|/article/*|tag|test article x99",
+    "kind": "consistency",
+    "message": "[R68t T2] 'Test Article X99' was saved with 'test article x99' (step 59), but the page of 'test article x99' does not list it",
+    "first_step": 62,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-X99-21",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R68t|/article/*|tag|test article x99",
+      "rule": "R68t",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/|overflow",
+    "kind": "consistency",
+    "message": "[R65 T2] the page is wider than the window: it scrolls sideways",
+    "first_step": 79,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|R65|/|overflow",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R30|/settings|logged-out|/profile/*",
+    "kind": "consistency",
+    "message": "[R30 T2] the session ended without a logout: /profile/* led to a login page",
+    "first_step": 51,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R30|/settings|logged-out|/profile/*",
+      "rule": "R30",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/profile/*|image|",
+    "kind": "consistency",
+    "message": "[R02m T2] the image '   ' failed to load",
+    "first_step": 58,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4100/profile/worker04",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02m|/profile/*|image|",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "   "
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R30|/settings|logged-out|/settings",
+    "kind": "consistency",
+    "message": "[R30 T2] the session ended without a logout: /settings led to a login page",
+    "first_step": 65,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R30|/settings|logged-out|/settings",
+      "rule": "R30",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

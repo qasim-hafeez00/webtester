@@ -14,6 +14,7 @@ from .inferred import (annotate, check, clicked_active, ground_expectations, per
                        violation_signal)
 from .oracles import FindingStore
 from .policies import Memory
+from .reach import defer_reason, network_gets
 from .state import action_key, route_shape, state_id
 from .trace import Trace
 
@@ -51,6 +52,13 @@ class RunContext:
         self.step_counter += 1
         return self.step_counter
 
+    stop_files: tuple = ()  # S2 (D60): paths whose existence ends the run cleanly
+    deferred: int = 0  # R8: destructive clicks held back
+    stateful_travels: int = 0  # X2: travels done by replaying a recorded navigation path
+
+    def stop_requested(self) -> bool:
+        return any(Path(p).exists() for p in self.stop_files)
+
 
 @dataclass
 class StepRecord:
@@ -61,6 +69,8 @@ class StepRecord:
     expect: list[dict]  # checks evaluated after the actions (annotated)
     intent: dict | None = None  # v4: the model's stated intent (the gate's sweeper reuses it)
     suspect: dict | None = None  # v4: a contradiction the model cited (R15)
+    session: dict | None = None  # v5 C1 (D60): session storage {origin, items} when the step started
+    t: float = 0.0  # C4 (D61): wall-clock time when the step started (gate replays of time rules use it)
 
 
 def save_replay_log(path: Path, log: dict[int, list[StepRecord]]) -> None:
@@ -89,16 +99,21 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
     edge = None  # (state, actions, verb, signals, by) of the last step: becomes a graph edge on arrival
     while True:
         reason = run.budget.exhausted()
+        if not reason and run.stop_requested():
+            run.stop.set()
+            run.trace.event("stop_file", worker=worker, step=run.step_counter)
         if reason or run.stop.is_set():
             return reason or "stopped"
         t0 = time.monotonic()
         obs = await session.observe()
-        sid = state_id(obs.url, obs.skeleton)
+        sid = _sid(session, obs)
         frontier = getattr(policy, "frontier", None)
         if graph is not None:
             graph.visit(worker, sid, obs.url, run.step_counter, obs.title)
             if edge:
-                graph.transition(worker, edge[0], edge[1], sid, by=edge[4], verb=edge[2], signals=edge[3])
+                e = graph.transition(worker, edge[0], edge[1], sid, by=edge[4], verb=edge[2], signals=edge[3])
+                if sweeper is not None:
+                    sweeper.note_edge(e)  # G3 (D61)
         edge = None
         # v4 travel: a newly assigned focus area elsewhere is reached by URL, without an LLM step.
         if getattr(frontier, "version", 1) >= 3 and hasattr(policy, "prepare"):
@@ -112,7 +127,15 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
                     frontier.visit(worker, sid, obs)
                     src = sid
                     obs = await session.observe()
-                    sid = state_id(obs.url, obs.skeleton)
+                    sid = _sid(session, obs)
+                    if route_shape(obs.url) != focus[0] and not focus[0].endswith("/*"):
+                        # X2: the URL did not restore the state (redirect, modal, selected record): replay a
+                        # recorded navigation-only path from here
+                        path = graph.nav_path(sid, focus[0]) if graph is not None else None
+                        if path and await _replay_path(session, path):
+                            run.stateful_travels += 1
+                            obs = await session.observe()
+                            sid = _sid(session, obs)
                     graph.visit(worker, sid, obs.url, run.step_counter, obs.title)
                     graph.transition(worker, src, [{"do": "navigate", "value": focus[1], "ekey": None}], sid,
                                      by="harness")
@@ -122,7 +145,9 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
         if frontier is not None:
             frontier.visit(worker, sid, obs)
         step = run.next_step()
+        t_step = time.time()
         storage = await session.storage_state() if run.record_replay else None
+        sess_store = await session.session_storage() if run.record_replay else None
 
         decision = await policy.decide(obs, mem, step, sid=sid)
         if frontier is not None:
@@ -147,8 +172,15 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             await sweeper.before(session, obs, decision.actions)
 
         done, clicked = [], []
+        share = _budget_share(run)
         for a in decision.actions:
             el = obs.element(a["id"]) if a["id"] else None
+            why = defer_reason(f"{el.text} {el.label}" if el else "", share, _own_page(run, worker, obs.url),
+                               getattr(session.cfg, "defer_destructive", 0)) if a["do"] == "click" and el else ""
+            if why:  # R8: the harness, not the prompt, keeps destructive actions late and on own items
+                run.deferred += 1
+                mem.add(f"s{step}: ({why}: {el.text or el.label})")
+                break
             if a["do"] == "click":
                 clicked.append(el)
             akey = action_key(sid, a["do"], el.key() if el else None, a["value"])
@@ -157,6 +189,8 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             res = await session.execute(a["do"], a["id"], a["value"])
             if frontier is not None and el is not None:
                 frontier.record(worker, sid, el.key(), do=a["do"], value=a["value"])
+            if el is not None and res.ok:
+                session.note_activated(obs.url, el.key())
             done.append({
                 "do": a["do"], "id": a["id"], "value": a["value"],
                 "el": el.describe() if el else None, "key": akey, "dup": dup,
@@ -198,6 +232,8 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
         if sweeper is not None:
             n_events = len(run.sweep.memory.events)
             consistency = await sweeper.after(session, obs, done, step, decision.intent, decision.suspect)
+            if getattr(session.cfg, "network_routes", False) and session.evidence and hasattr(frontier, "add_discovered"):
+                frontier.add_discovered({"network": network_gets(session.net_since(sweeper.net_mark))})
             for e in run.sweep.memory.events[n_events:]:
                 if e.verb != "view":
                     run.trace.event("memory_event", worker=worker, step=step, verb=e.verb, obj=e.obj, source=e.source,
@@ -206,7 +242,7 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             run.replay_log.setdefault(worker, []).append(StepRecord(
                 step, obs.url, storage,
                 [{"do": d["do"], "ekey": d["ekey"], "nth": d["nth"], "value": d["value"]} for d in done], expects,
-                decision.intent, decision.suspect))
+                decision.intent, decision.suspect, sess_store, t_step))
 
         signals = session.drain_signals() + violations + consistency
         fired = session.drain_exposures()
@@ -244,6 +280,51 @@ async def run_worker(run: RunContext, session: BrowserSession, policy, worker: i
             run.trace.event("finding", worker=worker, step=step, finding=f.to_dict())
         if step >= max_steps:
             return "max_steps"
+
+
+def _sid(session: BrowserSession, obs) -> str:
+    """The abstract state; R4 (D61): with accounts of several roles, the worker's role is part of it, so an
+    admin's and a reader's view of one page are two states (each worker keeps one account, so this is constant
+    per worker and cheap); so is the active context of a context switcher (workspace, team, store), when the page
+    has one."""
+    app = session.cfg.app
+    roles = {a.get("role", "") for a in getattr(app, "accounts", ()) or ()}
+    role = app.account(session.worker).role if len(roles) > 1 else ""
+    ctx = getattr(obs, "context", "")
+    return state_id(obs.url, obs.skeleton + (f"|role={role}" if role else "") + (f"|ctx={ctx}" if ctx else ""))
+
+
+def _budget_share(run: RunContext) -> float:
+    b = run.budget
+    return max(b.steps / max(b.cfg.max_steps, 1), b.tokens / max(b.cfg.max_tokens, 1),
+               b.elapsed_min() / max(b.cfg.max_minutes, 1e-9))
+
+
+def _own_page(run: RunContext, worker: int, url: str) -> bool:
+    """R8: the page is an item this worker created (its run memory says so)."""
+    if run.sweep is None:
+        return False
+    from .memory import entity_key
+
+    key = entity_key(url)
+    return any(e.worker == worker and e.verb == "create" and (e.target == key or e.landing == url)
+               for e in run.sweep.memory.events)
+
+
+async def _replay_path(session: BrowserSession, path) -> bool:
+    """X2: replay recorded navigation edges by element key; False as soon as one cannot be found."""
+    from .gate import locate
+
+    for e in path:
+        obs = await session.observe()
+        for a in e.replay:
+            el = locate(obs, a.get("ekey"), a.get("nth") or 0)
+            if a.get("ekey") and el is None:
+                return False
+            res = await session.execute(a["do"], el.id if el else None, a.get("value"))
+            if not res.ok:
+                return False
+    return True
 
 
 def _nth(obs, el) -> int:

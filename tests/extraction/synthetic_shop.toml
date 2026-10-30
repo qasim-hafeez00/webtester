@@ -1,0 +1,10 @@
+h1 = "Cart"
+[[list]]
+heading = "You may also like"
+items = ["Gamma lamp", "Delta pen"]
+[[total]]
+label = "Subtotal"
+value = "$40.00"
+[[total]]
+label = "Total"
+value = "$40.00"

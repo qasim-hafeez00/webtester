@@ -1,0 +1,52 @@
+# Cue words of the v5 rules (O6 b, D60), English. Values are regular-expression fragments (case-insensitive),
+# joined with | by webtester.lexicon; written as TOML literal strings ('...') so a backslash stays a backslash.
+# Another language: copy this file as <lang>.toml and set WEBTESTER_LANG=<lang>.
+# The v4 word lists are in [v4] at the end (D61), moved verbatim, so the v4/v5 comparison stays exact (I56).
+
+# J3: words that make a number legitimately inexact or not final
+benign = ['estimated', 'estimate', 'approx(imately|\.)?', 'sample data', 'demo data', 'excl(\.|uding) (tax|vat|shipping)',
+          'prices? exclude', 'before tax', 'may take (a few|several|up to) (seconds|minutes|hours)', 'provisional',
+          'pending', 'processing', 'subject to change']
+# C3: the harness, not the app
+harness = ['page (has )?expired', 'csrf', 'token mismatch', 'too many requests', 'rate limit(ed)?',
+           'session (has )?(expired|timed out)', 'please (log|sign) in again']
+# R34 / R20: status words of items (lower case)
+status = ['open', 'closed', 'pending', 'approved', 'rejected', 'draft', 'published', 'active', 'inactive', 'archived',
+          'paid', 'unpaid', 'overdue', 'cancelled', 'canceled', 'shipped', 'delivered', 'in stock', 'out of stock',
+          'sold out', 'completed', 'in progress', 'resolved', 'on hold', 'scheduled', 'expired']
+# R22: collections an item is added to
+collection = ['cart', 'basket', 'bag', 'wishlist', 'wish list', 'favou?rites', 'saved', 'bookmarks', 'compare', 'watchlist',
+              'reading list', 'playlist', 'library']
+# R8: destructive actions and session ends
+destructive = ['delete', 'remove', 'destroy', 'trash', 'discard', 'close (my )?account', 'deactivate', 'erase', 'purge',
+               'empty (the )?(trash|recycle bin)', 'revoke']
+logout = ['log ?out', 'sign ?out']
+
+# R34: a status action and the status word it must lead to
+[lifecycle]
+approve = 'approved'
+reject = 'rejected'
+cancel = 'cancelled'
+close = 'closed'
+reopen = 'open'
+publish = 'published'
+unpublish = 'draft'
+archive = 'archived'
+complete = 'completed'
+resolve = 'resolved'
+'mark as paid' = 'paid'
+'mark paid' = 'paid'
+activate = 'active'
+deactivate = 'inactive'
+ship = 'shipped'
+
+# ---- v4 word lists (D61, I56): moved here verbatim from memory.py and consistency.py; the code compiles these
+# exact patterns (tests/test_d61_lexicon.py pins them), so v4 behaviour is unchanged. Full regexes, not fragments.
+[v4]
+validation = '''is required|are required|must be|must have|must contain|is invalid|not valid|invalid|already (been )?taken|already exists|too (short|long)|at least \d|at most \d|please (enter|provide|fill|select|choose)|does not match|do not match|can'?t be (blank|empty)|cannot be (blank|empty)|field is|not allowed|format'''
+system_error = '''something went wrong|unknown error|an error (has )?occurred|unexpected error|internal (server )?error|could not|couldn't|failed to|unable to|try again later|service unavailable|server error'''
+personal = '''\bmy\b|\byour\b|favou?rite|starred|bookmark|wishlist|saved|liked|following|\bfeed\b|recently viewed|viewed|history|watch(ed|ing|list)'''
+recency = '''recent|latest|\bnew\b|newest|activity|updated|popular|trending|\bfeed\b|history|last'''
+event_feed = '''activit|audit|\blogs?\b|changelog|timeline|notification'''
+verbs = [["unfavourite", '''\bun-?favou?rite|\bunstar\b|remove (from )?(my )?(favou?rites|wishlist|bookmarks)|\bunbookmark'''], ["unfollow", '''\bun-?follow\b|\bunsubscribe\b|\bunwatch\b'''], ["unlike", '''\bunlike\b'''], ["favourite", '''\bfavou?rite|\bstar\b|\bbookmark|\bwishlist\b|\bheart\b|ion-heart|fa-heart|fa-star|bi-star|bi-heart'''], ["follow", '''\bfollow\b|\bsubscribe\b|\bwatch\b'''], ["like", '''\blike\b|\bupvote\b|thumbs.?up'''], ["delete", '''\bdelete\b|\bremove\b|\btrash\b|\bdestroy\b|\bdiscard\b|ion-trash|fa-trash|bi-trash'''], ["logout", '''\blog ?out\b|\bsign ?out\b'''], ["login", '''\blog ?in\b|\bsign ?in\b'''], ["create", '''\bcreate\b|\bnew\b|\badd\b|\bpublish\b|\bpost\b|\bregister\b|\bsign ?up\b|\bsend\b'''], ["save", '''\bsave\b|\bupdate\b|\bsubmit\b|\bapply\b|\bconfirm\b|\bok\b|\bdone\b''']]
+categories = [["favourite", '''favou?rite|starred|bookmark|wishlist|saved|liked'''], ["follow", '''following|followed|subscri'''], ["view", '''recently viewed|viewed|history|recently visited'''], ["add", '''\bcart\b|basket|\bbag\b|order summary|your items''']]

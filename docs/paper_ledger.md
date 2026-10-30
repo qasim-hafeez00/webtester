@@ -44,6 +44,29 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
   - B4 = B3 v2 + G3 + G2.
   - Ablations: A-G1 `b4nog1`, A-G3 `b4nog3`. A-G2 is B4's raw candidates, paired.
 
+- **Harness v5 as built (D60; not yet run on the apps, I59):**
+  - 99 deterministic rules with tiers.
+  - Every family marked covered, partial or coverable names a built rule (152 of 163; 11 spec or out).
+  - New modules: `norms.py` (page norms, one page read per step), `crossview.py` (one item across views and steps, passive), `probes5.py` (fresh tab, no-session and second-account probes; at most one per step, capped per run), `envcheck.py` (R71 time zone, locale and phone-width replay, k = 2).
+  - Every new rule starts at T2 (six at T3).
+  - Execution modes are enforced in the browser's request router, not the prompt. Probes that strip constraints, double-submit or drop responses run only in `controlled` mode (our own deployments).
+  - New condition B5 (worker roles). The app profile adds goal flows and never switches rules off.
+  - Gate: T1 first, delta debugging, optional Firefox/WebKit replay (one-engine findings reported as engine-specific).
+- **Harness v5 after the D61 audit (29 Oct; not yet run on the apps, I59):**
+  - 140 deterministic rule ids with tiers (41 added in D61); every 'extension' or 'variant' a family row names maps to its own id (`families.EXTENSIONS`); tracker: 152 of 163 families built, 3 need a specification, 8 out of scope, 0 rules left.
+  - Every rule counted as built has code that raises it (checked by a test).
+  - New plan items: one profiled retry of a rejected form; seeding to page size + 1; role and active context in the state id; per-run coverage file; sitemap, feed, OpenAPI and GraphQL checks; local storage and IndexedDB as a model of the list; condition `b4annot` (LLM-annotated lists, cached); time-dependent findings replayed on the recorded clock; safety records (incidents, blocked requests, mode violations, cleanup share).
+  - Evaluator: a block for each metric in v5 plan section 15.3; blocks without data report what they wait for.
+  - Tests: full suite 242 passed, 4 skipped (the 4 need a live app). 14 defects found by the D61 tests and fixed (I61-I71, I73-I75).
+- **Lock preparation (D62, 29 Oct):**
+  - Every built rule has a faulty and a clean fixture case except 8 login and second-account checks (27 added); the new tests found 7 defects (I76-I82), among them a double-submit false alarm on any form whose submit sends two requests (I77) and passed effect checks not counted in the check log (I79).
+  - Lock entry is computed (`scripts/lock_check.py`): per app recall >= the D55 v5 resweep, precision per finding >= 0.90, clean false alarms <= 0.5 per run; per rule a fixture test, armed check rows and labelled findings.
+  - D55 v5 resweep against these criteria: BookStack fails on clean false alarms (0.6 per run; 0.4 without R09); Conduit passes (recall 7/8, precision 0.99, 0.4 per run).
+  - Pilot resweep (D59 code plus D62 changes mid-run, 20 replays): with every v5 rule BookStack precision per finding 0.57 (71/125) and 10.8 clean false alarms per run, Conduit 0.53 (71/133) and 6.0; without the 16 rules under the 0.90 floor 0.97 (66/68) and 0.4, 0.99 (70/71) and 0.2; recall equal to the D55 resweep (BookStack 8/13, Conduit 7/8).
+  - Of the pilot's clean-app false alarms, 10 rule causes were found and fixed (I83, I85-I93, I95), one is open (R30, I94). Typical causes: a page read while still loading, screen-reader-only text, controls scrolled out of a box, parts of one tag, the testers' own typed addresses, markdown rendering, menu entries read as items.
+  - Real defects found on the unmodified apps by v5 rules (labels by the assistant, unconfirmed by the user): BookStack untranslated key `common.privacy_policy`, HTTP 500 for a draft address with a non-numeric id, search for '%' returning non-matching results; Conduit blank page with 'null' stored values, editor of a missing article answering 200 with an empty form, self-follow accepted.
+  - Tests: full suite 254 passed, 4 skipped (the 4 need a live app).
+
 ## 3. Subjects and ground truth (Evaluation setup)
 - **Conduit** (D8–D12, `apps/realworld/README.md`):
   - Express/Prisma backend with the AutoE2E-instrumented Angular frontend.
@@ -69,6 +92,17 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
 - **Gate cost:** replays, minutes, judge tokens as a % of the run's tokens (KPI ≤ 25%).
 - **Statistics** (D19): median [IQR], exact two-sided Mann-Whitney U, Vargha-Delaney Â12 (|Â12 − 0.5| ≥ 0.21 = large). n = 5 per condition.
 - **Run validity** (D17, D20): healthy (no LLM failures, no stall > 60 s, stopped by its budget, gate finished when expected) and no harness bug. Invalid runs stay listed with their reason.
+
+- **v5 evaluation definitions (D59, fixed before any v5 run; `src/webtester/evaluate.py`):**
+  - Distinct issue = rule x page template (route shape) x entity kind (first path segment of a link in the finding's subject, else of its page); an issue is true when any of its findings is true; mixed issues counted.
+  - Total recall = seeded faults found / reachable faults enabled (catalog `reachable`; Conduit F03, F04 unreachable, I34, I37). Oracle-conditioned recall: denominator = reachable faults in a covered, partial or coverable family (unmapped faults stay in it).
+  - Clean-app false alarms per run, per 100 steps and per 100 armed checks (check-outcome log), with exact Garwood 95% intervals; 0 events gives the rule-of-three bound. Labels `harness:` (harness-caused) and real bugs on a clean app (U#, `new:`) are counted apart, never as app false alarms.
+  - Proportions with Clopper-Pearson 95% intervals; F0.5 from distinct-issue precision and median total recall.
+  - Recall funnel per fault and run: S1 reached (catalog `reach` rules, else visited fault routes), S2 triggered (exposure markers), S3 observed (not measured yet), S4 armed (a rule of the fault's families armed on its route, check log), S5 flagged, S6 gate-confirmed, S7 labelled with the fault; first failed stage.
+  - Gate recall loss two ways: seeded faults found raw but not among confirmed findings; true findings not confirmed (the earlier ledger number).
+  - Confidence score: logistic regression over rule prior (leave-one-out, no target leak), cues on the same entity, replay k/n, judge verdict, implicit kind, occurrences; fitted leave-one-app-out; average precision, Brier, reliability. Reported only, never used to filter.
+  - Statistics: Holm-Bonferroni over the pre-registered primary family {faults found, precision per distinct issue, unique states}; all other metrics exploratory (unadjusted). Reason: with n = 5 vs 5 the smallest exact two-sided Mann-Whitney p is 2/252 = 0.0079, so Holm reaches 0.05 only for a family of at most 6.
+- **Check-outcome log (D59, `checks.py`):** outcomes detected, exercised, unarmed (reason), suppressed (guard), capped (budget), unobservable, inconclusive; per worker, rule, route shape; `checks.jsonl` per run. Unexecuted checks never count as passes.
 
 ## 5. Budgets and fairness
 - **Phase 1:** B0 vs B1 at equal wall-clock, 15 min (D18). B0 uses no tokens.
@@ -155,6 +189,20 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
   - **KPIs:** G2 precision ≥ 0.90 not met (88%, 48%); G2 recall loss ≤ 10 points met (2.5%, 5%); G2 cost met; G3 ≥ 40% met on Conduit (67% across runs, 50% per run), not on BookStack (28% across runs, 11% per run).
   - **Exploration:** B4 89 vs 119 steps on Conduit and 68 vs 89 on BookStack (both p = 0.008), same token budget; duplicates 33% vs 41% on Conduit (p = 0.008), equal on BookStack.
 
+### v5 evaluator on existing data (D59, 28 Oct; development numbers, not a v5 result)
+- Live Night 3 runs (20 valid; per condition, never pooled):
+  - Reproduces the earlier ledger values: Conduit b4 precision 82% raw (80/98), 88% gated (78/89), 89% judge-filtered (75/84); BookStack b4 38% (20/52), 48% (19/40), 49% (17/35); gate loss per true finding 2.5% and 5%; BookStack 5 of 13 faults across runs.
+  - Precision per distinct issue: Conduit b4 68% (15/22, 95% CI 45-86%), BookStack b4 23% (6/26, 9-44%); findings per issue 4.45 and 2.0. Conduit b3v3 100% (2/2; implicit findings only).
+  - Faults found, b4 vs b3v3, Holm over the primary family: Conduit A12 = 1.0, p = 0.0079, p_holm = 0.024; BookStack A12 = 1.0, p = 0.0079, p_holm = 0.016. Precision per distinct issue on Conduit favours b3v3 (A12 = 0, p_holm = 0.03).
+  - Judge vs labels (confirmed findings with a verdict): Conduit 42/45 agree (93%); BookStack 4/10 (40%).
+  - Confidence score, leave-one-app-out, 159 labelled findings: average precision 0.67, Brier 0.37; score bin 0.8-1.0 true 2/10, bin 0-0.2 true 37/52. Not calibrated across the two apps (I53).
+- D55 v5 resweeps (10 faulty-app and 10 clean-app replays, `scripts/eval_v5dev.py`):
+  - Precision per distinct issue: BookStack 13/14 (93%, CI 66-100%), Conduit 11/12 (92%, 62-100%); per finding 95% (86-99%) and 99% (92-100%).
+  - Clean-app false alarms per run with exact 95% intervals: BookStack 0.6 (0.12-1.75), Conduit 0.4 (0.05-1.44).
+  - Funnel, first failed stage over fault x run pairs: BookStack 65 pairs, 31 found; of 34 misses, S1 not reached 12, S2 not triggered 17, S5 not flagged 2, S7 flagged on the route but labelled otherwise 3. Conduit 40 pairs, 30 found; of 10 misses, S1 6, S2 2, S5 2. Reach and trigger account for 85% and 80% of the misses.
+  - F0.5 (distinct-issue precision, median total recall): BookStack 0.77, Conduit 0.88.
+- New rules R43, R64, R26 (D59): 0 findings on the 5 BookStack fixture pages (17 in-page anchors checked); not yet run on the apps (I54).
+
 ## 7. Run accounting (all runs, as of 24 Oct)
 - **As of 28 Oct, 01:17:** Night 3 (harness v4): 24 attempts, 20 valid (Conduit 10, BookStack 10), 4 invalid (key 7 quota then Docker stop, no-start after Docker stop, key 9 quota, key 10 quota; I48). Keys 7, 9, _OLD (Conduit), 10, 5 (BookStack), recorded in each `config.json` (D41).
 - **As of 26 Oct, 06:30:** BookStack `bsrep`: 17 runs with a summary, 15 valid, 2 invalid (1 crash at login I40, 1 quota on key 9); pilot `20261026-002235` (smoke). Keys 9 then 10 (D41).
@@ -204,6 +252,21 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
 - **LLM contamination (D58):** the development and held-out apps are public, so the LLM explorer may know how they should behave (spec leakage), and reviewer chats could recall published bug lists; a rebranded BookStack control run is planned, and PrestaShop's and CATTest's fault lists stay unread.
 - **v4 false-alarm families left in the locked harness (I49):** I-create/I-edit compare the model's intent name, not the typed value (login intents, description names); R02 probes hidden anchors; R11 treats a numeric button as a page control. Not fixed: fixing them after seeing Night 3 would be tuning on test data.
 - **Exposure markers undercount reach on BookStack (I44, I49):** faults that fire on a page's 2nd arrival (BS03, BS04) were found by B4 but not marked as exposed.
+- **Holm at n = 5 (D59):** a correction over every metric could never reach 0.05 (best adjusted p 0.13 over 16 metrics), so the primary family is limited to three metrics fixed before the v5 runs; all other comparisons are exploratory.
+- **Distinct-issue definition (D59):** the key (rule, page template, entity kind) is a heuristic; two real defects on one template under one rule count as one issue, and one defect seen by two rules counts as two. Reported with the per-finding number and the mixed-issue count.
+- **Confidence score does not transfer between apps (I53):** a rule's precision depends on the app; calibration needs more apps (clean corpus, held-out).
+- **Funnel S1 and S2 are approximations:** S1 uses catalog `reach` rules (Conduit) or the fault's routes (BookStack); S2 needs exposure markers, missing for Conduit's server-side faults (O-6). S3 is not measured.
+- **Lock measurement on frozen code (D62):** the D59 resweep ran while rule code changed (R33, R49, check-log rows), so it is reported as a pilot; lock numbers come only from the second resweep on the committed candidate.
+- **v5.0 candidate, final resweep (D62, 30 Oct):** final resweep v62 (30 Oct 01:30, code hash b1b3c3ab, 20 replays, 4 new signatures labelled): with every rule BookStack precision per finding 0.96 (91/95) and 0.8 clean false alarms per run, Conduit 0.65 (65/100) and 5.2; with R02h, R02m, R09, R09d, R12c, R21b, R30, R50m, R65 and R68t left out, BookStack 0.98 (90/92) and 0.4, Conduit 0.97 (65/67) and 0.2, recall equal to the D55 resweep (BookStack 8/13: BS04-BS11; Conduit 7/8: F01, F02, F06-F10); both apps meet the three lock criteria. Keeping R09 (a v4 rule) leaves BookStack at 0.6 per run. The left-out rules stay built and are re-measured for v5.1.
+- **v5.0 lock measurement on the code to be committed (D62b):** v63 resweep (30 Oct 04:06, code hash 2964342f, 20 replays, no new signatures): with every rule BookStack precision per finding 0.96 (91/95) and 0.8 clean false alarms per run, Conduit 0.68 (71/105) and 5.4; with the D62a set left out BookStack 0.98 (90/92) and 0.4, Conduit 0.99 (71/72) and 0.2; recall 8/13 and 7/8 as in the D55 resweep. Both apps meet the three criteria. Tests: full suite 255 passed, 4 skipped (the 4 need a live app). Left-out rules keep running and are withheld from the report (`exclude_rules`), so the locked version explores and probes exactly as measured.
+- **Real defects found by v5 rules on the unmodified apps (labels by the assistant, to be confirmed):** BookStack: skip link without target on guest and chapter pages (R43), untranslated key `common.privacy_policy` (R01x), HTTP 500 for a non-numeric draft id (R63), search for '%' returning non-matching results (R23m). Conduit: blank page with 'null' stored values (R48c), editor of a missing article answering 200 (R63), self-follow accepted (R68).
+- **Labelling threat (D62):** the assistant labelled the 171 resweep signatures; unverified ones were labelled fp (counted against precision and false alarms); one group (R43, 22 signatures) was first labelled fp and corrected after a live check as a guest.
+- **Rules built without app runs (D60, D61, I59):** after D61, 103 rule ids are untried on the apps (62 from D60, 41 from D61); every D61 id has a faulty and a clean test case except seven login and second-account probes (R24, R24b, R28, R46, R46w, R66, R67). D60 note: 62 rules exist that have not run on any app. 43 have faulty and clean fixture or served-app tests, 19 have none. Fixture tests found 8 bugs, so untested rules likely hold more. No rule counts before the v5 plan 12.2 entry rule.
+- **Exploration changed with v5 (I60):** element ranking, dialogs, pop-ups, seeding, deferral, discovery and the profile change what agents do. v5 numbers are compared with v4 only through the switches or the ablations.
+- **Severities set by the assistant (E8):** the per-fault severity is a judgment (data, function, display), to be checked with the labels.
+- **Storage-only effects (I73):** R29 and R29k treat a change of local storage or IndexedDB as an effect, so a dead control on an app that writes storage on every click is missed.
+- **Labels set by the assistant (I72, E8):** app types, primitives and frameworks in the dev configs, and the per-fault severities, are the assistant's; profile accuracy and per-type recall use them as truth until the user checks them.
+- **Extraction is imperfect (I57):** on 3 labelled synthetic pages, list items are found with 78% precision and 64% recall. Every rule inherits this.
 
 ## 9. Artifact
 - **Repo layout:** `src/webtester` (harness), `apps/realworld`, `apps/bookstack`, `configs/`, `scripts/run_batch.py`, `tests/` (offline and live), `logs/` (progress, decisions, issues, registry, notes, labels).

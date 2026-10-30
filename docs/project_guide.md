@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status as of** | 28 Oct 2026, evening PKT |
-| **Harness version** | v4 locked at commit `540887e` (branch `phase2-harness-v4`); **v5 in development** (D55-D58, not yet committed or locked, §7.5) |
+| **Status as of** | 29 Oct 2026 |
+| **Harness version** | v4 locked at commit `540887e` (branch `phase2-harness-v4`); **v5 in development** (D55-D62, built through every phase and audited against its plan; replay of the recorded runs under way, not yet locked, §7.5-7.9) |
 | **Experiments done** | Phase 1 (B0 vs B1), G1 (B2, B3 v1, B3 v2), G2/G3 on Conduit (harness v1, v2, v3), BookStack held-out (v3), v4 development resweeps and pilots, Night 3 (v4 on Conduit and BookStack, labelled), v5 development resweeps of Night 3 on both apps (complete, labelled) |
 | **Latest** | v5 resweeps (28 Oct), v4 → v5 on the same recorded runs: BookStack faults per run median 3 → 6 of 13, precision 51% → 95%, clean-app false alarms 4.0 → 0.6 per run; Conduit 5 → 6 of 8 (F08 now found), 85% → 99%, 2.8 → 0.4 (§11.8). Fault-family table (163 families, D56-D57) and a v5 plan by recall stage with an evidence layer (D58, `docs/v5_plan.md`) |
 | **Next milestones** | v5.0 lock (target 2 Nov) and Night 4 (Conduit, BookStack, PrestaShop held-out); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
@@ -15,6 +15,10 @@ This is a living document. It explains the whole project, from the idea to the c
 
 | Date | Change | Sections |
 |---|---|---|
+| 29 Oct 2026 | Preparing the v5.0 lock (D62): a script that checks the lock criteria; a test case on a faulty and a clean app for every rule (27 added; only the login and second-account checks wait for the replay); 7 more bugs found and fixed; a replay of the recorded runs with every v5 rule started as a pilot; a checklist of what is left. New §7.9 | header, 7.9, generated parts |
+| 29 Oct 2026 | v5 audited against its plan, the fault-family table and the paper's metric list (D61): every extension a family row names has its own rule (41 new rule ids, 140 in all); the missing plan items built (input retry, seeding to a second page, role and context in the state, coverage file, discovery checks, API contracts including GraphQL, browser storage, LLM-annotated lists as a condition, recorded-clock replays, safety records); an evaluator block for every metric; tests for every new rule except the login probes; 14 bugs found by the tests and fixed. New §7.8 | header, 7.8, generated parts |
+| 28 Oct 2026 | v5 built through every phase (D60): reach, safety and gate changes; 62 new rules, so every coverable fault family has one (152 of 163 built, 11 spec or out); evaluation and data parts (severity, corpus setup, rebranded control, extraction benchmark, freeze list). Nothing has run on the apps yet. New §7.7; §13, §14 updated | header, 7.7, 13, 14, generated parts |
+| 28 Oct 2026 | v5 implementation started (D59): third review taken into the v5 plan (§10 there); evaluation framework (`evaluate.py`: 12 metric groups, distinct-issue precision, exact intervals, recall funnel, confidence score, Holm over a primary family); check-outcome log; fault families as data with a generated tracker and rule packs; first wave rules R43, R64, R26; evidence capture switched on. New §7.6; §11.8 re-measured with the evaluator; §13, §14 updated | header, 7.6, 11.8, 13, 14, generated parts |
 | 28 Oct 2026 | Conduit v5 resweep finished and labelled (I52 closed): 5 → 6 faults per run (F08 found by R07c), precision 85% → 99%, clean false alarms 2.8 → 0.4 per run | header, 1, 11.8, 13, 14 |
 | 28 Oct 2026 | v5 plan by recall stage (D58, `docs/v5_plan.md`): recall funnel, check outcomes, gaps by stage with verdicts, phases to the v5.0 (2 Nov) and v5.1 (30 Nov) locks; evidence layer built behind `capture_evidence` (response bodies, network timeline, transient messages, R57, R51). Guide brought up to v5: new §7.5 (v5 and the fault families), §8.3.5 (evidence layer), §11.8 (v5 resweeps); §7 renamed v1 to v5 | header, 0, 1, 7, 8.1-8.6, 10, 11.8-11.9, 12, 13, 14, 15, A, generated parts |
 | 28 Oct 2026 | v5 BookStack resweep: precision 51% → 95%, clean false alarms 4.0 → 0.6 per run (D55); fault-family coverage table for generality, `docs/fault_families.md` (D56): 106 families over 13 workflow primitives and 13 app types; extended the same day from two reviewer chats (D57) to 163 families, 16 primitives, 16 app types and 14 check mechanisms | changelog only |
@@ -613,6 +617,111 @@ The layer is off unless `[run] capture_evidence = true`, so the Night 3 resweep 
 
 # Part C: The code
 
+
+### 7.6 v5 implementation, first step (D59, 28 Oct)
+The author asked to start implementing the v5 plan, to take a third review into it, to build a strong evaluation, to implement a rule for every fault family, and to switch the evidence layer on. What was built:
+
+- **Evidence capture is on** in both app configs (`capture_evidence = true`): every v5 run and resweep records the network timeline with JSON bodies and transient messages, so R57 and R51 run.
+- **Check-outcome log** (`checks.py`). Each rule, on each page it looks at, records what happened: detected, exercised (ran, no violation), unarmed (its preconditions did not hold, with the reason), suppressed (a precision guard skipped it, with the guard's name), capped (a probe budget ran out), unobservable (the evidence is not captured) or inconclusive. A check that did not run is never counted as a pass. This is what tells, for a missed fault, whether its rule ever looked at the page.
+- **Evaluation framework** (`evaluate.py`, `python -m webtester evaluate`). One offline module computes the paper's numbers from the run folders and labels: total and oracle-conditioned recall; precision per finding, per distinct issue (rule x page template x entity kind) and per tier and rule, with exact intervals; clean-app false alarms per run, per 100 steps and per 100 checks with exact intervals; the recall funnel (reached, triggered, observed, armed, flagged, confirmed, matched); gate loss; cost and efficiency; spreads across runs; a confidence score per finding with a precision-recall curve; and condition comparisons with Holm correction over three pre-registered primary metrics.
+- **Fault families as data** (`families.py`). The 163 families of `fault_families.md`, its primitives and app types are parsed from the document; whether a family's rules exist is read from the code. `docs/family_tracker.toml` is generated from both: 47 families fully built, 14 partly, 91 with no rule yet (53 rules left to build). For an app type, `rule_packs` lists the rules that apply and those still missing.
+- **First rules of the new waves** (`norms.py`): R43 (an in-page link whose target is missing), R64 (two tabs selected at once, a selected tab with a hidden panel, a control that says it is open while its target is hidden, a checkbox whose announced state disagrees with its real one), R26 (a progress bar, rating or number field outside its own limits). They start at tier T2.
+- **The review's other items** (element ranking before the 80-element cap, stateful travel, per-worker data, specialised worker roles as a new condition B5, an app profile step, cross-engine replay in the gate) are planned for phases 2-3 with their metrics (`docs/v5_plan.md`, §10).
+- **Building every family's rule:** all 56 missing rules are scheduled in four waves; a rule enters a lock only with a fixture test, its check rows, a seeded fault of its family and a measured precision. The paper counts only measured rules.
+
+
+### 7.7 v5 built through every phase (D60, 28 Oct)
+The author asked to build the whole v5 plan and a rule for every fault family before running anything. This
+is what exists now. None of it has run against Conduit or BookStack yet; the next step is the author's replay
+of the Night 3 runs with every new rule (`scripts/resweep_d59.sh`).
+
+- **Reach and safety.** The browser layer now ranks the elements it shows the model (ones not yet tried
+  first), scrolls each new page once, looks inside shadow DOM and same-origin iframes, accepts and logs native
+  dialogs, and closes cookie walls. The harness, not the prompt, holds deletes back until late in the budget
+  and to items the run created, keeps logout to the end, and refuses writes that the execution mode forbids
+  (read-only, reversible, controlled). It seeds data by repeating the first accepted create of a form, reads
+  extra routes from robots.txt, sitemaps and feeds, and replays a recorded path when a URL alone does not
+  restore a state. A stop file ends a run cleanly.
+- **Agents.** A new condition, **B5**, gives the workers roles (explorer, adversarial prober, role-switcher)
+  at B4's budget. After about ten pages the model names the app type and the workflow primitives it saw. This
+  adds goal flows to the prompt; it never turns rules off.
+- **Rules.** 62 new deterministic rules in four modules:
+  - page norms, from one page read per step;
+  - cross-view rules: one item across lists, its page, its edit form, its history;
+  - probes: fresh tabs, a browser with no session, a second account; at most one per step;
+  - environment replay: other time zones, a German locale, phone width.
+
+  Every family the fault-family table marks as checkable now names a rule that exists (152 of 163; the other 11
+  need a specification or are out of scope). Every new rule starts at the lower-confidence tier T2 and counts in a
+  result only after it is measured.
+- **Gate.** T1 findings are replayed first. Confirmed findings are shrunk by delta debugging. They can be replayed
+  in Firefox and WebKit; a finding seen in one engine only is reported as engine-specific.
+- **Evaluation and data.** Each seeded fault now has a severity, and recall can be weighted by it. Also written:
+  - setup for two clean-corpus apps (Parabank, Juice Shop) and a list of nine more;
+  - a rebranded BookStack, to test whether the model's prior knowledge of BookStack matters;
+  - a benchmark of hand-labelled pages for the page extraction (first score: list items 78% precision, 64% recall);
+  - the protocol for real historical bugs;
+  - a generated list of every threshold to freeze before held-out runs.
+- **Tests.** 162 pass. 43 of the 62 new rules have a faulty and a clean case, the probes on a small app served
+  inside the browser. Writing those tests found eight bugs, all fixed. 19 rules (mostly probes that need a login,
+  a second account or deliberate double submits) are not exercised by any test yet.
+
+### 7.8 v5 audited against its plan (D61, 29 Oct)
+The author asked for the v5 plan to be checked from start to end, for every fault family to be checked for a missing
+rule, and for every metric the paper reports to exist, and then for everything incomplete to be built and tested.
+The check went item by item through the plan (75 ids), row by row through the family table, and metric by metric
+through the evaluator. Section 15 of the v5 plan lists the result; in short:
+
+- **Families.** Many rows said a family is covered by "an extension of R20" or "a variant of R16". These now each
+  have their own rule id, written in the row, and the tracker counts a family as built only when every one of those
+  ids exists. Result: 152 of 163 families built; the other 11 need a specification or are out of scope by their
+  definition. A test also checks that every rule the tracker counts has code that raises it. That test found one
+  rule (G3, the same link leading to different pages) that existed only in the tier table; it is now built.
+- **Rules.** 41 new rule ids, 140 in all. Examples: a list showing a time shifted by whole hours from the item's own
+  page; one order number on two orders; a single delete that removed a second row; an archived item still listed
+  as active; a cart that lost the size chosen; a date-range filter returning items outside it; a countdown that
+  never ends; an export the app cannot import back.
+- **Plan items.** Built now: one retry of a rejected form with values derived from the field and the app's
+  message; seeding a list until it has a second page; the user's role and active workspace as part of the state;
+  a coverage file per run; checks of the app's own sitemap and feed; checks of API answers against the app's
+  OpenAPI document or GraphQL schema; local storage and IndexedDB compared with the page; LLM-annotated lists as a
+  separate condition (`b4annot`); replays of time-dependent findings on the recorded clock; records of
+  destructive incidents and cleanup.
+- **Evaluation.** Every metric of the list has a block in `evaluate.py`. A block whose data does not exist yet
+  (worker-count series, held-out apps, report ratings) says what it waits for instead of reporting zero.
+- **Tests.** Every new rule has a faulty and a clean case, many on small apps served for the test, except the
+  probes that need a login or a second account; those wait for the replay of the recorded runs. Writing the tests
+  found 14 bugs, all fixed. Among them: the form retry would have crashed at its first use; probe submissions
+  changed dates so that every date-validating form rejected them; a probe closed its tab before a slow save
+  started; one rule reported different findings depending on the process; probes that stopped early were logged as if they had run.
+- **Still the author's work:** the replay of the Night 3 runs with every v5 rule, the live pilots, the clean-corpus
+  and held-out runs, the real historical bugs, the report ratings, and checking the labels the assistant set
+  (severities, app types, primitives, frameworks).
+
+### 7.9 Preparing the v5.0 lock (D62, 29 Oct)
+A locked version is the code whose numbers the course paper reports, so the lock needs a fixed rule for which rules
+count and one code version behind the numbers.
+
+- **The criteria are checked by a script** (`scripts/lock_check.py`). For each development app: recall not below
+  the earlier v5 replay, at least 90% of findings true, at most one false alarm every two runs on the app without
+  faults. For each rule: it has a test case, it actually ran in the replay, and its findings are labelled. Run on
+  the earlier replay, it shows BookStack slightly over the false-alarm limit (0.6 per run), mostly from one rule.
+- **Every rule now has a test case** on a small app served once with faults and once without; the version without
+  faults must run every rule and stay quiet. Only the eight checks that need a login or a second account are left
+  to the replay of the recorded runs, and a test keeps it that way. Writing the 27 new cases found 7 bugs, among
+  them a double-submit check that would have reported every form whose save sends two requests, and passed checks
+  that were never counted as run.
+- **Pilot first, then the measured replay.** The replay of the 10 recorded runs with every v5 rule is running. Rule
+  code changed while it ran, so it serves to find false alarms; the lock numbers will come from a second replay on
+  the committed code.
+- **Result (30 Oct).** On the committed-to-be code, both apps meet the three criteria once ten rules are left
+  out of v5.0 (they stay built and are measured again for v5.1): at least 97% of findings true, 0.4 and 0.2 false
+  alarms per run, and the same faults found as before. Four of the new rules found real defects in the
+  unmodified apps (for example, BookStack's 'skip to main content' link has no target on its login pages).
+- **What is left** is listed, with who does it and the command, in `docs/v5_lock_checklist.md`: labelling the new
+  findings, fixing or removing rules that raise false alarms, the commit, the final replay, the live pilots and the
+  pre-registered targets (D51), all before the tag.
+
 ## 8. Code reference
 
 ### 8.1 Repository map
@@ -649,30 +758,41 @@ Modules in reading order, by role:
 <!-- gen:start modules -->
 | Module | Lines | Purpose |
 |---|---:|---|
+| [`annotate.py`](../src/webtester/annotate.py) | 73 | LLM annotation of page facts (v5 plan O11; the ablation condition `b4annot`, D61). |
 | [`appctl.py`](../src/webtester/appctl.py) | 120 | Control of the app under test: start with a fault set, reset data, health check. |
-| [`browser.py`](../src/webtester/browser.py) | 569 | Browser layer: one isolated Playwright context per worker. |
+| [`browser.py`](../src/webtester/browser.py) | 891 | Browser layer: one isolated Playwright context per worker. |
 | [`budget.py`](../src/webtester/budget.py) | 44 | Shared run budget. All workers of a run draw from one budget, which is what makes "equal total budget" comparisons across conditions possible. |
-| [`cli.py`](../src/webtester/cli.py) | 207 | Command line. |
-| [`config.py`](../src/webtester/config.py) | 179 | Run configuration: one TOML file per app, overridable from the CLI. |
-| [`consistency.py`](../src/webtester/consistency.py) | 1954 | Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and with what the agents did? |
+| [`checks.py`](../src/webtester/checks.py) | 93 | Check-outcome log (v5 plan section 3, D59): what each rule did on each page it considered. |
+| [`cli.py`](../src/webtester/cli.py) | 253 | Command line. |
+| [`config.py`](../src/webtester/config.py) | 252 | Run configuration: one TOML file per app, overridable from the CLI. |
+| [`consistency.py`](../src/webtester/consistency.py) | 2516 | Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and with what the agents did? |
 | [`crawler.py`](../src/webtester/crawler.py) | 199 | B0: deterministic breadth-first crawler with a random form filler (no LLM). |
+| [`crossview.py`](../src/webtester/crossview.py) | 1487 | Cross-view rules (v5 waves W1-W3, D60): one item, one flow or one control seen across pages and steps. |
+| [`envcheck.py`](../src/webtester/envcheck.py) | 162 | Environment replay (M10, rule R71; v5 wave W2, D60): what the data means must not change with the browser's time zone, locale or window width. |
+| [`evaluate.py`](../src/webtester/evaluate.py) | 1189 | v5 evaluation (v5 plan section 11, D59): every number is computed offline from what a run wrote (trace, findings, gate results, check-outcome log), the labels, the fault catalogs and the family registry. Nothing here runs the app or an LLM, so every condition is measured by the same code. |
 | [`evidence.py`](../src/webtester/evidence.py) | 128 | Evidence layer v5 (D58): what the browser layer records beyond statuses, and the rules that read it. |
-| [`frontier.py`](../src/webtester/frontier.py) | 267 | Exploration frontier (G1): a map of abstract states and the element actions tried in each, used to steer LLM workers away from duplicated work. |
-| [`gate.py`](../src/webtester/gate.py) | 252 | Evidence gate (G2): reproduce before report. |
+| [`families.py`](../src/webtester/families.py) | 244 | Fault families as data (v5 plan sections 7 and 12, D59), read from `docs/fault_families.md`. |
+| [`frontier.py`](../src/webtester/frontier.py) | 306 | Exploration frontier (G1): a map of abstract states and the element actions tried in each, used to steer LLM workers away from duplicated work. |
+| [`gate.py`](../src/webtester/gate.py) | 359 | Evidence gate (G2): reproduce before report. |
 | [`inferred.py`](../src/webtester/inferred.py) | 303 | Inferred oracles (G3): spec-free expectations proposed by the explorer itself. |
-| [`labels.py`](../src/webtester/labels.py) | 140 | Finding labels: the human ground truth behind precision (G2) and semantic-fault recall (G3). |
+| [`labels.py`](../src/webtester/labels.py) | 142 | Finding labels: the human ground truth behind precision (G2) and semantic-fault recall (G3). |
+| [`lexicon.py`](../src/webtester/lexicon.py) | 31 | Cue words as data (v5 plan O6 b, D60): the word lists the v5 rules use, one TOML file per language in `lexicon/`. WEBTESTER_LANG picks the file (default en); a missing key falls back to English. |
 | [`llm.py`](../src/webtester/llm.py) | 236 | Provider-agnostic LLM client over the OpenAI-compatible chat API. |
-| [`memory.py`](../src/webtester/memory.py) | 304 | Structured run memory (harness v4, D49), shared by all workers of a run. |
+| [`memory.py`](../src/webtester/memory.py) | 298 | Structured run memory (harness v4, D49), shared by all workers of a run. |
 | [`metrics.py`](../src/webtester/metrics.py) | 234 | Metrics computed offline from a run's trace (never from in-memory state), so every condition is measured by the same code. |
-| [`oracles.py`](../src/webtester/oracles.py) | 83 | Implicit oracles: turn raw browser signals into deduplicated candidate findings. |
-| [`policies.py`](../src/webtester/policies.py) | 343 | Action-selection policies. |
+| [`norms.py`](../src/webtester/norms.py) | 1093 | Page norms (v5 waves W1-W4, D59-D60): what one page says about itself, from one page read per step. |
+| [`openapi.py`](../src/webtester/openapi.py) | 352 | Declared API contracts (v5 plan O7, rule R57e; D61): when the app serves an OpenAPI or Swagger document, or answers GraphQL introspection, the JSON responses the network timeline captured are checked against what is declared for their operation, and the operations the run called are counted against the declared ones (endpoint coverage, evaluation group 4). |
+| [`oracles.py`](../src/webtester/oracles.py) | 89 | Implicit oracles: turn raw browser signals into deduplicated candidate findings. |
+| [`policies.py`](../src/webtester/policies.py) | 397 | Action-selection policies. |
+| [`probes5.py`](../src/webtester/probes5.py) | 1813 | Active probes of v5 (waves W1-W4, D60): checks that open a fresh tab, a context with no session, or a second account. Each probe kind is capped per run and runs once per page or form kind; at most MAX_PER_STEP v5 probes per step (separate from the v4 probe budget, so neither starves the other). |
+| [`reach.py`](../src/webtester/reach.py) | 261 | Reach helpers for v5 phase 2 (D60): what lets workers get to more states, with data, safely. |
 | [`registry.py`](../src/webtester/registry.py) | 129 | Run registry: one tracked record of every experiment run. |
-| [`runner.py`](../src/webtester/runner.py) | 309 | Run orchestration: one run = one agent condition x N workers on one app state. |
+| [`runner.py`](../src/webtester/runner.py) | 468 | Run orchestration: one run = one agent condition x N workers on one app state. |
 | [`state.py`](../src/webtester/state.py) | 78 | Canonical abstract-state identity (v0). |
-| [`stategraph.py`](../src/webtester/stategraph.py) | 247 | Abstract state graph (harness v4, D49): states, actions and transitions seen while exploring. |
-| [`stats.py`](../src/webtester/stats.py) | 183 | Condition comparison over repeated runs: median [IQR], exact Mann-Whitney U (two-sided) and the Vargha-Delaney A12 effect size, as fixed in the research plan (section 6). No SciPy: with 5-10 runs per condition the exact permutation distribution is cheap and better than the normal approximation. |
+| [`stategraph.py`](../src/webtester/stategraph.py) | 256 | Abstract state graph (harness v4, D49): states, actions and transitions seen while exploring. |
+| [`stats.py`](../src/webtester/stats.py) | 287 | Condition comparison over repeated runs: median [IQR], exact Mann-Whitney U (two-sided) and the Vargha-Delaney A12 effect size, as fixed in the research plan (section 6). No SciPy: with 5-10 runs per condition the exact permutation distribution is cheap and better than the normal approximation. |
 | [`trace.py`](../src/webtester/trace.py) | 39 | Append-only JSONL trace. Every step, LLM call and finding of a run is one line, so any metric can be recomputed offline from the trace alone. |
-| [`worker.py`](../src/webtester/worker.py) | 269 | The exploring worker loop: observe -> decide -> act -> collect signals -> log. |
+| [`worker.py`](../src/webtester/worker.py) | 350 | The exploring worker loop: observe -> decide -> act -> collect signals -> log. |
 <!-- gen:end -->
 
 ### 8.3 Deep dives
@@ -830,6 +950,19 @@ Gate settings (`GateConfig`: k = 3, windows 1/4/0, 20-minute cap, judge on) come
 *Generated from the code. "What it does" is the docstring, or the note in [`docs/code_notes.toml`](code_notes.toml). "Used in" lists the other modules that mention the name. Line numbers link to the source.*
 
 <!-- gen:start code -->
+#### `annotate.py`
+
+LLM annotation of page facts (v5 plan O11; the ablation condition `b4annot`, D61).
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `to_lists(data)` | [28](../src/webtester/annotate.py#L28) | The LLM's answer as page-fact lists (consistency.Facts.lists shape), marked annotated. | - |
+| `class Annotator` | [44](../src/webtester/annotate.py#L44) | Shared by the run's sweepers. `llm` None = cache only (the gate's replays). | consistency, gate, runner |
+| `Annotator.__init__(llm, cache)` | [47](../src/webtester/annotate.py#L47) | The LLM client (None in gate replays: cache only) and the cache of earlier answers. | - |
+| `Annotator.async lists_for(key, text)` | [53](../src/webtester/annotate.py#L53) | The annotated lists for one page key (route shape and heading): cached, else one LLM call. | consistency |
+| `Annotator.save(path)` | [67](../src/webtester/annotate.py#L67) | Writes the cache to annotations.json in the run folder. | consistency, crossview, envcheck, inferred, norms, policies, probes5, runner, stategraph |
+| `Annotator.load(path)` | [71](../src/webtester/annotate.py#L71) | Reads a run's annotations.json (empty when the run had none). | browser, checks, consistency, crossview, inferred, norms, probes5 |
+
 #### `appctl.py`
 
 Control of the app under test: start with a fault set, reset data, health check.
@@ -844,9 +977,9 @@ Control of the app under test: start with a fault set, reset data, health check.
 | `AppControl.running_faults()` | [41](../src/webtester/appctl.py#L41) | The run's ground truth: faults the backend container was started with, or for apps with client-side injected faults, the set chosen at the last `app up --faults`. | cli, runner |
 | `AppControl.fired_faults(since, until)` | [51](../src/webtester/appctl.py#L51) | Server-side exposure markers (`[wt-fault] Fxx`) the backend logged between two unix times: which seeded faults actually took effect during exploration (I33, D36). | metrics, runner |
 | `AppControl._backend_up()` | [60](../src/webtester/appctl.py#L60) | Whether the backend container is running (Conduit's faults are read from it). | - |
-| `AppControl.up(faults, build)` | [64](../src/webtester/appctl.py#L64) | Starts the app with a given fault set (FAULTS env for Conduit, the enabled-faults file for BookStack), waits until healthy and, for BookStack, waits for the seed-loader to finish. | cli, config, consistency, frontier, gate, inferred, memory, oracles, policies |
+| `AppControl.up(faults, build)` | [64](../src/webtester/appctl.py#L64) | Starts the app with a given fault set (FAULTS env for Conduit, the enabled-faults file for BookStack), waits until healthy and, for BookStack, waits for the seed-loader to finish. | browser, checks, cli, config, consistency, crossview, envcheck, frontier, gate, inferred, norms, oracles, policies, probes5, reach |
 | `AppControl._expand(faults)` | [81](../src/webtester/appctl.py#L81) | `ALL` means every fault in the app's catalog. | - |
-| `AppControl.reset()` | [90](../src/webtester/appctl.py#L90) | Restore the seeded snapshot. Returns seconds taken. | browser, cli, consistency, crawler, frontier, gate, runner |
+| `AppControl.reset()` | [90](../src/webtester/appctl.py#L90) | Restore the seeded snapshot. Returns seconds taken. | browser, cli, consistency, crawler, evaluate, frontier, gate, probes5, runner |
 | `AppControl.wait_healthy(timeout_s)` | [106](../src/webtester/appctl.py#L106) | Polls the app's health URL until it answers 200 or the timeout passes. | cli, runner |
 
 #### `browser.py`
@@ -855,43 +988,52 @@ Browser layer: one isolated Playwright context per worker.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `class Element` | [145](../src/webtester/browser.py#L145) | One interactive element the agent can act on: id, tag, type, role, visible text, label, href, value, options, disabled/active flags. | consistency, crawler, frontier, inferred |
-| `Element.key()` | [161](../src/webtester/browser.py#L161) | Position-independent identity, used to recognise 'the same action' across visits. | cli, config, consistency, crawler, evidence, frontier, gate, inferred, llm, memory, metrics, oracles, policies, runner, stategraph, stats, worker |
-| `Element.describe()` | [165](../src/webtester/browser.py#L165) | One-line description of the element for the LLM prompt, e.g. `[12] button "Post Comment"`. | crawler, frontier, gate, inferred, metrics, policies, runner, worker |
-| `class Observation` | [192](../src/webtester/browser.py#L192) | What a worker sees at one step: URL, title, interactive elements (up to 80), the text-free DOM skeleton and the visible text. | consistency, crawler, frontier, gate, inferred, policies |
-| `Observation.element(eid)` | [200](../src/webtester/browser.py#L200) | Looks up an element of this observation by its id. | consistency, crawler, frontier, gate, inferred, metrics, policies, runner, stategraph, worker |
-| `class Signal` | [205](../src/webtester/browser.py#L205) | A raw implicit-oracle observation (not yet a finding). | consistency, inferred, oracles |
-| `class ActionResult` | [216](../src/webtester/browser.py#L216) | Outcome of one executed action: ok/error, URL before and after, and whether it tried to leave the app. | - |
-| `class BrowserSession` | [224](../src/webtester/browser.py#L224) | One worker's isolated browser context (own cookies and storage). | consistency, crawler, evidence, gate, runner, worker |
-| `BrowserSession.__init__(browser, cfg, worker)` | [227](../src/webtester/browser.py#L227) | Sets up one worker's session object (browser, config, worker number, signal buffers); the context starts in start(). | - |
-| `BrowserSession.async start(storage_state)` | [249](../src/webtester/browser.py#L249) | `storage_state` (cookies + localStorage) restores a session: used by the evidence gate's replays. | appctl, cli, config, consistency, crawler, evidence, gate, llm, metrics, runner |
-| `BrowserSession.async close()` | [263](../src/webtester/browser.py#L263) | Closes the worker's browser context. | consistency, gate, runner, trace |
-| `BrowserSession.in_scope(url)` | [267](../src/webtester/browser.py#L267) | Whether a URL belongs to the app under test (allowed origins); everything else is blocked. | consistency, inferred |
-| `BrowserSession.async _route(route)` | [273](../src/webtester/browser.py#L273) | Network router: lets in-scope requests through and aborts the rest, so agents never reach the internet. | - |
-| `BrowserSession._wire(page)` | [279](../src/webtester/browser.py#L279) | Attaches the implicit-oracle listeners (page errors, console, responses, failed requests, request tracking) to a page. | - |
-| `BrowserSession._on_request(req)` | [289](../src/webtester/browser.py#L289) | Tracks an in-flight xhr/fetch/document request (used to wait until the app is quiet). | - |
-| `BrowserSession._on_request_done(req)` | [294](../src/webtester/browser.py#L294) | Marks a tracked request as finished. | - |
-| `BrowserSession._on_console(msg)` | [299](../src/webtester/browser.py#L299) | Console listener: fault-exposure markers become ground-truth records, console errors become `console_error` signals. | - |
-| `BrowserSession._on_response(resp)` | [324](../src/webtester/browser.py#L324) | Response listener: records the step's write requests (method, path, status) and turns any in-scope HTTP 5xx into an `http_5xx` signal. | - |
-| `BrowserSession._on_request_failed(req)` | [339](../src/webtester/browser.py#L339) | Turns an in-scope request that failed (not one cancelled by navigation) into a `request_failed` signal. | - |
-| `BrowserSession._record(resp)` | [349](../src/webtester/browser.py#L349) | v5 evidence layer (D58): adds one same-origin response to the network timeline (method, URL, status, type, content type, page; what a write sent) and starts reading its JSON body. | - |
-| `BrowserSession.async _grab_body(resp, rec)` | [366](../src/webtester/browser.py#L366) | v5 evidence layer: reads a response's body in the background and stores the parsed JSON on its timeline record (at most 200 KB; otherwise marks why not). | - |
-| `BrowserSession.async flush_bodies(timeout_s)` | [380](../src/webtester/browser.py#L380) | Wait (bounded) for the bodies of responses already seen to be read. | consistency |
-| `BrowserSession.net_mark()` | [385](../src/webtester/browser.py#L385) | v5 evidence layer: the timeline's current sequence number, taken when a step begins. | consistency |
-| `BrowserSession.net_since(mark)` | [388](../src/webtester/browser.py#L388) | v5 evidence layer: the timeline records after a mark, i.e. one step's responses. | consistency |
-| `BrowserSession.async drain_messages(page)` | [391](../src/webtester/browser.py#L391) | Transient messages (toasts, flashes, alerts) caught since the last drain, oldest first. | consistency |
-| `BrowserSession.drain_signals()` | [400](../src/webtester/browser.py#L400) | Returns and clears the implicit-oracle signals collected since the last call. | crawler, gate, worker |
-| `BrowserSession.drain_exposures()` | [404](../src/webtester/browser.py#L404) | Injected faults that fired since the last call (exposure, for analysis only). | crawler, worker |
-| `BrowserSession.async settle()` | [410](../src/webtester/browser.py#L410) | Waits after an action: network idle, then no request in flight for 300 ms (v3, D46), then a short pause. | - |
-| `BrowserSession.async wait_quiet(quiet_s, max_s)` | [418](../src/webtester/browser.py#L418) | In a single-page app `networkidle` is reached once at load and returns at once after a click, so wait until no xhr/fetch/document request has been in flight for `quiet_s` (at most `max_s`). Without this, checks ran before the app answered (D46). | consistency |
-| `BrowserSession.async observe()` | [429](../src/webtester/browser.py#L429) | Runs the in-page observation script and returns an Observation (retries if the page navigated mid-way). | crawler, evidence, gate, runner, worker |
-| `BrowserSession.async storage_state()` | [444](../src/webtester/browser.py#L444) | Cookies and localStorage of the worker's context: saved per step so the gate can replay from that session. | gate, runner, worker |
-| `BrowserSession.async fresh_text(url)` | [447](../src/webtester/browser.py#L447) | Visible text of `url` opened in a new tab of this context (same session), for inferred-oracle checks: the worker's own page is left untouched. None if it fails. | consistency, inferred |
-| `BrowserSession.async goto(url_or_path)` | [465](../src/webtester/browser.py#L465) | Opens a URL or app path, refusing out-of-scope addresses. | consistency, crawler, gate, policies, runner, state, worker |
-| `BrowserSession.async execute(do, eid, value)` | [477](../src/webtester/browser.py#L477) | Performs one action (click, fill, clear, select, check, press, hover, navigate, back, reload) on an element id and settles. | crawler, gate, runner, worker |
-| `BrowserSession.async _after(before)` | [531](../src/webtester/browser.py#L531) | After an action: if the page left the app, goes back to the last in-scope page; returns the ActionResult. | - |
-| `BrowserSession.async login(account)` | [545](../src/webtester/browser.py#L545) | Scripted login for the non-LLM crawler (B0) from the app's login recipe; retries once (I40). | config, consistency, crawler, memory, policies, stategraph |
-| `_short(e)` | [567](../src/webtester/browser.py#L567) | First line of an exception message, trimmed, for traces. | - |
+| `class Element` | [250](../src/webtester/browser.py#L250) | One interactive element the agent can act on: id, tag, type, role, visible text, label, href, value, options, disabled/active flags. | consistency, crawler, frontier, inferred, probes5 |
+| `Element.key()` | [266](../src/webtester/browser.py#L266) | Position-independent identity, used to recognise 'the same action' across visits. | annotate, checks, cli, config, consistency, crawler, crossview, evaluate, evidence, frontier, gate, inferred, lexicon, llm, memory, metrics, norms, openapi, oracles, policies, probes5, reach, runner, stategraph, stats, worker |
+| `Element.describe()` | [270](../src/webtester/browser.py#L270) | One-line description of the element for the LLM prompt, e.g. `[12] button "Post Comment"`. | crawler, frontier, gate, inferred, metrics, policies, runner, worker |
+| `class Observation` | [297](../src/webtester/browser.py#L297) | What a worker sees at one step: URL, title, interactive elements (up to 80), the text-free DOM skeleton and the visible text. | consistency, crawler, frontier, gate, inferred, policies |
+| `Observation.element(eid)` | [307](../src/webtester/browser.py#L307) | Looks up an element of this observation by its id. | consistency, crawler, crossview, frontier, gate, inferred, metrics, norms, policies, probes5, runner, stategraph, worker |
+| `class Signal` | [312](../src/webtester/browser.py#L312) | A raw implicit-oracle observation (not yet a finding). | consistency, envcheck, inferred, oracles |
+| `class ActionResult` | [323](../src/webtester/browser.py#L323) | Outcome of one executed action: ok/error, URL before and after, and whether it tried to leave the app. | - |
+| `class BrowserSession` | [331](../src/webtester/browser.py#L331) | One worker's isolated browser context (own cookies and storage). | consistency, crawler, envcheck, evidence, gate, probes5, runner, worker |
+| `BrowserSession.__init__(browser, cfg, worker)` | [334](../src/webtester/browser.py#L334) | Sets up one worker's session object (browser, config, worker number, signal buffers); the context starts in start(). | - |
+| `BrowserSession.async start(storage_state, session_storage, context_kw)` | [376](../src/webtester/browser.py#L376) | `storage_state` (cookies + localStorage) restores a session: used by the evidence gate's replays. `session_storage` ({origin, items}, C1) is restored once per tab by an init script. `context_kw` overrides context options (M10 axes: timezone_id, locale, viewport). | appctl, cli, config, consistency, crawler, crossview, envcheck, evidence, gate, llm, metrics, norms, probes5, reach, runner |
+| `BrowserSession.async close()` | [409](../src/webtester/browser.py#L409) | Closes the worker's browser context. | config, consistency, envcheck, gate, probes5, reach, runner, trace |
+| `BrowserSession.in_scope(url)` | [422](../src/webtester/browser.py#L422) | Whether a URL belongs to the app under test (allowed origins); everything else is blocked. | consistency, inferred |
+| `BrowserSession.async _route(route)` | [428](../src/webtester/browser.py#L428) | Network router: lets in-scope requests through and aborts the rest, so agents never reach the internet. | - |
+| `BrowserSession.mode_refuses(method, url)` | [441](../src/webtester/browser.py#L441) | S1, enforced here rather than in the prompt: read-only refuses every write but the login form; reversible refuses deletes and updates of items this worker did not create; controlled allows all. | - |
+| `BrowserSession._wire(page)` | [457](../src/webtester/browser.py#L457) | Attaches the implicit-oracle listeners (page errors, console, responses, failed requests, request tracking) to a page. | - |
+| `BrowserSession._on_dialog(dialog)` | [468](../src/webtester/browser.py#L468) | R6: native alert/confirm/prompt are logged and accepted (Playwright would dismiss them silently, so a delete behind confirm() never happened); never left blocking. | - |
+| `BrowserSession._on_request(req)` | [477](../src/webtester/browser.py#L477) | Tracks an in-flight xhr/fetch/document request (used to wait until the app is quiet). | - |
+| `BrowserSession._on_request_done(req)` | [482](../src/webtester/browser.py#L482) | Marks a tracked request as finished. | - |
+| `BrowserSession._on_console(msg)` | [487](../src/webtester/browser.py#L487) | Console listener: fault-exposure markers become ground-truth records, console errors become `console_error` signals. | - |
+| `BrowserSession._on_response(resp)` | [516](../src/webtester/browser.py#L516) | Response listener: records the step's write requests (method, path, status) and turns any in-scope HTTP 5xx into an `http_5xx` signal. | - |
+| `BrowserSession._on_request_failed(req)` | [533](../src/webtester/browser.py#L533) | Turns an in-scope request that failed (not one cancelled by navigation) into a `request_failed` signal. | - |
+| `BrowserSession._record(resp)` | [543](../src/webtester/browser.py#L543) | v5 evidence layer (D58): adds one same-origin response to the network timeline (method, URL, status, type, content type, page; what a write sent) and starts reading its JSON body. | - |
+| `BrowserSession.async _grab_body(resp, rec)` | [560](../src/webtester/browser.py#L560) | v5 evidence layer: reads a response's body in the background and stores the parsed JSON on its timeline record (at most 200 KB; otherwise marks why not). | - |
+| `BrowserSession.async flush_bodies(timeout_s)` | [574](../src/webtester/browser.py#L574) | Wait (bounded) for the bodies of responses already seen to be read. | consistency |
+| `BrowserSession.net_mark()` | [579](../src/webtester/browser.py#L579) | v5 evidence layer: the timeline's current sequence number, taken when a step begins. | consistency, worker |
+| `BrowserSession.net_since(mark)` | [582](../src/webtester/browser.py#L582) | v5 evidence layer: the timeline records after a mark, i.e. one step's responses. | consistency, worker |
+| `BrowserSession.async drain_messages(page)` | [585](../src/webtester/browser.py#L585) | Transient messages (toasts, flashes, alerts) caught since the last drain, oldest first. | consistency |
+| `BrowserSession.drain_signals()` | [594](../src/webtester/browser.py#L594) | Returns and clears the implicit-oracle signals collected since the last call. | crawler, gate, worker |
+| `BrowserSession.drain_exposures()` | [598](../src/webtester/browser.py#L598) | Injected faults that fired since the last call (exposure, for analysis only). | crawler, worker |
+| `BrowserSession.async settle()` | [604](../src/webtester/browser.py#L604) | Waits after an action: network idle, then no request in flight for 300 ms (v3, D46), then a short pause. | evaluate |
+| `BrowserSession.async wait_quiet(quiet_s, max_s)` | [612](../src/webtester/browser.py#L612) | In a single-page app `networkidle` is reached once at load and returns at once after a click, so wait until no xhr/fetch/document request has been in flight for `quiet_s` (at most `max_s`). Without this, checks ran before the app answered (D46). | consistency |
+| `BrowserSession.async observe()` | [623](../src/webtester/browser.py#L623) | Runs the in-page observation script and returns an Observation (retries if the page navigated mid-way). | crawler, evidence, gate, runner, worker |
+| `BrowserSession._rank(url, els)` | [662](../src/webtester/browser.py#L662) | X1: keep cfg.max_elements of the pool: the first 15 in page order (header and navigation), then elements not yet acted on in this kind of page, then the rest; shown in page order. | - |
+| `BrowserSession.note_activated(url, key)` | [676](../src/webtester/browser.py#L676) | X1: records that an element key was acted on in this kind of page, so ranking puts it last. | worker |
+| `BrowserSession.async _first_look()` | [681](../src/webtester/browser.py#L681) | Once per URL: close a cookie wall or newsletter pop-up (R9), then scroll to the end and back so lazy content loads (X1). | - |
+| `BrowserSession.async session_storage()` | [713](../src/webtester/browser.py#L713) | C1: this tab's session storage ({origin, items}), saved with each step record. | gate, worker |
+| `BrowserSession.async fresh_text_until(url, pred, deadline_s)` | [720](../src/webtester/browser.py#L720) | O3: like fresh_text, but re-reads the page every 0.5 s until `pred(text)` holds or the deadline passes (a fixed wait gives false alarms on slow apps and wastes time on fast ones). The time it took is kept in settle_times. | consistency |
+| `BrowserSession.locator(eid)` | [741](../src/webtester/browser.py#L741) | The element with this observation id; ids '<frame>.<n>' live in a same-origin iframe (R6). | consistency, inferred, probes5 |
+| `BrowserSession.report()` | [749](../src/webtester/browser.py#L749) | Reach and safety counters for the trace (X1, R6, R9, S1, O3). | cli, config, consistency, evaluate, gate, oracles, probes5, runner |
+| `BrowserSession.async storage_state()` | [766](../src/webtester/browser.py#L766) | Cookies and localStorage of the worker's context: saved per step so the gate can replay from that session. | envcheck, gate, probes5, runner, worker |
+| `BrowserSession.async fresh_text(url)` | [769](../src/webtester/browser.py#L769) | Visible text of `url` opened in a new tab of this context (same session), for inferred-oracle checks: the worker's own page is left untouched. None if it fails. | consistency, inferred |
+| `BrowserSession.async goto(url_or_path)` | [787](../src/webtester/browser.py#L787) | Opens a URL or app path, refusing out-of-scope addresses. | consistency, crawler, crossview, envcheck, gate, policies, probes5, runner, state, worker |
+| `BrowserSession.async execute(do, eid, value)` | [799](../src/webtester/browser.py#L799) | Performs one action (click, fill, clear, select, check, press, hover, navigate, back, reload) on an element id and settles. | crawler, gate, runner, worker |
+| `BrowserSession.async _after(before)` | [853](../src/webtester/browser.py#L853) | After an action: if the page left the app, goes back to the last in-scope page; returns the ActionResult. | - |
+| `BrowserSession.async login(account)` | [867](../src/webtester/browser.py#L867) | Scripted login for the non-LLM crawler (B0) from the app's login recipe; retries once (I40). | config, consistency, crawler, crossview, evaluate, memory, norms, policies, probes5, reach, stategraph |
+| `_short(e)` | [889](../src/webtester/browser.py#L889) | First line of an exception message, trimmed, for traces. | - |
 
 #### `budget.py`
 
@@ -900,10 +1042,25 @@ Shared run budget. All workers of a run draw from one budget, which is what make
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
 | `class Budget` | [13](../src/webtester/budget.py#L13) | The run's shared budget (steps, tokens, browser time): all workers draw from it, which makes equal-budget comparisons possible. | runner, worker |
-| `Budget.elapsed_min()` | [20](../src/webtester/budget.py#L20) | Minutes since the run started. | - |
+| `Budget.elapsed_min()` | [20](../src/webtester/budget.py#L20) | Minutes since the run started. | worker |
 | `Budget.charge(steps, tokens, browser_seconds)` | [23](../src/webtester/budget.py#L23) | Adds a step's steps, tokens and browser seconds to the shared budget. | crawler, worker |
 | `Budget.exhausted()` | [28](../src/webtester/budget.py#L28) | Returns which limit is used up (max_steps, max_tokens, max_minutes) or None; every worker checks it before each step. | crawler, frontier, llm, worker |
 | `Budget.snapshot()` | [37](../src/webtester/budget.py#L37) | The budget totals for the run_end trace event. | appctl, config, consistency, memory, runner |
+
+#### `checks.py`
+
+Check-outcome log (v5 plan section 3, D59): what each rule did on each page it considered.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `class CheckLog` | [32](../src/webtester/checks.py#L32) | Shared by all workers of a run (lives on the SweepState). | consistency |
+| `CheckLog.__init__()` | [35](../src/webtester/checks.py#L35) | Starts an empty log: rows keyed by worker, rule, route, outcome and reason. | - |
+| `CheckLog.note(worker, step, rule, route, outcome, why)` | [39](../src/webtester/checks.py#L39) | Counts one outcome of one rule on one route (and keeps its first and last step); refuses anything not in OUTCOMES. | config, consistency, labels, memory, policies, reach, registry |
+| `CheckLog.records()` | [51](../src/webtester/checks.py#L51) | The aggregated rows as dicts, sorted by rule and route. | consistency, crawler, crossview, evaluate, evidence, norms, probes5, runner, worker |
+| `CheckLog.write(path)` | [55](../src/webtester/checks.py#L55) | Writes the rows as JSON lines (checks.jsonl, or checks_resweep[_clean].jsonl). | browser, cli, consistency, crossview, evaluate, evidence, families, labels, memory, probes5, runner, trace, worker |
+| `CheckLog.summary()` | [60](../src/webtester/checks.py#L60) | rule -> outcome -> count (small enough for the trace's sweep event). | cli, consistency, crossview, evaluate, labels, memory, norms, reach, registry, runner, stats |
+| `read_checks(path)` | [68](../src/webtester/checks.py#L68) | Reads a check log written by CheckLog.write; an empty list when the run has none. | evaluate |
+| `page_arms(facts, typed_markup)` | [74](../src/webtester/checks.py#L74) | For the pure page rules: rule -> '' when armed, else the reason it is unarmed. Mirrors the preconditions inside each rule function in consistency.py (kept next to them in review). | consistency |
 
 #### `cli.py`
 
@@ -911,8 +1068,9 @@ Command line.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `main(argv)` | [32](../src/webtester/cli.py#L32) | Entry point of `python -m webtester`: parses the subcommand (app, run, report, registry, compare, triage, gate-report, regate, resweep, graph) and dispatches it. | __main__, consistency |
-| `_print_summary(s)` | [196](../src/webtester/cli.py#L196) | Prints the key fields of a run's summary.json (used by `run` and `report`). | - |
+| `main(argv)` | [35](../src/webtester/cli.py#L35) | Entry point of `python -m webtester`: parses the subcommand (app, run, report, registry, compare, triage, gate-report, regate, resweep, graph) and dispatches it. | __main__, browser, config, consistency, crossview, evaluate, norms, probes5 |
+| `_offline(args)` | [214](../src/webtester/cli.py#L214) | Commands that need no app config: evaluation and the family registry. | - |
+| `_print_summary(s)` | [242](../src/webtester/cli.py#L242) | Prints the key fields of a run's summary.json (used by `run` and `report`). | - |
 
 #### `config.py`
 
@@ -920,20 +1078,21 @@ Run configuration: one TOML file per app, overridable from the CLI.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `class Account` | [29](../src/webtester/config.py#L29) | One worker's test account (username, email, password). | browser, policies |
-| `class LoginRecipe` | [36](../src/webtester/config.py#L36) | How a non-LLM agent logs in: field label -> value template, then a submit button. | - |
-| `class AppConfig` | [45](../src/webtester/config.py#L45) | Everything about the app under test: base URL, compose folder, health path, reset command, scope, blocked texts, account template, login recipe, fault script, setup service. | appctl |
-| `AppConfig.account(worker)` | [66](../src/webtester/config.py#L66) | Credentials for worker number `worker` (1-based), from the template. | browser, consistency, crawler, gate, memory, policies, runner |
-| `AppConfig.origins()` | [76](../src/webtester/config.py#L76) | Origins the agents may visit (default: the base URL's origin). | browser |
-| `class LLMConfig` | [84](../src/webtester/config.py#L84) | LLM settings: provider, model, base URL, key variable, temperature, output limit, JSON mode, pacing, retries, key fallback, timeout, prices. | llm |
-| `LLMConfig.resolved_base_url()` | [104](../src/webtester/config.py#L104) | The API endpoint: the configured one, else the provider preset. | llm |
-| `LLMConfig.resolved_key_env()` | [109](../src/webtester/config.py#L109) | Name of the environment variable that holds the API key (configured `api_key_env`, else the provider default). | llm |
-| `class BudgetConfig` | [116](../src/webtester/config.py#L116) | Per-run limits: max steps, max minutes, max tokens. | budget |
-| `class RunConfig` | [123](../src/webtester/config.py#L123) | The complete configuration of a run: app, LLM, budget, seed, headless flag, output folder, observation and timing settings. | browser, crawler, runner |
-| `RunConfig.with_overrides(**kw)` | [138](../src/webtester/config.py#L138) | Returns a copy with CLI overrides applied (prefix app_/llm_/budget_ selects the section). | cli |
-| `RunConfig.to_dict()` | [151](../src/webtester/config.py#L151) | The configuration as a plain dict (saved as config.json in every run folder). | crawler, oracles, runner, stategraph, worker |
-| `load_dotenv(path)` | [155](../src/webtester/config.py#L155) | Minimal .env loader: KEY=VALUE lines, existing environment wins. | cli |
-| `load_config(path)` | [168](../src/webtester/config.py#L168) | Reads an app's TOML file (configs/realworld.toml, configs/bookstack.toml) into a RunConfig. | cli |
+| `class Account` | [29](../src/webtester/config.py#L29) | One worker's test account (username, email, password). | browser, policies, probes5 |
+| `class LoginRecipe` | [37](../src/webtester/config.py#L37) | How a non-LLM agent logs in: field label -> value template, then a submit button. | - |
+| `class AppConfig` | [46](../src/webtester/config.py#L46) | Everything about the app under test: base URL, compose folder, health path, reset command, scope, blocked texts, account template, login recipe, fault script, setup service. | appctl |
+| `AppConfig.account(worker)` | [85](../src/webtester/config.py#L85) | Credentials for worker number `worker` (1-based): the accounts per role in turn, else the template. | browser, consistency, crawler, crossview, gate, memory, policies, probes5, reach, runner, worker |
+| `AppConfig.other_account(worker)` | [100](../src/webtester/config.py#L100) | A second account for M7 probes (R46, R67): another role's account, else the next worker's. | probes5 |
+| `AppConfig.origins()` | [113](../src/webtester/config.py#L113) | Origins the agents may visit (default: the base URL's origin). | browser, probes5 |
+| `class LLMConfig` | [121](../src/webtester/config.py#L121) | LLM settings: provider, model, base URL, key variable, temperature, output limit, JSON mode, pacing, retries, key fallback, timeout, prices. | llm |
+| `LLMConfig.resolved_base_url()` | [141](../src/webtester/config.py#L141) | The API endpoint: the configured one, else the provider preset. | llm |
+| `LLMConfig.resolved_key_env()` | [146](../src/webtester/config.py#L146) | Name of the environment variable that holds the API key (configured `api_key_env`, else the provider default). | llm |
+| `class BudgetConfig` | [153](../src/webtester/config.py#L153) | Per-run limits: max steps, max minutes, max tokens. | budget |
+| `class RunConfig` | [160](../src/webtester/config.py#L160) | The complete configuration of a run: app, LLM, budget, seed, headless flag, output folder, observation and timing settings. | browser, crawler, runner |
+| `RunConfig.with_overrides(**kw)` | [205](../src/webtester/config.py#L205) | Returns a copy with CLI overrides applied (prefix app_/llm_/budget_ selects the section). | cli |
+| `RunConfig.to_dict()` | [218](../src/webtester/config.py#L218) | The configuration as a plain dict (saved as config.json in every run folder). | crawler, oracles, runner, stategraph, worker |
+| `load_dotenv(path)` | [222](../src/webtester/config.py#L222) | Minimal .env loader: KEY=VALUE lines, existing environment wins. | cli |
+| `load_config(path)` | [235](../src/webtester/config.py#L235) | Reads an app's TOML file (configs/realworld.toml, configs/bookstack.toml) into a RunConfig. | cli |
 
 #### `consistency.py`
 
@@ -941,77 +1100,93 @@ Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `class Facts` | [397](../src/webtester/consistency.py#L397) | What the audit script read from a page: URL, h1, title, visible and plain text, lists (heading, items, nav flag), counts, times, tables, links, form state. | - |
-| `Facts.of(raw, url)` | [417](../src/webtester/consistency.py#L417) | Builds Facts from the audit script's raw result. | appctl, browser, budget, cli, config, crawler, evidence, frontier, gate, inferred, labels, memory, policies, registry, runner, state, stategraph, stats, trace, worker |
-| `Facts.content_lists()` | [422](../src/webtester/consistency.py#L422) | Lists that are content, not navigation (menus, tab bars, pagination excluded, D54). | - |
-| `Facts.main_list()` | [425](../src/webtester/consistency.py#L425) | The largest content list on the page (search results, feeds). | - |
-| `async audit(session, typed, page)` | [430](../src/webtester/consistency.py#L430) | Runs the page-audit script (AUDIT_JS) on the worker's page or a probe tab and returns its Facts. | evidence, memory |
-| `class Violation` | [443](../src/webtester/consistency.py#L443) | One rule violation: rule id, subject (what it is about), message and evidence. | evidence |
-| `Violation.tier()` | [450](../src/webtester/consistency.py#L450) | The rule's tier: T1 definite, T2 likely, T3 LLM-cited. | gate, metrics |
-| `signal_of(v, url)` | [454](../src/webtester/consistency.py#L454) | Turns a Violation into a `consistency` Signal whose signature is rule + route shape + subject (I45), so the store deduplicates it and the gate can match it. | - |
-| `rule_junk(plain, typed)` | [479](../src/webtester/consistency.py#L479) | R01: rendering junk in visible text outside code blocks; text the agents typed is removed first. | - |
-| `rule_dead_items(facts)` | [503](../src/webtester/consistency.py#L503) | R03: a list item without a real link while (nearly) all its siblings have one. A 2-item list counts too (BookStack's 'Recently Created Shelves' with one shelf and a phantom, BS07, D55 A3): the items share their tag and class, so the dead one has its sibling's structure. | - |
-| `_unit(s)` | [526](../src/webtester/consistency.py#L526) | Normalised unit of a count ('Books' -> 'book') so counts and lists can be matched. | - |
-| `rule_counts(facts)` | [531](../src/webtester/consistency.py#L531) | R04: a count shown for a kind of item is below the number of those items listed (one-sided, so preview lists and pagination are fine). R04b: 'showing a-b of N'. | - |
-| `parse_money(s)` | [572](../src/webtester/consistency.py#L572) | '$1,234.56', '1.234,56 €', '(12.00)', '-3' -> float; None if no number. | - |
-| `_close(a, b)` | [596](../src/webtester/consistency.py#L596) | Whether two money amounts are equal within rounding. | - |
-| `rule_arithmetic(facts)` | [600](../src/webtester/consistency.py#L600) | R06: qty x unit price = line total in tables; total = subtotal + tax + shipping + fees - discount. | - |
-| `rule_echo(facts)` | [658](../src/webtester/consistency.py#L658) | R12: markup the agent typed is rendered as HTML (not escaped); garbled accents. | - |
-| `same_name(a, b)` | [669](../src/webtester/consistency.py#L669) | Two names of the same thing: equal, one contains the other (when the shorter is specific: 2+ words or 8+ characters, so 'Book' is not 'Atlas Book Q7'), or half their words shared. | - |
-| `shown(obj, text)` | [684](../src/webtester/consistency.py#L684) | The typed value is on the page: as typed, or with its markup rendered ('<b>Name</b>' shows as 'Name'). | browser, evidence, inferred, labels, memory, policies, stats |
-| `item_matches(item, name, key)` | [693](../src/webtester/consistency.py#L693) | Whether a list item is a given object (same link target, same name, or the name inside its text). | - |
-| `diff_lists(prev, now)` | [698](../src/webtester/consistency.py#L698) | Items added and removed between two snapshots of one list. | - |
-| `explained(events, name, href)` | [709](../src/webtester/consistency.py#L709) | Whether some recorded action (create, delete, toggle ...) on that item explains why a list changed. | - |
-| `age_conflict(a, b, dt_min)` | [724](../src/webtester/consistency.py#L724) | Two ages of the same thing disagree: ratio over 3 and the gap beyond what time passing explains. | - |
-| `id_segments(url)` | [744](../src/webtester/consistency.py#L744) | The path segments route_shape turns into '*' (the item's ids or slugs), in order. | - |
-| `edit_template(page_url, edit_url)` | [751](../src/webtester/consistency.py#L751) | How an item's edit address is made from its page address: the edit path with the page's id segments as {0}, {1}, ... ('/article/how-to-x' + '/editor/how-to-x' -> '/editor/{0}'), and the edit page's route shape. None when the edit link uses none of the page's ids (it edits something else, e.g. a comment). | - |
-| `apply_template(template, page_url)` | [767](../src/webtester/consistency.py#L767) | Builds an item's edit address from its page address using a learned template (R13). | - |
-| `view_diff(a, b, events, volatile)` | [782](../src/webtester/consistency.py#L782) | G2: page `a` as the worker saw it vs `b`, the same URL opened again in a fresh tab right after, with no write by this worker in between. Compares the heading, the items of lists with the same heading (as sets: order may change) and counts with a unit shown once on both. `events`: what any worker did meanwhile (explains changes). A list that changes by more than half is marked volatile in `volatile` (rotating content) and skipped from then on. | - |
-| `field_label(d)` | [832](../src/webtester/consistency.py#L832) | A filled field's name, from its element key (tag/type/role/text/label/href). | - |
-| `long_value(base, n)` | [838](../src/webtester/consistency.py#L838) | `n` characters starting with the agent's own value (so the item stays recognisable). | - |
-| `mutation_plan(done, obj)` | [844](../src/webtester/consistency.py#L844) | For a one-step create form: (field that names the new item, field for the long value), or None when the step is not a form the harness may submit again: no fills, no final click/press, a password field (registration, login: a second submit could switch the worker's account) or a search box. | - |
-| `class SweepState` | [863](../src/webtester/consistency.py#L863) | Shared by all workers of a run (or of one replay): memory, graph, probe caches. | gate, runner, worker |
-| `SweepState.__init__(graph)` | [866](../src/webtester/consistency.py#L866) | Creates the shared memory and the per-run caches and counters (link statuses, probes, access evidence, mutation forms, reload pages). | - |
-| `class Sweeper` | [908](../src/webtester/consistency.py#L908) | One worker's view: hooks before and after each step's actions. | gate, runner, worker |
-| `Sweeper.__init__(state, worker, account, llm_rules)` | [911](../src/webtester/consistency.py#L911) | Creates one worker's sweeper over the shared state; `llm_rules` turns on the rule that uses the model's cited contradictions (R15). | - |
-| `Sweeper.async before(session, obs, actions)` | [930](../src/webtester/consistency.py#L930) | Before a step's actions: marks the control about to be clicked and reads its text, number, the item it sits in, form validity and the page text (PRE_JS). | browser, config, evidence, gate, inferred, memory, metrics, oracles, registry, runner, worker |
-| `Sweeper.async actions_done(session)` | [946](../src/webtester/consistency.py#L946) | Read the marked control again and take the step's write requests. | gate, runner, worker |
-| `Sweeper.async after(session, obs, done, step, intent, suspect)` | [957](../src/webtester/consistency.py#L957) | After a step's actions: audits the page, records a memory event, and runs every rule (junk, links, counts, arithmetic, echo, effects, pending checks, lists, ages, link vs destination, pagination, back, probes, mutation, access, reload); returns the violations as signals. | appctl, browser, config, crawler, frontier, gate, inferred, llm, memory, metrics, policies, runner, worker |
-| `Sweeper.async _evidence(session)` | [1006](../src/webtester/consistency.py#L1006) | D58: R57 (2xx answers with an error body) and R51 (success and error messages together). | - |
-| `Sweeper._event(obs, done, step, intent, facts, url)` | [1012](../src/webtester/consistency.py#L1012) | Works out what the step did (verb from the model's intent or from word lists over the clicked control; object; fields; whether the app accepted a write) and records it in the action ledger. | - |
-| `Sweeper._effects(e, facts, done, obs)` | [1106](../src/webtester/consistency.py#L1106) | Immediate-effect rules: I-submit (a valid form sent nothing and nothing changed), I-error (a system error after a save), toggle counts that move the wrong way. | - |
-| `Sweeper.async _verify_pending(session, facts, step)` | [1160](../src/webtester/consistency.py#L1160) | Deferred checks of earlier intents: I-create/I-edit (the object is shown where the flow landed or started), I-delete (gone when its address is opened in a fresh tab), search/filter and logout checks. | - |
-| `Sweeper.async _filter_check(session, e, facts)` | [1231](../src/webtester/consistency.py#L1231) | I-filter: every result of a filter or search for T must contain T, on the list or on its own page. | - |
-| `Sweeper.async _logout_check(session, e)` | [1258](../src/webtester/consistency.py#L1258) | I-logout: after logging out, a page that showed the account name must no longer show it. | - |
-| `Sweeper._lists(facts, step)` | [1272](../src/webtester/consistency.py#L1272) | List rules: R07/R07b (what this worker favourited or followed must be in that list) and R09 (a list changed on a revisit with no recorded action to explain it). | - |
-| `Sweeper._ages(facts, step)` | [1345](../src/webtester/consistency.py#L1345) | R08: ages of the same item across pages, and of items an agent just touched. R18: time order of one item: nothing about it is older than its creation, and its 'updated' age is not older than an update entry in an activity feed (D55 A6; BookStack BS09-BS11). An activity entry ('Admin created page Page 1 15 hours ago') is about its object link, not its author (A5). | - |
-| `Sweeper._link_vs_dest(obs, done, facts)` | [1421](../src/webtester/consistency.py#L1421) | R10: a list item's name against the heading of the page its link opened. | - |
-| `Sweeper._pagination(done, facts)` | [1441](../src/webtester/consistency.py#L1441) | R11: a page-number / next control that leaves the main list unchanged. | - |
-| `Sweeper._back(done, facts)` | [1460](../src/webtester/consistency.py#L1460) | G1: back returns to the page before the last move (not after a form submit). | - |
-| `Sweeper._suspect(s, facts)` | [1472](../src/webtester/consistency.py#L1472) | R15: a contradiction the model cites, kept only when both quotes are really on pages it saw. | - |
-| `Sweeper.async _probes(session, facts)` | [1484](../src/webtester/consistency.py#L1484) | R02 broken link: checks the status of a few list-item links (404/5xx is a violation); runs the R05 search probe. | - |
-| `Sweeper.async _search_probe(session, facts)` | [1513](../src/webtester/consistency.py#L1513) | R05: search for a made-up token; any result not on the page before is a phantom. | - |
-| `Sweeper.async _feed_check(session)` | [1553](../src/webtester/consistency.py#L1553) | 'Your Feed' lists what this account follows: an item whose author's page offers 'Follow' (not 'Unfollow') to this session contradicts the feed (Conduit F08). One author page per feed list. | - |
-| `Sweeper.async _toggle_probe(session, facts)` | [1586](../src/webtester/consistency.py#L1586) | A favourite/like control showing a count must change it by one when clicked and the app accepts the write; the probe clicks it once more to undo (Conduit F05). One page kind per run. | - |
-| `Sweeper.async _access(session, facts)` | [1632](../src/webtester/consistency.py#L1632) | R13 access: an item page's Edit link refused for this session while the same kind of edit address worked, or a hidden Edit whose address still opens the filled form. | - |
-| `Sweeper.async _probe_form(session, url)` | [1686](../src/webtester/consistency.py#L1686) | Opens an edit address in a fresh tab and reports whether it shows a form filled with the item's data (R13 evidence). | - |
-| `Sweeper.async _reload(session, obs, done, facts)` | [1705](../src/webtester/consistency.py#L1705) | G2 reload invariance: after a plain navigation, opens the same URL in a fresh tab and compares heading, lists and counts (view_diff). | - |
-| `Sweeper.async _mutate(session, obs, done, e, step)` | [1732](../src/webtester/consistency.py#L1732) | R16/R17: after an accepted one-step create form, submits it again in fresh tabs with an empty, spaces-only and over-long name and checks how the app answers. | - |
-| `Sweeper.async _submit_variant(session, form_url, done, target, kind)` | [1774](../src/webtester/consistency.py#L1774) | Open the form in a fresh tab, fill it as the agent did except `target` (empty, spaces or long; other text fields get a short suffix so a unique-name rule does not reject the copy), submit it the same way, and report what the app answered. | - |
-| `Sweeper.async _fresh_text(session, url)` | [1847](../src/webtester/consistency.py#L1847) | Visible text of a URL in a fresh tab (counts against the per-step probe budget). | - |
-| `Sweeper.async _fetch(session, url, body)` | [1852](../src/webtester/consistency.py#L1852) | HTTP GET through the worker's session (link status checks); returns status and optionally the body. | - |
-| `async _quiet(page, ms)` | [1863](../src/webtester/consistency.py#L1863) | Waits until a probe page's network is idle. | - |
-| `class _ProbeNet` | [1872](../src/webtester/consistency.py#L1872) | What a probe tab's requests did. Probe tabs are not wired to the session's signal buffer (their errors must not become findings with the worker's trail), so R13/R16/G2 watch them here. | - |
-| `_ProbeNet.__init__(session, page)` | [1876](../src/webtester/consistency.py#L1876) | Attaches request/response listeners to a probe tab. | - |
-| `_ProbeNet._request(req)` | [1889](../src/webtester/consistency.py#L1889) | Tracks a probe tab's in-flight request. | - |
-| `_ProbeNet._finished(req)` | [1894](../src/webtester/consistency.py#L1894) | Marks a probe tab's request as finished. | - |
-| `_ProbeNet._response(resp)` | [1899](../src/webtester/consistency.py#L1899) | Records a probe tab's write statuses and 5xx answers. | - |
-| `_ProbeNet.reset()` | [1908](../src/webtester/consistency.py#L1908) | Clears what was recorded before the next submission. | appctl, browser, cli, crawler, frontier, gate, runner |
-| `_ProbeNet.async quiet(quiet_s, max_s)` | [1911](../src/webtester/consistency.py#L1911) | Like BrowserSession.wait_quiet: no xhr/fetch/document request in flight for `quiet_s`. | - |
-| `async _open(session, url)` | [1921](../src/webtester/consistency.py#L1921) | (page, net, HTTP status) of `url` in a new tab of the worker's context, loaded and quiet; the caller closes the page. None if it does not load. | - |
-| `_locate(els, ekey, nth)` | [1939](../src/webtester/consistency.py#L1939) | Finds an element by key and ordinal in a list of elements. | - |
-| `_href_of(d)` | [1946](../src/webtester/consistency.py#L1946) | Extracts the href from an element description. | - |
-| `_el_text(d)` | [1951](../src/webtester/consistency.py#L1951) | Extracts the quoted visible text from an element description. | - |
+| `input_class(v)` | [81](../src/webtester/consistency.py#L81) | R5 metric: the class of a typed value (state.value_class, with negative numbers, dates and non-ASCII text). | - |
+| `class Facts` | [426](../src/webtester/consistency.py#L426) | What the audit script read from a page: URL, h1, title, visible and plain text, lists (heading, items, nav flag), counts, times, tables, links, form state. | annotate, probes5 |
+| `Facts.of(raw, url)` | [446](../src/webtester/consistency.py#L446) | Builds Facts from the audit script's raw result. | annotate, appctl, browser, budget, checks, cli, config, crawler, crossview, envcheck, evaluate, evidence, families, frontier, gate, inferred, labels, memory, norms, openapi, oracles, policies, probes5, reach, registry, runner, state, stategraph, stats, trace, worker |
+| `Facts.content_lists()` | [451](../src/webtester/consistency.py#L451) | Lists that are content, not navigation (menus, tab bars, pagination excluded, D54). | checks, crossview, envcheck, norms, probes5 |
+| `Facts.main_list()` | [454](../src/webtester/consistency.py#L454) | The largest content list on the page (search results, feeds). | checks, crossview, norms, probes5 |
+| `async audit(session, typed, page)` | [459](../src/webtester/consistency.py#L459) | Runs the page-audit script (AUDIT_JS) on the worker's page or a probe tab and returns its Facts. | crossview, envcheck, evidence, norms, probes5 |
+| `class Violation` | [472](../src/webtester/consistency.py#L472) | One rule violation: rule id, subject (what it is about), message and evidence. | crossview, envcheck, evidence, norms, openapi, probes5, runner |
+| `Violation.tier()` | [480](../src/webtester/consistency.py#L480) | The rule's tier: T1 definite, T2 likely, T3 LLM-cited. | evaluate, families, gate, metrics |
+| `signal_of(v, url, health, probe_values)` | [498](../src/webtester/consistency.py#L498) | Turns a Violation into a `consistency` Signal whose signature is rule + route shape + subject (I45), so the store deduplicates it and the gate can match it. | envcheck, runner |
+| `rule_junk(plain, typed)` | [531](../src/webtester/consistency.py#L531) | R01: rendering junk in visible text outside code blocks; text the agents typed is removed first. | - |
+| `rule_dead_items(facts)` | [555](../src/webtester/consistency.py#L555) | R03: a list item without a real link while (nearly) all its siblings have one. A 2-item list counts too (BookStack's 'Recently Created Shelves' with one shelf and a phantom, BS07, D55 A3): the items share their tag and class, so the dead one has its sibling's structure. | - |
+| `_unit(s)` | [578](../src/webtester/consistency.py#L578) | Normalised unit of a count ('Books' -> 'book') so counts and lists can be matched. | norms |
+| `rule_counts(facts)` | [583](../src/webtester/consistency.py#L583) | R04: a count shown for a kind of item is below the number of those items listed (one-sided, so preview lists and pagination are fine). R04b: 'showing a-b of N'. | - |
+| `parse_money(s)` | [624](../src/webtester/consistency.py#L624) | '$1,234.56', '1.234,56 €', '(12.00)', '-3' -> float; None if no number. | - |
+| `_close(a, b)` | [648](../src/webtester/consistency.py#L648) | Whether two money amounts are equal within rounding. | norms |
+| `rule_arithmetic(facts)` | [652](../src/webtester/consistency.py#L652) | R06: qty x unit price = line total in tables; total = subtotal + tax + shipping + fees - discount. | - |
+| `rule_echo(facts)` | [710](../src/webtester/consistency.py#L710) | R12: markup the agent typed is rendered as HTML (not escaped); garbled accents. | - |
+| `same_name(a, b)` | [721](../src/webtester/consistency.py#L721) | Two names of the same thing: equal, one contains the other (when the shorter is specific: 2+ words or 8+ characters, so 'Book' is not 'Atlas Book Q7'), or half their words shared. | crossview, probes5 |
+| `shown(obj, text)` | [736](../src/webtester/consistency.py#L736) | The typed value is on the page: as typed, or with its markup rendered ('<b>Name</b>' shows as 'Name'). | annotate, browser, crossview, evidence, inferred, labels, memory, norms, policies, probes5, reach, stats |
+| `item_matches(item, name, key)` | [745](../src/webtester/consistency.py#L745) | Whether a list item is a given object (same link target, same name, or the name inside its text). | crossview, probes5 |
+| `diff_lists(prev, now)` | [750](../src/webtester/consistency.py#L750) | Items added and removed between two snapshots of one list. | - |
+| `explained(events, name, href)` | [761](../src/webtester/consistency.py#L761) | Whether some recorded action (create, delete, toggle ...) on that item explains why a list changed. | - |
+| `age_conflict(a, b, dt_min)` | [776](../src/webtester/consistency.py#L776) | Two ages of the same thing disagree: ratio over 3 and the gap beyond what time passing explains. | - |
+| `id_segments(url)` | [792](../src/webtester/consistency.py#L792) | The path segments route_shape turns into '*' (the item's ids or slugs), in order. | - |
+| `edit_template(page_url, edit_url)` | [799](../src/webtester/consistency.py#L799) | How an item's edit address is made from its page address: the edit path with the page's id segments as {0}, {1}, ... ('/article/how-to-x' + '/editor/how-to-x' -> '/editor/{0}'), and the edit page's route shape. None when the edit link uses none of the page's ids (it edits something else, e.g. a comment). | - |
+| `apply_template(template, page_url)` | [815](../src/webtester/consistency.py#L815) | Builds an item's edit address from its page address using a learned template (R13). | - |
+| `view_diff(a, b, events, volatile, skipped)` | [830](../src/webtester/consistency.py#L830) | G2: page `a` as the worker saw it vs `b`, the same URL opened again in a fresh tab right after, with no write by this worker in between. Compares the heading, the items of lists with the same heading (as sets: order may change) and counts with a unit shown once on both. `events`: what any worker did meanwhile (explains changes). A list that changes by more than half is marked volatile in `volatile` (rotating content) and skipped from then on. `skipped` collects the guard that dropped each list (check-outcome log, D59). | - |
+| `field_label(d)` | [885](../src/webtester/consistency.py#L885) | A filled field's name, from its element key (tag/type/role/text/label/href). | probes5 |
+| `long_value(base, n)` | [891](../src/webtester/consistency.py#L891) | `n` characters starting with the agent's own value (so the item stays recognisable). | - |
+| `mutation_plan(done, obj)` | [897](../src/webtester/consistency.py#L897) | For a one-step create form: (field that names the new item, field for the long value), or None when the step is not a form the harness may submit again: no fills, no final click/press, a password field (registration, login: a second submit could switch the worker's account) or a search box. | probes5 |
+| `class SweepState` | [921](../src/webtester/consistency.py#L921) | Shared by all workers of a run (or of one replay): memory, graph, probe caches. | checks, crossview, gate, probes5, runner, worker |
+| `SweepState.__init__(graph)` | [924](../src/webtester/consistency.py#L924) | Creates the shared memory and the per-run caches and counters (link statuses, probes, access evidence, mutation forms, reload pages). | - |
+| `class Sweeper` | [990](../src/webtester/consistency.py#L990) | One worker's view: hooks before and after each step's actions. | checks, crossview, gate, norms, reach, runner, worker |
+| `Sweeper.__init__(state, worker, account, llm_rules)` | [993](../src/webtester/consistency.py#L993) | Creates one worker's sweeper over the shared state; `llm_rules` turns on the rule that uses the model's cited contradictions (R15). | - |
+| `Sweeper._ck(rule, outcome, why)` | [1034](../src/webtester/consistency.py#L1034) | Record a check outcome other than detected/exercised (those are settled at the end of the step). | crossview, probes5 |
+| `Sweeper._arm(*rules)` | [1038](../src/webtester/consistency.py#L1038) | Marks rules as armed in this step; _settle_checks then records each as detected or exercised. | crossview, probes5 |
+| `Sweeper.async before(session, obs, actions)` | [1042](../src/webtester/consistency.py#L1042) | Before a step's actions: marks the control about to be clicked and reads its text, number, the item it sits in, form validity and the page text (PRE_JS). | browser, config, crossview, evaluate, evidence, families, gate, inferred, memory, metrics, norms, oracles, probes5, reach, registry, runner, worker |
+| `Sweeper.async actions_done(session)` | [1075](../src/webtester/consistency.py#L1075) | Read the marked control again and take the step's write requests. | gate, runner, worker |
+| `Sweeper.async after(session, obs, done, step, intent, suspect)` | [1101](../src/webtester/consistency.py#L1101) | After a step's actions: audits the page, records a memory event, and runs every rule (junk, links, counts, arithmetic, echo, effects, pending checks, lists, ages, link vs destination, pagination, back, probes, mutation, access, reload); returns the violations as signals. | appctl, browser, config, crawler, crossview, evaluate, frontier, gate, inferred, llm, memory, metrics, norms, policies, probes5, reach, runner, worker |
+| `Sweeper.note_edge(e)` | [1187](../src/webtester/consistency.py#L1187) | G3 (NV5): one navigation action from one state reached two different pages on different occasions. Called by the worker when it records a graph edge; the finding is reported with the next step's. Edges with a data verb, Back (it lands by history, not by state; G1 checks it), and arrivals on a login page (R30's case) are left out. | worker |
+| `Sweeper._count_form(obs, done, facts)` | [1205](../src/webtester/consistency.py#L1205) | R1/R5 measures. A step that filled fields and then clicked or pressed is a form attempt of its route shape; it is accepted when a write was answered 2xx/3xx and no new validation text appeared. Returns None when the step was no form attempt. | - |
+| `Sweeper._new_validation(facts)` | [1220](../src/webtester/consistency.py#L1220) | Validation lines on the page after the step that were not there before it (R1). | - |
+| `Sweeper.async _retry_form(session, obs, done, facts, step)` | [1225](../src/webtester/consistency.py#L1225) | R1 input profiles: a rejected form is submitted once more, in a fresh tab, with each field's value derived from what the page declares about it and from the app's own message (reach.profile_value). Only forms the mutation plan accepts (no password or search fields); at most MAX_RETRY_FORMS per run. | - |
+| `Sweeper._profile_filter(session, viol)` | [1256](../src/webtester/consistency.py#L1256) | X5 ablation only (profile_gating): violations of rules outside the app profile's packs are dropped and logged as suppressed:profile. Off by default, since a wrong profile would hide faults. | - |
+| `Sweeper._health(facts, done, url)` | [1273](../src/webtester/consistency.py#L1273) | C3: why this step looks like a failure of the harness rather than of the app ('' = it does not). | registry |
+| `Sweeper.async _seed(session, obs, done, e, step)` | [1286](../src/webtester/consistency.py#L1286) | R2: after the first accepted create of a form, the harness (not the LLM) submits the same form `seed_copies` more times with distinct names, so list rules (pagination, sort, counts, R09) have 2+ items to read. The copies are writes of this run (memory events, source 'seed'). | - |
+| `Sweeper.async _seed_copies(session, key, copies, step)` | [1308](../src/webtester/consistency.py#L1308) | `copies` more submits of a seeded form, numbered after the ones made before; returns those accepted. | - |
+| `Sweeper._page_size(session)` | [1327](../src/webtester/consistency.py#L1327) | R2: the list page size, from a per-page control on this page (its selected number), else the config. | - |
+| `Sweeper.async _top_up(session, facts, step)` | [1335](../src/webtester/consistency.py#L1335) | R2 (v5 plan 4.1: 0, 1, 2 and page size + 1 items): on a complete list that holds items of a seeded form, with a known page size N, the form is submitted again until the list would hold N + 1 (once per form, MAX_TOPUP copies in all), so pagination, sort and count rules see a second page. | - |
+| `Sweeper.async _norms(session, facts)` | [1357](../src/webtester/consistency.py#L1357) | R43 anchors, R64 control state, R26 declared ranges (norms.py): one page read. | - |
+| `Sweeper._loading(raw, facts, session)` | [1378](../src/webtester/consistency.py#L1378) | R54: a spinner still shown 10 s later on the same page; an empty-state text on a step whose list request failed (needs the network timeline). | - |
+| `Sweeper._settle_checks(viol)` | [1402](../src/webtester/consistency.py#L1402) | Every rule armed this step, or that raised a violation, gets one detected/exercised row. | - |
+| `Sweeper.async _evidence(session, ev)` | [1409](../src/webtester/consistency.py#L1409) | D58: R57 (2xx answers with an error body) and R51 (success and error messages together). | - |
+| `Sweeper._event(obs, done, step, intent, facts, url)` | [1428](../src/webtester/consistency.py#L1428) | Works out what the step did (verb from the model's intent or from word lists over the clicked control; object; fields; whether the app accepted a write) and records it in the action ledger. | - |
+| `Sweeper._effects(e, facts, done, obs)` | [1523](../src/webtester/consistency.py#L1523) | Immediate-effect rules: I-submit (a valid form sent nothing and nothing changed), I-error (a system error after a save), toggle counts that move the wrong way. | - |
+| `Sweeper.async _verify_pending(session, facts, step)` | [1595](../src/webtester/consistency.py#L1595) | Deferred checks of earlier intents: I-create/I-edit (the object is shown where the flow landed or started), I-delete (gone when its address is opened in a fresh tab), search/filter and logout checks. | - |
+| `Sweeper.async _filter_check(session, e, facts)` | [1685](../src/webtester/consistency.py#L1685) | I-filter: every result of a filter or search for T must contain T, on the list or on its own page. | - |
+| `Sweeper.async _logout_check(session, e)` | [1714](../src/webtester/consistency.py#L1714) | I-logout: after logging out, a page that showed the account name must no longer show it. | - |
+| `Sweeper._lists(facts, step)` | [1730](../src/webtester/consistency.py#L1730) | List rules: R07/R07b (what this worker favourited or followed must be in that list) and R09 (a list changed on a revisit with no recorded action to explain it). | norms |
+| `Sweeper._ages(facts, step)` | [1830](../src/webtester/consistency.py#L1830) | R08: ages of the same item across pages, and of items an agent just touched. R18: time order of one item: nothing about it is older than its creation, and its 'updated' age is not older than an update entry in an activity feed (D55 A6; BookStack BS09-BS11). An activity entry ('Admin created page Page 1 15 hours ago') is about its object link, not its author (A5). | - |
+| `Sweeper._link_vs_dest(obs, done, facts)` | [1909](../src/webtester/consistency.py#L1909) | R10: a list item's name against the heading of the page its link opened. | - |
+| `Sweeper._pagination(done, facts)` | [1933](../src/webtester/consistency.py#L1933) | R11: a page-number / next control that leaves the main list unchanged. | - |
+| `Sweeper._back(done, facts)` | [1955](../src/webtester/consistency.py#L1955) | G1: back returns to the page before the last move (not after a form submit). | - |
+| `Sweeper._suspect(s, facts)` | [1969](../src/webtester/consistency.py#L1969) | R15: a contradiction the model cites, kept only when both quotes are really on pages it saw. | - |
+| `Sweeper.async _probes(session, facts)` | [1983](../src/webtester/consistency.py#L1983) | R02 broken link: checks the status of a few list-item links (404/5xx is a violation); runs the R05 search probe. | - |
+| `Sweeper.async _search_probe(session, facts)` | [2017](../src/webtester/consistency.py#L2017) | R05: search for a made-up token; any result not on the page before is a phantom. | - |
+| `Sweeper.async _feed_check(session)` | [2059](../src/webtester/consistency.py#L2059) | 'Your Feed' lists what this account follows: an item whose author's page offers 'Follow' (not 'Unfollow') to this session contradicts the feed (Conduit F08). One author page per feed list. | - |
+| `Sweeper.async _toggle_probe(session, facts)` | [2095](../src/webtester/consistency.py#L2095) | A favourite/like control showing a count must change it by one when clicked and the app accepts the write; the probe clicks it once more to undo (Conduit F05). One page kind per run. | - |
+| `Sweeper.async _access(session, facts)` | [2146](../src/webtester/consistency.py#L2146) | R13 access: an item page's Edit link refused for this session while the same kind of edit address worked, or a hidden Edit whose address still opens the filled form. | - |
+| `Sweeper.async _probe_form(session, url)` | [2201](../src/webtester/consistency.py#L2201) | Opens an edit address in a fresh tab and reports whether it shows a form filled with the item's data (R13 evidence). | - |
+| `Sweeper.async _reload(session, obs, done, facts)` | [2221](../src/webtester/consistency.py#L2221) | G2 reload invariance: after a plain navigation, opens the same URL in a fresh tab and compares heading, lists and counts (view_diff). | - |
+| `Sweeper.async _mutate(session, obs, done, e, step)` | [2256](../src/webtester/consistency.py#L2256) | R16/R17: after an accepted one-step create form, submits it again in fresh tabs with an empty, spaces-only and over-long name and checks how the app answers. | - |
+| `Sweeper.async _submit_variant(session, form_url, done, target, kind, override)` | [2304](../src/webtester/consistency.py#L2304) | Open the form in a fresh tab, fill it as the agent did except `target` (empty, spaces or long; other text fields get a short suffix so a unique-name rule does not reject the copy), submit it the same way, and report what the app answered. `override` (R1, D61): element key -> value used as given for those fields. | probes5 |
+| `Sweeper.async _fresh_text(session, url, until)` | [2405](../src/webtester/consistency.py#L2405) | Visible text of a URL in a fresh tab (counts against the per-step probe budget). | - |
+| `Sweeper.async _fetch(session, url, body)` | [2414](../src/webtester/consistency.py#L2414) | HTTP GET through the worker's session (link status checks); returns status and optionally the body. | - |
+| `async _quiet(page, ms)` | [2425](../src/webtester/consistency.py#L2425) | Waits until a probe page's network is idle. | probes5 |
+| `class _ProbeNet` | [2434](../src/webtester/consistency.py#L2434) | What a probe tab's requests did. Probe tabs are not wired to the session's signal buffer (their errors must not become findings with the worker's trail), so R13/R16/G2 watch them here. | - |
+| `_ProbeNet.__init__(session, page)` | [2438](../src/webtester/consistency.py#L2438) | Attaches request/response listeners to a probe tab. | - |
+| `_ProbeNet._request(req)` | [2451](../src/webtester/consistency.py#L2451) | Tracks a probe tab's in-flight request. | - |
+| `_ProbeNet._finished(req)` | [2456](../src/webtester/consistency.py#L2456) | Marks a probe tab's request as finished. | - |
+| `_ProbeNet._response(resp)` | [2461](../src/webtester/consistency.py#L2461) | Records a probe tab's write statuses and 5xx answers. | - |
+| `_ProbeNet.reset()` | [2470](../src/webtester/consistency.py#L2470) | Clears what was recorded before the next submission. | appctl, browser, cli, crawler, evaluate, frontier, gate, probes5, runner |
+| `_ProbeNet.async quiet(quiet_s, max_s)` | [2473](../src/webtester/consistency.py#L2473) | Like BrowserSession.wait_quiet: no xhr/fetch/document request in flight for `quiet_s`. | probes5 |
+| `async _open(session, url)` | [2483](../src/webtester/consistency.py#L2483) | (page, net, HTTP status) of `url` in a new tab of the worker's context, loaded and quiet; the caller closes the page. None if it does not load. | probes5 |
+| `_locate(els, ekey, nth)` | [2501](../src/webtester/consistency.py#L2501) | Finds an element by key and ordinal in a list of elements. | probes5 |
+| `_href_of(d)` | [2508](../src/webtester/consistency.py#L2508) | Extracts the href from an element description. | - |
+| `_el_text(d)` | [2513](../src/webtester/consistency.py#L2513) | Extracts the quoted visible text from an element description. | - |
 
 #### `crawler.py`
 
@@ -1022,10 +1197,149 @@ B0: deterministic breadth-first crawler with a random form filler (no LLM).
 | `_fillable(e)` | [26](../src/webtester/crawler.py#L26) | Whether the crawler can type into this element. | - |
 | `class RandomFiller` | [30](../src/webtester/crawler.py#L30) | Random form values for the crawler (valid-looking email, password, numbers, words, sometimes empty or special input). | - |
 | `RandomFiller.__init__(rng)` | [31](../src/webtester/crawler.py#L31) | Seeds the filler's random generator. | - |
-| `RandomFiller.value(e)` | [34](../src/webtester/crawler.py#L34) | A random value suited to the field (by type and label). | browser, config, consistency, frontier, gate, inferred, labels, llm, memory, metrics, policies, runner, state, stategraph, stats, worker |
+| `RandomFiller.value(e)` | [34](../src/webtester/crawler.py#L34) | A random value suited to the field (by type and label). | browser, checks, config, consistency, crossview, frontier, gate, inferred, labels, llm, memory, metrics, norms, openapi, policies, probes5, reach, runner, state, stategraph, stats, worker |
 | `_actions_for(obs, sid, avoid)` | [53](../src/webtester/crawler.py#L53) | (kind, element-or-form key, description) for every action available in a state. | - |
 | `async run_crawler(run, session, cfg, worker)` | [77](../src/webtester/crawler.py#L77) | The B0 worker: logs in with the recipe, then breadth-first over (state, action) pairs: clicks every element and fills and submits every form once per abstract state, until the budget ends. | runner |
 | `async _perform(session, obs, cur, kind, key, filler, run)` | [164](../src/webtester/crawler.py#L164) | Executes one crawler action (a click, or a whole form fill plus submit) and records it like an LLM step. | - |
+
+#### `crossview.py`
+
+Cross-view rules (v5 waves W1-W3, D60): one item, one flow or one control seen across pages and steps.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `datetimes(text)` | [162](../src/webtester/crossview.py#L162) | (date, minutes after midnight or None) for each date in `text`, with a time right after it. | - |
+| `_label_of(d)` | [189](../src/webtester/crossview.py#L189) | The visible label of a done action's element, normalised. | - |
+| `_nav_texts(raw)` | [193](../src/webtester/crossview.py#L193) | The texts of the page's navigation links (page read). | - |
+| `_names(facts)` | [197](../src/webtester/crossview.py#L197) | The item names of the page's main list. | - |
+| `class CrossState` | [203](../src/webtester/crossview.py#L203) | Shared by all workers of a run (SweepState.cross). | consistency |
+| `_who_when(name)` | [242](../src/webtester/crossview.py#L242) | A name made only of one name token and a date or time (a card's byline, 'worker01October 29, 2026'). | - |
+| `_written_since(mem, key, names, step)` | [247](../src/webtester/crossview.py#L247) | Whether any worker wrote to an item (by key or name) since a step: such changes are explained. | - |
+| `_status_of(text)` | [260](../src/webtester/crossview.py#L260) | The first status word (open, paid, shipped, ...) in a text, from the lexicon. | probes5 |
+| `_page_money(facts)` | [265](../src/webtester/crossview.py#L265) | The price nearest the heading: the first amount within 400 characters after it. | - |
+| `_complete(L, raw)` | [275](../src/webtester/crossview.py#L275) | Whether a list is complete: no pager, at most 50 items, no 'view all' or 'load more'. | - |
+| `_path(u)` | [280](../src/webtester/crossview.py#L280) | A URL's path without the trailing slash (navigation badges and collection pages are keyed by it). | frontier |
+| `class CrossView` | [285](../src/webtester/crossview.py#L285) | The passive cross-view rules: one item, flow or control compared across pages and steps. | consistency |
+| `CrossView.__init__(st)` | [286](../src/webtester/crossview.py#L286) | Binds the rules to the run's shared cross-view memory (CrossState). | - |
+| `CrossView.check(sw, facts, raw, obs, done, ev, step)` | [289](../src/webtester/crossview.py#L289) | All passive cross-view rules for this step; `sw` is the worker's Sweeper (memory, check log). | appctl, browser, checks, consistency, evaluate, families, frontier, gate, inferred, labels, memory, metrics, norms, openapi, policies, probes5, reach, registry, runner, worker |
+| `CrossView._registry(sw, facts, raw, obs, done, ev, step)` | [312](../src/webtester/crossview.py#L312) | R20: an item's name, price or status in a list against its own page; a list still showing a replaced name. | - |
+| `CrossView._declared(sw, facts, raw, obs, done, ev, step)` | [384](../src/webtester/crossview.py#L384) | R20d (O7): JSON-LD offers or product meta against the visible price and name. | - |
+| `CrossView._prefill(sw, facts, raw, obs, done, ev, step)` | [413](../src/webtester/crossview.py#L413) | R21a: an item's edit form must hold the name its page shows. | - |
+| `CrossView._hierarchy(sw, facts, raw, obs, done, ev, step)` | [436](../src/webtester/crossview.py#L436) | R40: the breadcrumb parent of an item must list it. | - |
+| `CrossView._badges(sw, facts, raw, obs, done, ev, step)` | [471](../src/webtester/crossview.py#L471) | R47: a navigation badge must not count more items than the page it opens lists. | - |
+| `CrossView._referenced(sw, facts, raw, obs, done, ev, step)` | [490](../src/webtester/crossview.py#L490) | R31: the page must not tell the user to use a control it lacks while the app shows it elsewhere. | - |
+| `CrossView._history(sw, facts, raw, obs, done, ev, step)` | [505](../src/webtester/crossview.py#L505) | R73: an activity page showing an older write of this run must show the newer ones too. | - |
+| `CrossView._relations(sw, facts, raw, obs, done, ev, step)` | [531](../src/webtester/crossview.py#L531) | R68: a follow must move the follower count by one; following oneself must be refused. | - |
+| `CrossView._collections(sw, facts, raw, obs, done, ev, step)` | [552](../src/webtester/crossview.py#L552) | R22: an accepted add to a cart or wishlist must raise its badge and put the item on its page. | - |
+| `CrossView._lifecycle(sw, facts, raw, obs, done, ev, step)` | [588](../src/webtester/crossview.py#L588) | R34: after Approve, Close or Publish the item must show the new status; status tab counts must add up to All. | - |
+| `CrossView._capacity(sw, facts, raw, obs, done, ev, step)` | [616](../src/webtester/crossview.py#L616) | R35: availability must fall after an accepted booking; taking more than available must be refused. | - |
+| `CrossView._conservation(sw, facts, raw, obs, done, ev, step)` | [637](../src/webtester/crossview.py#L637) | R32 (LG1): after an accepted transfer, the two balances must move by the amount. | - |
+| `CrossView._funnel(sw, facts, raw, obs, done, ev, step)` | [671](../src/webtester/crossview.py#L671) | R70: values typed in a multi-step flow must appear on its review or confirmation page. | - |
+| `CrossView._echo(sw, facts, raw, obs, done, ev, step)` | [700](../src/webtester/crossview.py#L700) | R12b: a typed value with markup or accents must not be shown escaped, accent-folded or with question marks. | - |
+| `CrossView._fidelity_values(sw, facts, raw, step)` | [733](../src/webtester/crossview.py#L733) | R12c (FM8, UQ3): a typed value cut short, its emoji dropped, its spaces collapsed in the form, its leading zeros or long digits lost. Only values the app accepted in a write, never the harness's probes. | - |
+| `CrossView._times(sw, facts, raw, obs, done, ev, step)` | [777](../src/webtester/crossview.py#L777) | R20t (TM3, TM4): an item's date or time in a list against its own page. | - |
+| `CrossView._idents(sw, facts, raw, obs, done, ev, step)` | [805](../src/webtester/crossview.py#L805) | R20u (UQ1): one shown identifier on two items; one item address showing another item later. | - |
+| `CrossView._choice(sw, facts, raw, obs, done, ev, step)` | [831](../src/webtester/crossview.py#L831) | R21s (FM11): an option chosen in a saved form, shown as another option when the form opens again. | - |
+| `CrossView._collateral(sw, facts, raw, obs, done, ev, step)` | [857](../src/webtester/crossview.py#L857) | R09d (DB4), R09r (DB9): what a single delete removed from the list it was made on. | - |
+| `CrossView._archive(sw, facts, raw, obs, done, ev, step)` | [885](../src/webtester/crossview.py#L885) | R49a (DB12): an archived item listed in an active list; a restored item with fewer children. | - |
+| `CrossView._guest(sw, facts, raw, obs, done, ev, step)` | [920](../src/webtester/crossview.py#L920) | R22g (CT5) guest merge, R22v (PX4) the chosen variant on the collection line. | - |
+| `CrossView._closed(sw, facts, raw, obs, done, ev, step)` | [963](../src/webtester/crossview.py#L963) | R34c (SM3): a write accepted on an item whose page called it closed or locked. | - |
+| `CrossView._status_tabs(sw, facts, raw, obs, done, ev, step)` | [981](../src/webtester/crossview.py#L981) | R34 (SM4): one item listed under two exclusive status tabs. | - |
+| `CrossView._booking(sw, facts, raw, obs, done, ev, step)` | [1005](../src/webtester/crossview.py#L1005) | R36b (TM2): two accepted bookings of one slot of one resource (the agent's or the seeder's). | - |
+| `CrossView._dates(sw, facts, raw, obs, done, ev, step)` | [1025](../src/webtester/crossview.py#L1025) | R38 (SF7): a date-range filter in the address and items dated outside it. | - |
+| `CrossView._forbidden(sw, facts, raw, obs, done, ev, step)` | [1046](../src/webtester/crossview.py#L1046) | R67f (CX3): an item this account's list showed, answering 'forbidden' when opened from it. | - |
+| `CrossView._tag_pages(sw, facts, raw, obs, done, ev, step)` | [1060](../src/webtester/crossview.py#L1060) | R68t (RL1): an item saved with a tag or assignee, missing from that tag's own page. | - |
+| `CrossView._undo(sw, facts, raw, obs, done, ev, step)` | [1089](../src/webtester/crossview.py#L1089) | R48u (RC3): redo right after undo must give back the list as it was before the undo. | - |
+| `CrossView._keys(sw, facts, raw, obs, done, ev, step)` | [1108](../src/webtester/crossview.py#L1108) | R29k (RC4): a key the page advertises that changed nothing. | - |
+| `CrossView._unread(sw, facts, raw, obs, done, ev, step)` | [1127](../src/webtester/crossview.py#L1127) | R47r (MU2, T3): a notification opened from its list is still counted unread on the next visit. | - |
+| `CrossView._shuffle(sw, facts, raw, obs, done, ev, step)` | [1146](../src/webtester/crossview.py#L1146) | R74 (MD2): shuffle must keep the set of tracks. | - |
+| `CrossView._header(sw, facts, raw, obs, done, ev, step)` | [1159](../src/webtester/crossview.py#L1159) | R30 (SA2): the header offers 'Log in' while the page greets this account by name. | - |
+| `CrossView._empty_state(sw, facts, raw, obs, done, ev, step)` | [1173](../src/webtester/crossview.py#L1173) | R31 (PR7): an empty state that asks to create one, on a page with no control to do it. | - |
+| `CrossView._suggestion(sw, facts, raw, obs, done, ev, step)` | [1188](../src/webtester/crossview.py#L1188) | R61 (SF9): a chosen suggestion opening another item than the one it named. | - |
+| `CrossView._cart_algebra(sw, facts, raw, obs, done, ev, step)` | [1205](../src/webtester/crossview.py#L1205) | R69 (PX1, PX2): the same cart lines must cost the same; a quantity set must stay; a coupon below its stated minimum, marked expired, or applied twice must not lower the total. | - |
+| `CrossView._fidelity(sw, facts, raw, obs, done, ev, step)` | [1249](../src/webtester/crossview.py#L1249) | R12c: typed values cut, stripped of emoji, spaces or leading zeros, or rounded (see _fidelity_values). | - |
+| `CrossView._parity(sw, facts, raw, obs, done, ev, step)` | [1253](../src/webtester/crossview.py#L1253) | R56 (T3): two create routes for one item kind must keep the same fields. | - |
+| `CrossView._session(sw, facts, raw, obs, done, ev, step)` | [1275](../src/webtester/crossview.py#L1275) | R30: a login page with no logout in the trail means the session ended. | consistency, probes5 |
+| `CrossView._input_kept(sw, facts, raw, obs, done, ev, step)` | [1292](../src/webtester/crossview.py#L1292) | R27: after a rejected submit, the fields the agent filled must still hold their values. | - |
+| `CrossView._dead(sw, facts, raw, obs, done, ev, step)` | [1314](../src/webtester/crossview.py#L1314) | R29: an action button that sends no request, changes no address and leaves the page as it was. | - |
+| `CrossView._facets(sw, facts, raw, obs, done, ev, step)` | [1335](../src/webtester/crossview.py#L1335) | R38: a facet count against the results it opens; a range filter returns only items in range; R38c filter composition. | - |
+| `CrossView._prefs(sw, facts, raw, obs, done, ev, step)` | [1382](../src/webtester/crossview.py#L1382) | R44: a chosen page size must be kept by later lists. | - |
+| `CrossView._bulk(sw, facts, raw, obs, done, ev, step)` | [1399](../src/webtester/crossview.py#L1399) | R55: a bulk action must change exactly the selected rows, and its message count must match. | - |
+| `CrossView._clone(sw, facts, raw, obs, done, ev, step)` | [1422](../src/webtester/crossview.py#L1422) | R58: a copy must have its original's children. | - |
+| `CrossView._cart(sw, facts, raw, obs, done, ev, step)` | [1441](../src/webtester/crossview.py#L1441) | R69: quantity 0 removes the line; removing a coupon restores the total. | - |
+| `message_fidelity(sw, msgs, ev, done)` | [1469](../src/webtester/crossview.py#L1469) | R51c (FB2): a message counting another number than one single change, or naming another item. Called from the Sweeper's evidence step (it drains the transient messages). | consistency |
+
+#### `envcheck.py`
+
+Environment replay (M10, rule R71; v5 wave W2, D60): what the data means must not change with the browser's time zone, locale or window width.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `page_values(facts, raw)` | [44](../src/webtester/envcheck.py#L44) | The normalised values of one page read: list item names per list, counts by unit, calendar dates. | - |
+| `compare(axis, base, other, other_raw)` | [54](../src/webtester/envcheck.py#L54) | What differs between the base read and an axis read, as short descriptions ([] = the same). | cli, consistency, state, stats |
+| `async run_envcheck(browser, cfg, ctx, axes, pw)` | [82](../src/webtester/envcheck.py#L82) | Compare base and axis reads for the pages each worker visited; ingest R71 findings into the run. Engine axes (ENGINES) need the Playwright handle `pw`; an engine that is not installed is skipped and noted. | runner |
+
+#### `evaluate.py`
+
+v5 evaluation (v5 plan section 11, D59): every number is computed offline from what a run wrote (trace, findings, gate results, check-outcome log), the labels, the fault catalogs and the family registry. Nothing here runs the app or an LLM, so every condition is measured by the same code.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `class RunData` | [74](../src/webtester/evaluate.py#L74) | One run for the evaluator: id, app, condition, clean or faulty, findings, labels, enabled faults, summary, check rows, step times. | - |
+| `_app_metas()` | [94](../src/webtester/evaluate.py#L94) | app_type, primitives, framework and heldout of every app config in configs/ (cached). | - |
+| `app_meta(app)` | [106](../src/webtester/evaluate.py#L106) | The app's [app] table from configs/ (fallback for runs whose saved config predates a field). | - |
+| `load_catalog()` | [111](../src/webtester/evaluate.py#L111) | Both apps' fault catalogs as one dict by fault id, with the app name added. | - |
+| `fault_routes(f)` | [119](../src/webtester/evaluate.py#L119) | Routes where a fault lives: its `reach` routes, its `hint` routes, '(/path)' in its trigger text. | - |
+| `_step_times(trace)` | [132](../src/webtester/evaluate.py#L132) | Seconds since the run began for each (worker, step), and the run's last step time, from the trace. | - |
+| `_trace_parts(trace)` | [137](../src/webtester/evaluate.py#L137) | Step times, run end and the trace events the evaluator reads (session, reach, discovery, ...). | - |
+| `load_run(run_dir, condition, findings, clean, labels, checks)` | [156](../src/webtester/evaluate.py#L156) | A run directory as written by the runner. `findings` may name a resweep file; its check log is the matching `checks*.jsonl`. Labels from finding_labels.toml unless given. | cli |
+| `label_kind(label)` | [180](../src/webtester/evaluate.py#L180) | Sorts a label into seeded, new, upstream, fp, harness or unlabelled. | - |
+| `rule_of(f)` | [198](../src/webtester/evaluate.py#L198) | The rule of a finding (its kind for implicit findings). | - |
+| `tier_of(f)` | [202](../src/webtester/evaluate.py#L202) | The tier of a finding; 'implicit' for HTTP and JS signals. | - |
+| `route_of(f)` | [206](../src/webtester/evaluate.py#L206) | The route shape of a finding, from its signature. | - |
+| `entity_kind(f)` | [212](../src/webtester/evaluate.py#L212) | The kind of item a finding is about: the first path segment of a link in its subject, else of its page. | - |
+| `issue_key(f)` | [222](../src/webtester/evaluate.py#L222) | The distinct-issue key of a finding: rule, page template, entity kind. | - |
+| `found_faults(r, confirmed)` | [226](../src/webtester/evaluate.py#L226) | Seeded faults a run found: labels plus the catalog's detect rules (gate-confirmed findings only if asked). | - |
+| `_prec(tp, n)` | [235](../src/webtester/evaluate.py#L235) | Precision with its Clopper-Pearson 95% interval. | - |
+| `precision_block(runs)` | [240](../src/webtester/evaluate.py#L240) | Precision per finding, per distinct issue, per tier, per rule, gated and judge-filtered; judge accuracy; label kinds; new bugs. | - |
+| `recall_block(runs, catalog)` | [280](../src/webtester/evaluate.py#L280) | Total and oracle-conditioned recall per run, faults found across runs, recall per family and per primitive. | - |
+| `severity_recall(per_run, catalog)` | [342](../src/webtester/evaluate.py#L342) | E8: recall per severity class and severity-weighted recall (catalog field `severity`; unset = function). | - |
+| `f_beta(p, r, beta)` | [360](../src/webtester/evaluate.py#L360) | F-beta of a precision and a recall (beta 0.5 weights precision). | - |
+| `false_alarm_block(clean)` | [368](../src/webtester/evaluate.py#L368) | Clean-app false alarms per run, per 100 steps and per 100 armed checks with exact intervals; per rule; harness-induced and real bugs apart. | - |
+| `harness_block(runs)` | [401](../src/webtester/evaluate.py#L401) | C2/C3/J3 (D60): findings the harness itself may have caused, reported apart; reach and safety counters from the trace (X1, X2, R6-R9, S1, S2, O3, R2, R7, X5, X9). | - |
+| `_ratio(a, b)` | [433](../src/webtester/evaluate.py#L433) | a/b rounded, or None when b is 0. | - |
+| `setup_effort(runs)` | [437](../src/webtester/evaluate.py#L437) | Generality (group 9): per app, how many app-specific config items the run needed beyond a URL and credentials (login recipe fields, blocked texts, reset command, fault script, setup service). | - |
+| `gate_block(runs)` | [452](../src/webtester/evaluate.py#L452) | Gate statuses and rates, gate recall loss per fault and per true finding, minimal trace length. | - |
+| `run_metrics(r)` | [469](../src/webtester/evaluate.py#L469) | Per-run scalars (reach, efficiency, cost, detection) used for spreads and condition comparisons. | - |
+| `funnel_block(runs, catalog)` | [515](../src/webtester/evaluate.py#L515) | Recall funnel S1-S7 per seeded fault and run, the first stage that failed, guard suppressions and caps on the fault's route. | - |
+| `checks_block(runs)` | [557](../src/webtester/evaluate.py#L557) | Arm rate per rule and the most frequent reasons a check did not run, from the check log. | - |
+| `_features(r, f, prior, tier_prior, own)` | [577](../src/webtester/evaluate.py#L577) | `own`: the row's label when it is a training row; its rule prior then leaves it out (no target leak). | - |
+| `_priors(rows)` | [597](../src/webtester/evaluate.py#L597) | Rule label counts and smoothed tier precisions of the training findings (confidence score). | - |
+| `_fit(X, y, l2, it, lr)` | [607](../src/webtester/evaluate.py#L607) | L2-regularised logistic regression by gradient descent (pure Python). | - |
+| `_score(w, x)` | [622](../src/webtester/evaluate.py#L622) | The fitted model's probability for one feature vector. | - |
+| `confidence_block(runs)` | [627](../src/webtester/evaluate.py#L627) | Confidence score per finding, fitted leave-one-app-out: precision-recall curve, average precision, Brier score, reliability bins, weights. | - |
+| `kappa_block(sample)` | [674](../src/webtester/evaluate.py#L674) | Cohen's kappa of the user's blind labels against the assistant's labels (pending until the blind labels are filled). | - |
+| `spreads(per_run)` | [704](../src/webtester/evaluate.py#L704) | Median, IQR, mean, SD, CV and a bootstrap interval of each per-run metric; the healthy-run share. | openapi |
+| `compare_conditions(per_run, ref)` | [714](../src/webtester/evaluate.py#L714) | Each condition against `ref`, per app: exact Mann-Whitney p, A12, Holm-adjusted over the metric family. | - |
+| `evaluate(runs, ref)` | [738](../src/webtester/evaluate.py#L738) | The full report: per app and condition precision, recall, false alarms, F-beta, gate, funnel, checks, spreads; confidence, kappa, per-run metrics, comparisons. | browser, checks, cli, consistency, envcheck, families, inferred, probes5, worker |
+| `report_md(rep)` | [785](../src/webtester/evaluate.py#L785) | A compact markdown view of the main numbers; the JSON holds everything. | cli |
+| `rule_recall(runs, catalog)` | [843](../src/webtester/evaluate.py#L843) | Group 10: per rule, seeded faults its findings were labelled with / (run x enabled fault) pairs whose families name the rule (the faults the rule is meant to catch). | - |
+| `reach_block(runs)` | [867](../src/webtester/evaluate.py#L867) | Group 4 from the session, sweep, role, api and step records of the runs. | - |
+| `_auc(points)` | [911](../src/webtester/evaluate.py#L911) | Area under a step curve of (x in 0..1, y in 0..1), x sorted. | - |
+| `efficiency_block(runs, catalog)` | [922](../src/webtester/evaluate.py#L922) | Group 5: dead-end and revisit rates, session losses, recall over steps / tokens / minutes (with the area under each curve), and the state plateau (the share of the run after which 95% of its states were known). | - |
+| `cost_block(runs)` | [970](../src/webtester/evaluate.py#L970) | Group 7: tokens per finding and per confirmed true finding, USD, gate overhead, LLM retries and policy errors, and cross-worker redundancy (states several workers visited). | - |
+| `safety_block(runs)` | [995](../src/webtester/evaluate.py#L995) | Group 11: destructive incidents (deletes of items the run did not create), out-of-scope requests the router blocked, writes the mode refused, writes that passed although the mode forbids them, cleanup share. | - |
+| `guard_loss(funnel)` | [1009](../src/webtester/evaluate.py#L1009) | Group 6: per guard, the (fault x run) misses that failed at S4 or S5 while the guard suppressed a rule of the fault's families on its route (an upper bound of the recall the guard costs). | - |
+| `tier_calibration(runs)` | [1020](../src/webtester/evaluate.py#L1020) | Group 10: the tier each rule reports at against the tier its measured precision gives it. | - |
+| `engine_agreement(runs)` | [1030](../src/webtester/evaluate.py#L1030) | Group 10 / X9: confirmed findings replayed in other engines, and the share that held in every engine. | - |
+| `profile_accuracy(runs)` | [1040](../src/webtester/evaluate.py#L1040) | X5: the app profile the LLM gave against the app type and primitives in the app's config (our labels). | - |
+| `scaling_block(per_run, runs)` | [1056](../src/webtester/evaluate.py#L1056) | Group 7: parallel speedup and efficiency, per app and condition, across the worker counts present (unique states and faults found per run; speedup = mean at N / mean at the smallest N). | - |
+| `_axis(r, axis)` | [1079](../src/webtester/evaluate.py#L1079) | The value of one sensitivity axis (LLM model, framework, app name) for a run. | - |
+| `sensitivity_block(per_run, runs)` | [1088](../src/webtester/evaluate.py#L1088) | Group 8: the primary metrics across the values of one axis (LLM model, front-end framework, the rebranded app vs its original), condition by condition; exact Mann-Whitney p, unadjusted (exploratory). | - |
+| `generalization_block(per_run, runs)` | [1121](../src/webtester/evaluate.py#L1121) | Group 9: development vs held-out apps (app.heldout in the config): the difference of the medians of recall, distinct-issue precision and findings per run. | - |
+| `across_apps(per_run)` | [1141](../src/webtester/evaluate.py#L1141) | Group 12: per condition, the mean over apps of each app's median, with a bootstrap interval over apps. | - |
+| `detector_vs_e2e(runs)` | [1158](../src/webtester/evaluate.py#L1158) | E10: for runs present both live and resweept, the faults found by each (detector-only = the resweep of the recorded trail with the current oracles, end-to-end = what the run reported). | - |
+| `report_quality_block(path)` | [1174](../src/webtester/evaluate.py#L1174) | Group 3: the user's ratings of sampled confirmed reports (scripts/report_sample.py writes the sheet): reproduced by a person (yes/no), an actionability rubric of five 0-2 items, minutes to triage. | - |
 
 #### `evidence.py`
 
@@ -1038,6 +1352,28 @@ Evidence layer v5 (D58): what the browser layer records beyond statuses, and the
 | `kind_of(text)` | [106](../src/webtester/evidence.py#L106) | 'ok', 'bad', or '' for a message's text; a message with both kinds of words is ambiguous (''). | - |
 | `rule_messages(msgs)` | [113](../src/webtester/evidence.py#L113) | R51 (FB2): one step's messages include a success and an error that appeared within MSG_WINDOW_MS of each other: the app says both that the action worked and that it failed. | consistency |
 
+#### `families.py`
+
+Fault families as data (v5 plan sections 7 and 12, D59), read from `docs/fault_families.md`.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `_cells(line)` | [56](../src/webtester/families.py#L56) | Splits a markdown table row into trimmed cells. | - |
+| `_expand_faults(cell)` | [60](../src/webtester/families.py#L60) | Expands a 'Dev faults' cell ('BS01-BS08; F06') into fault ids. | - |
+| `_expand_families(cell, known)` | [68](../src/webtester/families.py#L68) | Expands a primitive's family cell ('DB1-DB13, FM1-FM11') into the family ids that exist. | - |
+| `_parse(path)` | [77](../src/webtester/families.py#L77) | Reads fault_families.md once: the family rows, the primitive table and the app-type table. | - |
+| `families()` | [122](../src/webtester/families.py#L122) | Every family row of section 3 by id: name, group, evidence, rules named, status, development faults. | cli, consistency, evaluate, policies, reach |
+| `primitives()` | [126](../src/webtester/families.py#L126) | Workflow primitive -> its families (section 4). | config, consistency, evaluate, policies, reach |
+| `app_types()` | [130](../src/webtester/families.py#L130) | App type -> primitives rated central or present (section 4). | policies |
+| `fault_families_of()` | [134](../src/webtester/families.py#L134) | Seeded fault id -> the families whose row names it. | evaluate |
+| `extension_phrases(fid)` | [160](../src/webtester/families.py#L160) | The extension / variant phrases a family row names ('R16 variant', 'I-delete extension'). | - |
+| `built_rules()` | [166](../src/webtester/families.py#L166) | Rules that exist in the code now: the consistency tier table plus the implicit signal kinds. | - |
+| `family_rules(fid)` | [173](../src/webtester/families.py#L173) | The rules and implicit signal kinds a family names. | evaluate |
+| `rule_packs(app_type, prims, present)` | [178](../src/webtester/families.py#L178) | The app-profile mapper (v5 plan P1). `app_type` as in section 4's table, or `prims` directly. `present`: include primitives rated ○ as well as ●. Returns the primitives, their families and the rules to run (built ones in `rules`, the rest in `missing`, so a profile shows what it cannot check). | cli, consistency, reach |
+| `tracker()` | [193](../src/webtester/families.py#L193) | One entry per family: specification status and implementation status, derived, not typed. | cli, norms, probes5 |
+| `tracker_toml(rows)` | [216](../src/webtester/families.py#L216) | The tracker rows as TOML (docs/family_tracker.toml). | cli |
+| `tally(rows)` | [237](../src/webtester/families.py#L237) | Counts of the tracker: families by status and by implementation, unbuilt rules, rules per wave. | cli |
+
 #### `frontier.py`
 
 Exploration frontier (G1): a map of abstract states and the element actions tried in each, used to steer LLM workers away from duplicated work.
@@ -1047,33 +1383,34 @@ Exploration frontier (G1): a map of abstract states and the element actions trie
 | `class StateInfo` | [25](../src/webtester/frontier.py#L25) | What the frontier knows about one abstract state: URL, route, its elements, visits. | - |
 | `class Frontier` | [32](../src/webtester/frontier.py#L32) | B3 v1 (D23): the shared map of states and element actions; marks elements `[done xN]` / `[taken]` (90 s leases) and suggests the least-explored state. | policies, runner |
 | `Frontier.__init__(shared, lease_s)` | [33](../src/webtester/frontier.py#L33) | Creates an empty frontier (shared between workers or private, for the -local ablation). | - |
-| `Frontier.visit(worker, sid, obs)` | [43](../src/webtester/frontier.py#L43) | Registers a visit to a state and its elements. | crawler, memory, policies, stategraph, worker |
+| `Frontier.visit(worker, sid, obs)` | [43](../src/webtester/frontier.py#L43) | Registers a visit to a state and its elements. | checks, consistency, crawler, crossview, memory, policies, reach, stategraph, worker |
 | `Frontier.claim(worker, sid, keys)` | [56](../src/webtester/frontier.py#L56) | Leases the elements a worker is about to act on, so others see them `[taken]`. | worker |
-| `Frontier.record(worker, sid, key, do, value)` | [61](../src/webtester/frontier.py#L61) | Counts that an element was exercised in a state and releases its lease. | gate, memory, registry, stategraph, worker |
+| `Frontier.record(worker, sid, key, do, value)` | [61](../src/webtester/frontier.py#L61) | Counts that an element was exercised in a state and releases its lease. | browser, gate, memory, openapi, probes5, registry, stategraph, worker |
 | `Frontier._taken_by_other(worker, sid, key)` | [66](../src/webtester/frontier.py#L66) | Whether another worker holds a live lease on this element. | - |
-| `Frontier._path(url)` | [70](../src/webtester/frontier.py#L70) | Path + query + fragment of a URL (what a worker should navigate to). | - |
-| `Frontier.mark(worker, sid, el)` | [74](../src/webtester/frontier.py#L74) | The mark shown next to an element in the prompt: `[taken]`, `[done xN]` or nothing. | browser, consistency, policies |
+| `Frontier._path(url)` | [70](../src/webtester/frontier.py#L70) | Path + query + fragment of a URL (what a worker should navigate to). | crossview |
+| `Frontier.mark(worker, sid, el)` | [74](../src/webtester/frontier.py#L74) | The mark shown next to an element in the prompt: `[taken]`, `[done xN]` or nothing. | browser, consistency, crossview, policies |
 | `Frontier.untouched(worker, sid)` | [81](../src/webtester/frontier.py#L81) | Number of elements in a state nobody has exercised yet. | browser, runner |
-| `Frontier.suggest(worker, current, threshold)` | [87](../src/webtester/frontier.py#L87) | When the current state is nearly exhausted, point the worker at the state with the most untouched elements that no other worker is heading to. | consistency, labels, policies |
-| `Frontier.stats()` | [107](../src/webtester/frontier.py#L107) | Frontier totals for the trace (states, elements, elements tried). | cli, runner, stategraph |
+| `Frontier.suggest(worker, current, threshold)` | [87](../src/webtester/frontier.py#L87) | When the current state is nearly exhausted, point the worker at the state with the most untouched elements that no other worker is heading to. | consistency, labels, norms, policies, probes5 |
+| `Frontier.stats()` | [107](../src/webtester/frontier.py#L107) | Frontier totals for the trace (states, elements, elements tried). | cli, evaluate, runner, stategraph |
 | `class FrontierV2` | [117](../src/webtester/frontier.py#L117) | B3 v2, from the v1 pilot (I16): the v1 suggestion never fired because nav-bar elements kept every page "unexplored", and workers converged on the same forms. | runner |
 | `FrontierV2.__init__(shared, lease_s, rotate_steps, global_share, min_states_for_global, dry_threshold)` | [132](../src/webtester/frontier.py#L132) | Adds v2 bookkeeping: rotation steps, global-element share, focus areas, typed input classes, known links. | - |
-| `FrontierV2.visit(worker, sid, obs)` | [147](../src/webtester/frontier.py#L147) | Also records which states each element appears on (to spot the nav bar) and the links seen (unvisited routes). | crawler, memory, policies, stategraph, worker |
-| `FrontierV2.record(worker, sid, key, do, value)` | [161](../src/webtester/frontier.py#L161) | Also records the input class typed into a field (`[tried: empty, text]`). | gate, memory, registry, stategraph, worker |
-| `FrontierV2.is_global(key)` | [167](../src/webtester/frontier.py#L167) | Whether an element is on at least half of the known states (navigation): it is not counted as work. | - |
-| `FrontierV2.untouched(worker, sid)` | [171](../src/webtester/frontier.py#L171) | Untouched elements, ignoring global (navigation) ones. | browser, runner |
-| `FrontierV2.area(route)` | [178](../src/webtester/frontier.py#L178) | Focus-area name of a route: sibling routes that differ only in their last segment (3 or more, below the top level, e.g. /profile/alice, /profile/bob) form one area. Works around the v0 state abstraction keeping alphabetic value segments apart (I11). | policies, worker |
-| `FrontierV2._area_routes(area)` | [191](../src/webtester/frontier.py#L191) | All known routes that belong to a focus area. | - |
-| `FrontierV2.area_visited(area)` | [194](../src/webtester/frontier.py#L194) | Whether any worker has been in the area. | - |
-| `FrontierV2.area_work(worker, area)` | [197](../src/webtester/frontier.py#L197) | Untouched non-global elements over the area's states; an unvisited area counts as fresh work. | - |
-| `FrontierV2.unvisited_routes()` | [203](../src/webtester/frontier.py#L203) | Areas known from links that nobody has visited yet. | policies |
-| `FrontierV2.mark(worker, sid, el)` | [206](../src/webtester/frontier.py#L206) | v2 marks: `[taken]`, `[tried: classes]` for text fields, `[nav]` for global elements, `[done xN]`. | browser, consistency, policies |
-| `FrontierV2.focus(worker, current)` | [218](../src/webtester/frontier.py#L218) | The worker's focus area (route, path to it), reassigned when dry or after rotate_steps. | policies, runner, worker |
-| `FrontierV2._area_path(area)` | [241](../src/webtester/frontier.py#L241) | A concrete path into the area: the last URL seen there, else a link to it. | - |
-| `FrontierV2.others_focus(worker)` | [248](../src/webtester/frontier.py#L248) | The other workers' focus areas (shown in the coordination note). | policies |
-| `FrontierV2.stats()` | [251](../src/webtester/frontier.py#L251) | v2 totals: focus reassignments and global elements. | cli, runner, stategraph |
-| `class FrontierV3` | [256](../src/webtester/frontier.py#L256) | B3 v3 (harness v4, D49): FrontierV2 plus the run's abstract state graph (stategraph.py). The harness travels to a newly assigned focus area by URL instead of spending an LLM step on it (22-28% of v3 tokens went to travel to known routes), and the prompt is compact: explored navigation on one line, 12 routes. Marks and focus areas are v2's. | runner |
-| `FrontierV3.__init__(shared, graph, **kw)` | [264](../src/webtester/frontier.py#L264) | v3 (harness v4): links the frontier to the run's state graph for travel and page names. | - |
+| `FrontierV2.visit(worker, sid, obs)` | [151](../src/webtester/frontier.py#L151) | Also records which states each element appears on (to spot the nav bar) and the links seen (unvisited routes). | checks, consistency, crawler, crossview, memory, policies, reach, stategraph, worker |
+| `FrontierV2.record(worker, sid, key, do, value)` | [168](../src/webtester/frontier.py#L168) | Also records the input class typed into a field (`[tried: empty, text]`). | browser, gate, memory, openapi, probes5, registry, stategraph, worker |
+| `FrontierV2.is_global(key)` | [174](../src/webtester/frontier.py#L174) | Whether an element is on at least half of the known states (navigation): it is not counted as work. | - |
+| `FrontierV2.untouched(worker, sid)` | [178](../src/webtester/frontier.py#L178) | Untouched elements, ignoring global (navigation) ones. | browser, runner |
+| `FrontierV2.area(route)` | [185](../src/webtester/frontier.py#L185) | Focus-area name of a route: sibling routes that differ only in their last segment (3 or more, below the top level, e.g. /profile/alice, /profile/bob) form one area. Works around the v0 state abstraction keeping alphabetic value segments apart (I11). | evaluate, policies, worker |
+| `FrontierV2._area_routes(area)` | [198](../src/webtester/frontier.py#L198) | All known routes that belong to a focus area. | - |
+| `FrontierV2.area_visited(area)` | [201](../src/webtester/frontier.py#L201) | Whether any worker has been in the area. | - |
+| `FrontierV2.area_work(worker, area)` | [204](../src/webtester/frontier.py#L204) | Untouched non-global elements over the area's states; an unvisited area counts as fresh work. v5 (D60): a list page seen only once counts 2 more (E1: second-arrival faults, R09 needs a revisit), and unvisited item pages of the area count 1 each, up to 3 (E3). | - |
+| `FrontierV2.unvisited_routes()` | [221](../src/webtester/frontier.py#L221) | Areas known from links that nobody has visited yet. | policies |
+| `FrontierV2.mark(worker, sid, el)` | [224](../src/webtester/frontier.py#L224) | v2 marks: `[taken]`, `[tried: classes]` for text fields, `[nav]` for global elements, `[done xN]`. | browser, consistency, crossview, policies |
+| `FrontierV2.focus(worker, current)` | [236](../src/webtester/frontier.py#L236) | The worker's focus area (route, path to it), reassigned when dry or after rotate_steps. | policies, runner, worker |
+| `FrontierV2.add_discovered(paths)` | [259](../src/webtester/frontier.py#L259) | R7: routes from sitemap, robots, feeds and the network join the links (as unvisited work). | runner, worker |
+| `FrontierV2._area_path(area)` | [270](../src/webtester/frontier.py#L270) | A concrete path into the area: an item page not visited yet (E3, D60), else the last URL seen there, else a link to it. | - |
+| `FrontierV2.others_focus(worker)` | [282](../src/webtester/frontier.py#L282) | The other workers' focus areas (shown in the coordination note). | policies |
+| `FrontierV2.stats()` | [285](../src/webtester/frontier.py#L285) | v2 totals: focus reassignments and global elements. | cli, evaluate, runner, stategraph |
+| `class FrontierV3` | [293](../src/webtester/frontier.py#L293) | B3 v3 (harness v4, D49): FrontierV2 plus the run's abstract state graph (stategraph.py). The harness travels to a newly assigned focus area by URL instead of spending an LLM step on it (22-28% of v3 tokens went to travel to known routes), and the prompt is compact: explored navigation on one line, 12 routes. Marks and focus areas are v2's. | runner |
+| `FrontierV3.__init__(shared, graph, revisits, **kw)` | [301](../src/webtester/frontier.py#L301) | v3 (harness v4): links the frontier to the run's state graph for travel and page names. | - |
 
 #### `gate.py`
 
@@ -1081,14 +1418,19 @@ Evidence gate (G2): reproduce before report.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `class GateConfig` | [62](../src/webtester/gate.py#L62) | Gate settings: k = 3 replays, windows (1, 4, 0 = full prefix), 20-minute cap, judge on/off. | cli, runner |
-| `label(reproduced, k, tried, ran)` | [69](../src/webtester/gate.py#L69) | `ran`: at least one replay ran all its actions. A finding no replay could run is unverified, not rejected: the gate has no evidence against it (D46). | browser, cli, config, consistency, crawler, inferred, labels, memory, policies, runner, stategraph, stats |
-| `locate(obs, ekey, nth)` | [79](../src/webtester/gate.py#L79) | Finds the recorded element again on the replayed page (same key, same ordinal). | runner, worker |
-| `windows_for(log, step, sizes)` | [88](../src/webtester/gate.py#L88) | Distinct suffix windows of the worker's log ending at `step`, shortest first. | - |
-| `async replay(browser, cfg, ctl, window, finding)` | [103](../src/webtester/gate.py#L103) | One replay of `window` on freshly reset data. Returns {reproduced, missing, failed, reason, seconds}. | cli, config, consistency, oracles, runner, worker |
-| `async _violated_again(s, finding, rec, obs, active_click)` | [159](../src/webtester/gate.py#L159) | For an LLM-check finding: re-evaluates the same check on the replayed page. | - |
-| `async run_gate(browser, cfg, run, ctl, llm, gcfg)` | [171](../src/webtester/gate.py#L171) | The gate: for each candidate (in order of first step) searches the minimal window, replays it until k replays, labels it confirmed / flaky / rejected / unverified, and asks the judge on reproduced oracle and T2/T3 consistency findings; stops at the time cap. | runner |
-| `async _judge(llm, f, usage)` | [227](../src/webtester/gate.py#L227) | LLM second opinion on a reproduced finding: `bug` or `wrong_expectation`, with a reason; never changes the gate label. | - |
+| `class GateConfig` | [67](../src/webtester/gate.py#L67) | Gate settings: k = 3 replays, windows (1, 4, 0 = full prefix), 20-minute cap, judge on/off. | cli, runner |
+| `label(reproduced, k, tried, ran)` | [78](../src/webtester/gate.py#L78) | `ran`: at least one replay ran all its actions. A finding no replay could run is unverified, not rejected: the gate has no evidence against it (D46). | browser, cli, config, consistency, crawler, crossview, evaluate, inferred, labels, memory, norms, policies, probes5, reach, runner, stategraph, stats, worker |
+| `locate(obs, ekey, nth)` | [88](../src/webtester/gate.py#L88) | Finds the recorded element again on the replayed page (same key, same ordinal). | runner, worker |
+| `windows_for(log, step, sizes)` | [97](../src/webtester/gate.py#L97) | Distinct suffix windows of the worker's log ending at `step`, shortest first. | - |
+| `async replay(browser, cfg, ctl, window, finding, context_kw, annot)` | [112](../src/webtester/gate.py#L112) | One replay of `window` on freshly reset data. Returns {reproduced, missing, failed, reason, seconds}. | annotate, cli, config, consistency, crossview, envcheck, evaluate, oracles, probes5, runner, stategraph, worker |
+| `_href_of_key(ekey)` | [190](../src/webtester/gate.py#L190) | The href in an element key (tag/type/role/text/label/href), when the element was an in-app link. | - |
+| `async _violated_again(s, finding, rec, obs, active_click)` | [197](../src/webtester/gate.py#L197) | For an LLM-check finding: re-evaluates the same check on the replayed page. | - |
+| `_tier_rank(f)` | [209](../src/webtester/gate.py#L209) | Replay order of a finding: T1 first, then implicit, T2, T3 (C6). | - |
+| `async _ddmin(browser, cfg, ctl, window, f, tries, annot)` | [214](../src/webtester/gate.py#L214) | C5: drop prefix steps (never the finding's own step) while the finding still reproduces; greedy, halves first, then single steps, at most `tries` replays. Returns the smaller window and replays used. | - |
+| `async _engine_check(engines, cfg, ctl, window, f)` | [231](../src/webtester/gate.py#L231) | X9: one replay per extra engine. A finding that holds in Chromium only is 'engine-specific' (an EN1 candidate), not harness-suspect: browser-specific bugs are real (v5 plan X9). | - |
+| `_annot(run)` | [246](../src/webtester/gate.py#L246) | O11: the run's annotations for a replay, as keyword arguments (none when the run has no annotator). | - |
+| `async run_gate(browser, cfg, run, ctl, llm, gcfg, pw)` | [252](../src/webtester/gate.py#L252) | The gate: for each candidate (in order of first step) searches the minimal window, replays it until k replays, labels it confirmed / flaky / rejected / unverified, and asks the judge on reproduced oracle and T2/T3 consistency findings; stops at the time cap. | runner |
+| `async _judge(llm, f, usage)` | [334](../src/webtester/gate.py#L334) | LLM second opinion on a reproduced finding: `bug` or `wrong_expectation`, with a reason; never changes the gate label. | - |
 
 #### `inferred.py`
 
@@ -1108,11 +1450,11 @@ Inferred oracles (G3): spec-free expectations proposed by the explorer itself.
 | `class CheckResult` | [188](../src/webtester/inferred.py#L188) | Outcome of one check: pass / violated / inconclusive, with evidence. | gate |
 | `oracle_signature(exp, step_url)` | [193](../src/webtester/inferred.py#L193) | Stable identity of a check: the same check at the same route is one finding. | gate |
 | `violation_signal(exp, result, step_url)` | [209](../src/webtester/inferred.py#L209) | Turns a violated check into an `oracle_violation` signal. | worker |
-| `annotate(exp, obs)` | [216](../src/webtester/inferred.py#L216) | Attach what replays need to find a `count` element again (key, ordinal, label). | worker |
+| `annotate(exp, obs)` | [216](../src/webtester/inferred.py#L216) | Attach what replays need to find a `count` element again (key, ordinal, label). | consistency, gate, runner, worker |
 | `clicked_active(clicked)` | [228](../src/webtester/inferred.py#L228) | True when the step clicked something and every clicked control was already selected (current page number, open tab): then 'nothing changed' is the correct outcome (D46). | gate, worker |
 | `twin_eligible(clicked)` | [234](../src/webtester/inferred.py#L234) | A persistence twin follows a click on a control that may change data: not a link or a tab. | worker |
 | `persistence_twins(expects, results, inner_text, typed)` | [239](../src/webtester/inferred.py#L239) | For each passed shows/not_shows check on the current page, the same check after reload, unless the model already asked for it. Persistence is about data: something removed stays removed (not_shows), and text the worker typed in this step and now sees on the page stays (shows). Other shown text gets no twin: messages like "can't be blank" are meant to vanish. | worker |
-| `async check(session, exp, obs, active_click)` | [262](../src/webtester/inferred.py#L262) | Evaluate one expectation right after the step's actions. `obs` is the observation the actions were chosen from (ids are still valid on the page). `active_click`: every click hit an already-selected control (see clicked_active). | appctl, browser, gate, labels, memory, metrics, policies, registry, worker |
+| `async check(session, exp, obs, active_click)` | [262](../src/webtester/inferred.py#L262) | Evaluate one expectation right after the step's actions. `obs` is the observation the actions were chosen from (ids are still valid on the page). `active_click`: every click hit an already-selected control (see clicked_active). | appctl, browser, checks, consistency, crossview, evaluate, families, frontier, gate, labels, memory, metrics, norms, openapi, policies, probes5, reach, registry, runner, worker |
 
 #### `labels.py`
 
@@ -1120,13 +1462,23 @@ Finding labels: the human ground truth behind precision (G2) and semantic-fault 
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `load_labels(path)` | [31](../src/webtester/labels.py#L31) | Reads logs/experiments/finding_labels.toml (run id -> finding signature -> label). | stats |
-| `label_of(labels, run_id, sig)` | [35](../src/webtester/labels.py#L35) | The label of one finding, or ''. | - |
-| `is_true_positive(label)` | [39](../src/webtester/labels.py#L39) | Every label except `fp` counts as a correct report (seeded fault, U-defect, `new:`, `env:`). | - |
-| `suggest(f, catalog, enabled)` | [43](../src/webtester/labels.py#L43) | Suggested label for triage: a fault whose detect rule matches, an exposed fault, a known upstream pattern, or a hint. | consistency, frontier, policies |
-| `label_metrics(run_id, findings, summary, labels)` | [66](../src/webtester/labels.py#L66) | Seeded faults found over all oracles and over gate-confirmed findings, and precision (raw candidates, gate-confirmed, confirmed minus judge 'wrong_expectation'). Precision needs every finding of the run labelled; otherwise it is left out. | stats |
-| `_run_dir(arg)` | [98](../src/webtester/labels.py#L98) | Finds a run folder from a path or run id. | - |
-| `triage(arg, write)` | [106](../src/webtester/labels.py#L106) | Lists a run's findings with suggested labels and appends blank label entries for the unlabelled ones. | cli, metrics, stats |
+| `load_labels(path)` | [31](../src/webtester/labels.py#L31) | Reads logs/experiments/finding_labels.toml (run id -> finding signature -> label). | evaluate, stats |
+| `label_of(labels, run_id, sig)` | [35](../src/webtester/labels.py#L35) | The label of one finding, or ''. | evaluate |
+| `is_true_positive(label)` | [39](../src/webtester/labels.py#L39) | Every label except `fp` counts as a correct report (seeded fault, U-defect, `new:`, `env:`). | evaluate |
+| `suggest(f, catalog, enabled)` | [45](../src/webtester/labels.py#L45) | Suggested label for triage: a fault whose detect rule matches, an exposed fault, a known upstream pattern, or a hint. | consistency, frontier, norms, policies, probes5 |
+| `label_metrics(run_id, findings, summary, labels)` | [68](../src/webtester/labels.py#L68) | Seeded faults found over all oracles and over gate-confirmed findings, and precision (raw candidates, gate-confirmed, confirmed minus judge 'wrong_expectation'). Precision needs every finding of the run labelled; otherwise it is left out. | stats |
+| `_run_dir(arg)` | [100](../src/webtester/labels.py#L100) | Finds a run folder from a path or run id. | - |
+| `triage(arg, write)` | [108](../src/webtester/labels.py#L108) | Lists a run's findings with suggested labels and appends blank label entries for the unlabelled ones. | cli, evaluate, metrics, stats |
+
+#### `lexicon.py`
+
+Cue words as data (v5 plan O6 b, D60): the word lists the v5 rules use, one TOML file per language in `lexicon/`. WEBTESTER_LANG picks the file (default en); a missing key falls back to English.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `lexicon(lang)` | [15](../src/webtester/lexicon.py#L15) | The cue-word file of the language (WEBTESTER_LANG, default en), with English as the fallback. | consistency, crossview, memory, reach |
+| `words(key, lang)` | [24](../src/webtester/lexicon.py#L24) | One word list of the lexicon. | consistency, crossview, evidence, families, gate, norms, policies, probes5 |
+| `alternation(key, lang)` | [28](../src/webtester/lexicon.py#L28) | The list as one regex alternation (its entries are regex fragments). | consistency, crossview, reach |
 
 #### `llm.py`
 
@@ -1136,18 +1488,18 @@ Provider-agnostic LLM client over the OpenAI-compatible chat API.
 |---|---:|---|---|
 | `class LLMError` | [21](../src/webtester/llm.py#L21) | Raised when the LLM cannot give a usable answer after all retries. | gate, policies |
 | `class Usage` | [26](../src/webtester/llm.py#L26) | Token and call accounting: prompt and completion tokens, calls, retries, latency. | policies |
-| `Usage.total()` | [34](../src/webtester/llm.py#L34) | Prompt + completion tokens. | budget, consistency, frontier, gate, policies, stats, worker |
-| `Usage.add(other)` | [37](../src/webtester/llm.py#L37) | Adds another Usage into this one. | browser, cli, consistency, crawler, evidence, frontier, gate, memory, metrics, policies, registry, stategraph, worker |
+| `Usage.total()` | [34](../src/webtester/llm.py#L34) | Prompt + completion tokens. | annotate, budget, consistency, crossview, evaluate, frontier, gate, norms, policies, probes5, stats, worker |
+| `Usage.add(other)` | [37](../src/webtester/llm.py#L37) | Adds another Usage into this one. | browser, checks, cli, consistency, crawler, crossview, envcheck, evaluate, evidence, families, frontier, gate, metrics, norms, openapi, policies, probes5, reach, registry, runner, stategraph, worker |
 | `api_key_env_names(base_name)` | [49](../src/webtester/llm.py#L49) | Return the configured base key followed by numbered fallback keys. | - |
 | `is_quota_error(error)` | [61](../src/webtester/llm.py#L61) | Whether an API error indicates this key cannot currently make requests. | - |
 | `parse_json_object(text)` | [69](../src/webtester/llm.py#L69) | Parse the first JSON object in a model reply (tolerates code fences and prose). | - |
 | `class LLMClient` | [109](../src/webtester/llm.py#L109) | Provider-agnostic client over the OpenAI-compatible chat API (Gemini by default): pacing, retries, JSON parsing, key handling, cost. | policies, runner |
 | `LLMClient.__init__(cfg)` | [110](../src/webtester/llm.py#L110) | Builds one API client per configured key and the pacing locks. | - |
 | `LLMClient.async _pace()` | [148](../src/webtester/llm.py#L148) | Keeps calls at least `min_interval_s` apart (free-tier rate limits). | - |
-| `LLMClient.async complete_json(system, user)` | [157](../src/webtester/llm.py#L157) | One chat completion that must return a JSON object. | gate, policies |
+| `LLMClient.async complete_json(system, user)` | [157](../src/webtester/llm.py#L157) | One chat completion that must return a JSON object. | annotate, gate, policies |
 | `LLMClient.async _current_client()` | [211](../src/webtester/llm.py#L211) | The client of the key in use. | - |
 | `LLMClient.async _rotate_key(failed_index)` | [215](../src/webtester/llm.py#L215) | Moves to the next configured key after a quota error (only when key fallback is on). | - |
-| `LLMClient.cost_usd(usage)` | [222](../src/webtester/llm.py#L222) | Cost in USD from the configured prices. | runner |
+| `LLMClient.cost_usd(usage)` | [222](../src/webtester/llm.py#L222) | Cost in USD from the configured prices. | evaluate, runner |
 | `_retry_after(e)` | [227](../src/webtester/llm.py#L227) | The server's Retry-After delay, if it sent one. | - |
 
 #### `memory.py`
@@ -1156,31 +1508,32 @@ Structured run memory (harness v4, D49), shared by all workers of a run.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `norm(s)` | [71](../src/webtester/memory.py#L71) | Lower-cased text with whitespace collapsed. | consistency |
-| `entity_key(url)` | [75](../src/webtester/memory.py#L75) | Identity of an item: its path (a client-side '#/...' route counts as the path), no query. | consistency |
-| `list_key(url, heading)` | [82](../src/webtester/memory.py#L82) | Identity of a list: the page's path with its query (page=2 is another list) and its heading. | consistency |
-| `classify(text)` | [89](../src/webtester/memory.py#L89) | Verb of a clicked control from its visible text, label or class names ('' if none). | browser, consistency |
-| `category_of(heading)` | [97](../src/webtester/memory.py#L97) | Which toggle list a heading names (favourites, follows, likes) or ''. | - |
-| `class Event` | [105](../src/webtester/memory.py#L105) | One ledger entry (M1): worker, step, verb, object, type, URL, target item, fields, source, status (pending / verified / conflict / unknown), whether the app accepted the write. | consistency, worker |
-| `Event.brief()` | [125](../src/webtester/memory.py#L125) | Short form of the event for the worker's prompt notes. | - |
-| `class Entity` | [131](../src/webtester/memory.py#L131) | One item (M2), keyed by its path: names seen, saved fields, toggle states, ages per page. | consistency |
-| `class Snapshot` | [143](../src/webtester/memory.py#L143) | One visit's items of a list, with the ledger position at that moment (M3). | - |
-| `class ListInfo` | [153](../src/webtester/memory.py#L153) | A list's identity and properties: category, personal, recency-ordered, volatile, its snapshots per worker. | - |
-| `class RunMemory` | [163](../src/webtester/memory.py#L163) | The run's shared memory: events, entities, lists, typed values, recent page texts. | consistency |
-| `RunMemory.__init__()` | [164](../src/webtester/memory.py#L164) | Creates an empty memory. | - |
-| `RunMemory.add_event(**kw)` | [172](../src/webtester/memory.py#L172) | Appends a ledger event and updates the target entity. | consistency |
-| `RunMemory.pending(worker)` | [181](../src/webtester/memory.py#L181) | Events not yet verified (optionally for one worker). | consistency |
-| `RunMemory.events_since(idx, worker)` | [184](../src/webtester/memory.py#L184) | Events after a ledger position (what could explain a change). | consistency |
-| `RunMemory.net_toggle(worker, verb)` | [187](../src/webtester/memory.py#L187) | Objects this worker turned `verb` on (and not off again), by entity key or name. | consistency |
-| `RunMemory.views(worker)` | [203](../src/webtester/memory.py#L203) | The item views a worker made (for recently-viewed lists). | consistency |
-| `RunMemory.entity(key)` | [207](../src/webtester/memory.py#L207) | Gets or creates an entity record (bounded in number). | consistency |
-| `RunMemory.known_name(name)` | [217](../src/webtester/memory.py#L217) | Whether a name was ever typed or seen for an item. | - |
-| `RunMemory.snapshot(url, heading, items, worker, step)` | [222](../src/webtester/memory.py#L222) | Record a list's items; returns (list info, this worker's previous snapshot or None). Lists are kept per worker: a revisit compares what one account saw twice (many lists, e.g. a dashboard's, differ between accounts without saying so in their heading). | appctl, budget, config, consistency, runner |
-| `RunMemory.remember_page(worker, url, text)` | [240](../src/webtester/memory.py#L240) | Keeps the last 10 page texts per worker (grounding for LLM checks and R15 quotes). | consistency |
-| `RunMemory.notes(worker, n)` | [246](../src/webtester/memory.py#L246) | Prompt lines: this worker's recent intents and their status, oldest first. | policies, registry, runner, stats |
-| `age_minutes(text)` | [264](../src/webtester/memory.py#L264) | Minutes a relative time stands for ('5 minutes ago' -> 5); negative for future ('in 3 days'). | consistency |
-| `age_class(minutes)` | [284](../src/webtester/memory.py#L284) | 0 seconds/minutes, 1 hours, 2 days, 3 months, 4 years. | - |
-| `age_kind(context)` | [297](../src/webtester/memory.py#L297) | Whether a relative time is a creation or an update time, from its context words. | consistency |
+| `norm(s)` | [56](../src/webtester/memory.py#L56) | Lower-cased text with whitespace collapsed. | consistency, crossview, envcheck, norms, probes5 |
+| `entity_key(url)` | [60](../src/webtester/memory.py#L60) | Identity of an item: its path (a client-side '#/...' route counts as the path), no query. | consistency, crossview, probes5, worker |
+| `item_key(item, page_url, heading)` | [67](../src/webtester/memory.py#L67) | O6 (c), D61: an item's identity: its link when it has one, else the page's route, the list heading and the item's name (cards and rows with no link of their own). Used by the v5 rules; the v4 rules keep entity_key. | crossview |
+| `list_key(url, heading)` | [76](../src/webtester/memory.py#L76) | Identity of a list: the page's path with its query (page=2 is another list) and its heading. | consistency |
+| `classify(text)` | [83](../src/webtester/memory.py#L83) | Verb of a clicked control from its visible text, label or class names ('' if none). | browser, consistency, policies |
+| `category_of(heading)` | [91](../src/webtester/memory.py#L91) | Which toggle list a heading names (favourites, follows, likes) or ''. | - |
+| `class Event` | [99](../src/webtester/memory.py#L99) | One ledger entry (M1): worker, step, verb, object, type, URL, target item, fields, source, status (pending / verified / conflict / unknown), whether the app accepted the write. | consistency, worker |
+| `Event.brief()` | [119](../src/webtester/memory.py#L119) | Short form of the event for the worker's prompt notes. | - |
+| `class Entity` | [125](../src/webtester/memory.py#L125) | One item (M2), keyed by its path: names seen, saved fields, toggle states, ages per page. | consistency |
+| `class Snapshot` | [137](../src/webtester/memory.py#L137) | One visit's items of a list, with the ledger position at that moment (M3). | - |
+| `class ListInfo` | [147](../src/webtester/memory.py#L147) | A list's identity and properties: category, personal, recency-ordered, volatile, its snapshots per worker. | - |
+| `class RunMemory` | [157](../src/webtester/memory.py#L157) | The run's shared memory: events, entities, lists, typed values, recent page texts. | consistency |
+| `RunMemory.__init__()` | [158](../src/webtester/memory.py#L158) | Creates an empty memory. | - |
+| `RunMemory.add_event(**kw)` | [166](../src/webtester/memory.py#L166) | Appends a ledger event and updates the target entity. | consistency |
+| `RunMemory.pending(worker)` | [175](../src/webtester/memory.py#L175) | Events not yet verified (optionally for one worker). | consistency, evaluate, norms, policies |
+| `RunMemory.events_since(idx, worker)` | [178](../src/webtester/memory.py#L178) | Events after a ledger position (what could explain a change). | consistency |
+| `RunMemory.net_toggle(worker, verb)` | [181](../src/webtester/memory.py#L181) | Objects this worker turned `verb` on (and not off again), by entity key or name. | consistency |
+| `RunMemory.views(worker)` | [197](../src/webtester/memory.py#L197) | The item views a worker made (for recently-viewed lists). | consistency, crossview, probes5 |
+| `RunMemory.entity(key)` | [201](../src/webtester/memory.py#L201) | Gets or creates an entity record (bounded in number). | consistency, crossview, evaluate, norms, probes5 |
+| `RunMemory.known_name(name)` | [211](../src/webtester/memory.py#L211) | Whether a name was ever typed or seen for an item. | - |
+| `RunMemory.snapshot(url, heading, items, worker, step)` | [216](../src/webtester/memory.py#L216) | Record a list's items; returns (list info, this worker's previous snapshot or None). Lists are kept per worker: a revisit compares what one account saw twice (many lists, e.g. a dashboard's, differ between accounts without saying so in their heading). | appctl, budget, config, consistency, runner |
+| `RunMemory.remember_page(worker, url, text)` | [234](../src/webtester/memory.py#L234) | Keeps the last 10 page texts per worker (grounding for LLM checks and R15 quotes). | consistency |
+| `RunMemory.notes(worker, n)` | [240](../src/webtester/memory.py#L240) | Prompt lines: this worker's recent intents and their status, oldest first. | policies, registry, runner, stats |
+| `age_minutes(text)` | [258](../src/webtester/memory.py#L258) | Minutes a relative time stands for ('5 minutes ago' -> 5); negative for future ('in 3 days'). | consistency |
+| `age_class(minutes)` | [278](../src/webtester/memory.py#L278) | 0 seconds/minutes, 1 hours, 2 days, 3 months, 4 years. | - |
+| `age_kind(context)` | [291](../src/webtester/memory.py#L291) | Whether a relative time is a creation or an update time, from its context words. | consistency |
 
 #### `metrics.py`
 
@@ -1190,12 +1543,70 @@ Metrics computed offline from a run's trace (never from in-memory state), so eve
 |---|---:|---|---|
 | `summarize(trace_path)` | [14](../src/webtester/metrics.py#L14) | Recomputes every run metric offline from trace.jsonl: unique states and routes, duplicate and failed action rates, findings, tokens, health, gate outcomes, graph, exposure. | cli, registry, runner |
 | `_g2_g3(events, checks, gate_done)` | [120](../src/webtester/metrics.py#L120) | Inferred-oracle check counts (G3) and evidence-gate outcomes (G2), when the run had them. | - |
-| `load_fault_catalog(path)` | [135](../src/webtester/metrics.py#L135) | Reads an app's faults.toml into id -> entry. | labels, registry, runner |
-| `route_matches(pattern, route)` | [140](../src/webtester/metrics.py#L140) | `/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11). | labels |
+| `load_fault_catalog(path)` | [135](../src/webtester/metrics.py#L135) | Reads an app's faults.toml into id -> entry. | evaluate, labels, registry, runner |
+| `route_matches(pattern, route)` | [140](../src/webtester/metrics.py#L140) | `/profile/*` also covers /profile/alice and its sub-pages (state IDs keep plain names apart, I11). | evaluate, labels |
 | `_action_matches(cond, a)` | [148](../src/webtester/metrics.py#L148) | One action against a `reach` condition: action type, element description (regex, without its [id]), typed value (regex, or minimum length) and an optional ceiling on the element id. | - |
-| `fault_reach(steps, enabled, catalog)` | [165](../src/webtester/metrics.py#L165) | Which enabled faults some worker at least attempted to trigger (offline, from the trace). | registry, runner, stats |
+| `fault_reach(steps, enabled, catalog)` | [165](../src/webtester/metrics.py#L165) | Which enabled faults some worker at least attempted to trigger (offline, from the trace). | evaluate, registry, runner, stats |
 | `reach_from_trace(trace_path, enabled, catalog)` | [199](../src/webtester/metrics.py#L199) | `fault_reach` over a run's trace, or None when no enabled fault has a `reach` rule. | registry, runner |
-| `fault_detection(findings, enabled, catalog, fired)` | [207](../src/webtester/metrics.py#L207) | Which enabled faults were revealed by at least one finding. | cli, labels, registry, runner, stats |
+| `fault_detection(findings, enabled, catalog, fired)` | [207](../src/webtester/metrics.py#L207) | Which enabled faults were revealed by at least one finding. | cli, evaluate, labels, registry, runner, stats |
+
+#### `norms.py`
+
+Page norms (v5 waves W1-W4, D59-D60): what one page says about itself, from one page read per step.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `_f(s)` | [393](../src/webtester/norms.py#L393) | A number from text with a comma or point decimal; None if it is not one. | - |
+| `parse_number(s)` | [400](../src/webtester/norms.py#L400) | O6 (a): '1.234,56', '1,234.56', '1,00,000', '(12.00)', '-3', '1.2k', '2M', Eastern Arabic digits. | crossview |
+| `money_values(text)` | [430](../src/webtester/norms.py#L430) | Amounts with a currency in a text, parsed with the locale-aware number parser. | crossview |
+| `_close(a, b, tol)` | [434](../src/webtester/norms.py#L434) | Two amounts equal within a cent or half a percent (the page's own rounding). | consistency |
+| `arms(raw)` | [438](../src/webtester/norms.py#L438) | Rule -> '' when the page has what the rule reads, else why not (check-outcome log). | checks, consistency |
+| `rule_anchors(raw)` | [466](../src/webtester/norms.py#L466) | R43: in-page links whose #target is not on the page. | - |
+| `rule_controls(raw)` | [478](../src/webtester/norms.py#L478) | R64: two tabs or options selected at once, a selected tab with a hidden panel, a control expanded over a hidden target, aria-checked against checked. | - |
+| `rule_ranges(raw, typed)` | [506](../src/webtester/norms.py#L506) | R26: progress bars and meters outside their own range, ratings above their maximum, number fields outside their own limits. | - |
+| `sort_violations(spec_text, keys, kind, asc)` | [544](../src/webtester/norms.py#L544) | Index of the first key that breaks the order (ties allowed; a pinned first item is skipped). | - |
+| `rule_sort(raw, main_list)` | [557](../src/webtester/norms.py#L557) | R25: the visible keys must follow an active sort (a selected sort option, aria-sort on a column). | - |
+| `rule_aggregates(lists, counts, totals, raw)` | [588](../src/webtester/norms.py#L588) | R41: a summary count or total on the page must equal the complete list it names. | - |
+| `rule_running_balance(tables)` | [618](../src/webtester/norms.py#L618) | R32 (LG2, LG4): a balance column must step by each row's amount. | - |
+| `find_dates(line)` | [668](../src/webtester/norms.py#L668) | Calendar dates in a line (ISO, 'Nov 15, 2026', '15 Nov 2026'). | crossview, envcheck |
+| `_minutes(h, m, ap)` | [689](../src/webtester/norms.py#L689) | Minutes since midnight of an h:mm time, with am or pm. | - |
+| `rule_lines(lines, today)` | [696](../src/webtester/norms.py#L696) | R36 intervals, R06s identities (class S of fault_families.md 5.1), R72 relative times. | - |
+| `_recurrence(rec, add)` | [852](../src/webtester/norms.py#L852) | R36r: a stated recurrence count ('weekly, 5 times') against the dated occurrences listed. | - |
+| `rule_column_totals(tables)` | [866](../src/webtester/norms.py#L866) | R06c (AG3): a 'Total' row whose cell differs from the sum of the rows above it in that column. | - |
+| `norm_label(s)` | [891](../src/webtester/norms.py#L891) | A label in lower case with its spaces collapsed. | - |
+| `rule_chart(raw, tables)` | [895](../src/webtester/norms.py#L895) | R41 (AG2): a chart's labelled values (aria-label or title 'Jan: 12') against a table with the same labels. | - |
+| `rule_limits(plain, lists, raw)` | [919](../src/webtester/norms.py#L919) | R35 (CP1): the page states a limit ('Free plan: up to 3 projects') and its own complete list of that kind holds more. | - |
+| `rule_playlist(plain, lists, raw)` | [940](../src/webtester/norms.py#L940) | R74 (MD2): a playlist's stated track count or total length against the tracks it lists. | - |
+| `_typed_address(url, typed)` | [968](../src/webtester/norms.py#L968) | D62 (I85): the address is one the testers typed (an image URL in a profile, a link in an article body), or a relative value the page resolved against its own origin ('not-a-url'): the app shows what it was given. | - |
+| `rule_presentation(raw, typed)` | [977](../src/webtester/norms.py#L977) | R65 geometry, R74 media, R75 SVG and canvas, R02m broken media, R10x contact links. | - |
+| `rule_placeholders(plain, typed)` | [1056](../src/webtester/norms.py#L1056) | R01x: message keys left untranslated ('auth.login.title', 'messages.welcome_title') and placeholder text. | - |
+| `rule_norms(raw, typed, facts, today)` | [1078](../src/webtester/norms.py#L1078) | All three page-norm rules over one page read. | consistency |
+
+#### `openapi.py`
+
+Declared API contracts (v5 plan O7, rule R57e; D61): when the app serves an OpenAPI or Swagger document, or answers GraphQL introspection, the JSON responses the network timeline captured are checked against what is declared for their operation, and the operations the run called are counted against the declared ones (endpoint coverage, evaluation group 4).
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `class Spec` | [30](../src/webtester/openapi.py#L30) | An OpenAPI or Swagger document: operations by method and path template, with response schemas. | consistency |
+| `Spec.__init__(doc)` | [31](../src/webtester/openapi.py#L31) | Compiles each path template (under the base path or server path) and keeps its 200/201 JSON schema. | - |
+| `Spec._response_schema(op)` | [48](../src/webtester/openapi.py#L48) | The JSON response schema of an operation's 200 or 201 answer, or None. | - |
+| `Spec.resolve(node, depth)` | [62](../src/webtester/openapi.py#L62) | Follows local $ref pointers; an external ref resolves to nothing. | appctl, config |
+| `Spec.match(method, path)` | [73](../src/webtester/openapi.py#L73) | The operation template and response schema for a method and path, or (None, None). | browser, consistency, crossview, envcheck, families, metrics, norms, policies, probes5 |
+| `Spec.issues(value, schema, where, depth)` | [79](../src/webtester/openapi.py#L79) | Where a JSON value breaks its schema: type, enum, required field, null; at most MAX_ISSUES. | evaluate |
+| `rule_contract(net, spec, called)` | [119](../src/webtester/openapi.py#L119) | R57e over one step's network timeline; `called` collects the operation templates seen (coverage). | consistency |
+| `async load_spec(session, base_url)` | [152](../src/webtester/openapi.py#L152) | The app's API document, if it serves one at a usual path (fetched once per run). | runner |
+| `spec_path_of(spec)` | [181](../src/webtester/openapi.py#L181) | The path the API document was read from ('' when unknown). | - |
+| `_tokens(q)` | [193](../src/webtester/openapi.py#L193) | GraphQL tokens of a query; comments dropped, strings kept whole. | - |
+| `_skip_parens(t, i)` | [197](../src/webtester/openapi.py#L197) | The token index after a balanced (...) group (arguments, variables, directives). | - |
+| `_selection(t, i)` | [208](../src/webtester/openapi.py#L208) | Parse a `{ ... }` selection set at t[i] == '{'. Returns ([(key, field, sub / None, optional)], next i); named fragment spreads come back as ('...', name, None, False), inline fragments are skipped. | - |
+| `parse_operation(q)` | [242](../src/webtester/openapi.py#L242) | ('query' / 'mutation' / 'subscription', root selection, named fragments) of the first operation, or None. | - |
+| `class GraphQLSchema` | [267](../src/webtester/openapi.py#L267) | A GraphQL schema read by introspection: types, root types, root fields as operations. | - |
+| `GraphQLSchema.__init__(schema)` | [268](../src/webtester/openapi.py#L268) | Types by name, the query and mutation root types, and the root fields for endpoint coverage. | - |
+| `GraphQLSchema._field_type(type_name, field)` | [275](../src/webtester/openapi.py#L275) | The declared type of a field of an object type, or None. | - |
+| `GraphQLSchema._value(v, tref, sel, frags, where, depth)` | [278](../src/webtester/openapi.py#L278) | Issues of one response value against its type: non-null, list, scalar, enum, object. | - |
+| `GraphQLSchema._object(data, type_name, sel, frags, where, depth)` | [308](../src/webtester/openapi.py#L308) | Issues of a response object against the selection the query made (fragments followed). | - |
+| `GraphQLSchema.check(rec)` | [329](../src/webtester/openapi.py#L329) | (root operations called, issues) for one network record of a GraphQL request. | appctl, browser, checks, consistency, crossview, evaluate, families, frontier, gate, inferred, labels, memory, metrics, norms, policies, probes5, reach, registry, runner, worker |
 
 #### `oracles.py`
 
@@ -1204,13 +1615,13 @@ Implicit oracles: turn raw browser signals into deduplicated candidate findings.
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
 | `normalise_message(msg)` | [22](../src/webtester/oracles.py#L22) | Replaces numbers, hex ids and quoted strings by placeholders so the same error from different data dedups. | consistency, inferred |
-| `signature(sig)` | [29](../src/webtester/oracles.py#L29) | The identity of a finding: kind + normalised message, or method + route + status for 5xx, or the rule's own `sig` for checks and consistency rules. | gate, labels, metrics |
+| `signature(sig)` | [29](../src/webtester/oracles.py#L29) | The identity of a finding: kind + normalised message, or method + route + status for 5xx, or the rule's own `sig` for checks and consistency rules. | consistency, crossview, evaluate, gate, labels, metrics, norms |
 | `class Finding` | [41](../src/webtester/oracles.py#L41) | A deduplicated candidate bug: signature, kind, message, first step, worker, page, trail of actions, occurrences, gate status and replays, judge verdict, exposed faults. | gate, labels, runner |
 | `Finding.to_dict()` | [57](../src/webtester/oracles.py#L57) | The finding as a dict (findings.json). | config, crawler, runner, stategraph, worker |
 | `class FindingStore` | [61](../src/webtester/oracles.py#L61) | All findings of a run, keyed by signature. | consistency, inferred, runner, worker |
-| `FindingStore.__init__()` | [62](../src/webtester/oracles.py#L62) | Creates an empty store. | - |
-| `FindingStore.ingest(signals, step, worker, state, trail, exposed)` | [65](../src/webtester/oracles.py#L65) | Returns the findings that are new in this batch. | crawler, runner, worker |
-| `FindingStore.all()` | [81](../src/webtester/oracles.py#L81) | All findings of the run. | consistency, crawler, frontier, gate, inferred, labels, memory, metrics, runner, stategraph, stats, worker |
+| `FindingStore.__init__(exclude)` | [62](../src/webtester/oracles.py#L62) | Creates an empty store. | - |
+| `FindingStore.ingest(signals, step, worker, state, trail, exposed)` | [67](../src/webtester/oracles.py#L67) | Returns the findings that are new in this batch (findings of excluded rules are kept apart, never returned, gated or reported). | crawler, envcheck, runner, worker |
+| `FindingStore.all()` | [87](../src/webtester/oracles.py#L87) | All findings of the run. | browser, checks, consistency, crawler, crossview, envcheck, evaluate, frontier, gate, inferred, labels, memory, metrics, norms, probes5, reach, runner, stategraph, stats, worker |
 
 #### `policies.py`
 
@@ -1221,20 +1632,110 @@ Action-selection policies.
 | `class Decision` | [38](../src/webtester/policies.py#L38) | What a policy decided for one step: actions, thought, token usage, error, checks (expect), intent, cited contradiction, page name. | - |
 | `class Memory` | [51](../src/webtester/policies.py#L51) | What one worker remembers. Kept small so prompts stay bounded. | worker |
 | `Memory.note_visit(url, state)` | [58](../src/webtester/policies.py#L58) | Counts a visit to a route and state. | worker |
-| `Memory.add(line)` | [62](../src/webtester/policies.py#L62) | Appends one history line. | browser, cli, consistency, crawler, evidence, frontier, gate, llm, memory, metrics, registry, stategraph, worker |
+| `Memory.add(line)` | [62](../src/webtester/policies.py#L62) | Appends one history line. | browser, checks, cli, consistency, crawler, crossview, envcheck, evaluate, evidence, families, frontier, gate, llm, metrics, norms, openapi, probes5, reach, registry, runner, stategraph, worker |
 | `session_line(obs)` | [120](../src/webtester/policies.py#L120) | Say when the worker looks logged out: workers that lost their session kept testing as a guest without noticing (D46). Generic tell: a visible 'Sign in' / 'Log in' control. | - |
 | `build_user_prompt(obs, mem, account, step, max_steps, frontier, worker, sid, suggestion, notes)` | [128](../src/webtester/policies.py#L128) | Without a frontier this is the Phase 1 (B1) prompt (plus, from harness v3, the session line: D46). With one, the route list comes from the map, elements carry done/taken marks, and a coordination note is added (B3 shared, B3-local per worker). | - |
 | `_coordination_v2(frontier, worker, who, focus)` | [190](../src/webtester/policies.py#L190) | B3 v2: a focus area per worker instead of a fallback suggestion, and input-class marks. | - |
 | `sanitize_actions(raw)` | [214](../src/webtester/policies.py#L214) | Keeps well-formed actions from the model's reply (valid verbs, at most 6). | - |
-| `class LLMPolicy` | [244](../src/webtester/policies.py#L244) | The LLM explorer used by every LLM condition: builds the prompt (with frontier view, intent and check instructions as the condition allows), calls the model, parses the JSON reply. | runner |
-| `LLMPolicy.__init__(llm, account, max_steps, frontier, worker, inferred, intents, notes)` | [247](../src/webtester/policies.py#L247) | `inferred`: the model may add checks and cited contradictions (v4: b4, b4nog1). `intents`: the model states intents that the harness verifies (v4 B4 family, D49). `notes`: callable returning the worker's memory lines for the prompt (M5). | - |
-| `LLMPolicy.prepare(sid)` | [268](../src/webtester/policies.py#L268) | Frontier v2+: work out this step's focus area once. Returns it when it is newly assigned (the harness may then travel there without an LLM step, v4), else None. | worker |
-| `LLMPolicy.async decide(obs, mem, step, sid)` | [279](../src/webtester/policies.py#L279) | One LLM step: updates the focus area, builds the prompt, calls the model and returns a Decision. | worker |
-| `sanitize_intent(raw)` | [307](../src/webtester/policies.py#L307) | Keeps a well-formed intent {verb, object, type} from the reply. | - |
-| `class RandomPolicy` | [316](../src/webtester/policies.py#L316) | Uniform random actions: a sanity floor and an offline smoke test with no API key. | runner |
-| `RandomPolicy.__init__(seed)` | [319](../src/webtester/policies.py#L319) | Seeds the random generator. | - |
-| `RandomPolicy.random_value(typ)` | [322](../src/webtester/policies.py#L322) | A random value by input type. | - |
-| `RandomPolicy.async decide(obs, mem, step, sid)` | [332](../src/webtester/policies.py#L332) | Picks a random usable element and acts on it (sometimes goes back). | worker |
+| `class LLMPolicy` | [247](../src/webtester/policies.py#L247) | The LLM explorer used by every LLM condition: builds the prompt (with frontier view, intent and check instructions as the condition allows), calls the model, parses the JSON reply. | runner |
+| `LLMPolicy.__init__(llm, account, max_steps, frontier, worker, inferred, intents, notes, role, profile_after, sequences)` | [250](../src/webtester/policies.py#L250) | `inferred`: the model may add checks and cited contradictions (v4: b4, b4nog1). `intents`: the model states intents that the harness verifies (v4 B4 family, D49). `notes`: callable returning the worker's memory lines for the prompt (M5). | - |
+| `LLMPolicy.async _profile()` | [279](../src/webtester/policies.py#L279) | X5: once per run (the first worker to get there), after `profile_after` routes, the LLM names the app type and the primitives it saw; the profile goes on the shared frontier. It adds goal flows to every worker's prompt and is logged; it never switches rules off (v5 plan X5). | - |
+| `LLMPolicy.prepare(sid)` | [306](../src/webtester/policies.py#L306) | Frontier v2+: work out this step's focus area once. Returns it when it is newly assigned (the harness may then travel there without an LLM step, v4), else None. | worker |
+| `LLMPolicy.async decide(obs, mem, step, sid)` | [317](../src/webtester/policies.py#L317) | One LLM step: updates the focus area, builds the prompt, calls the model and returns a Decision. | checks, worker |
+| `sanitize_intent(raw)` | [361](../src/webtester/policies.py#L361) | Keeps a well-formed intent {verb, object, type} from the reply. | - |
+| `class RandomPolicy` | [370](../src/webtester/policies.py#L370) | Uniform random actions: a sanity floor and an offline smoke test with no API key. | runner |
+| `RandomPolicy.__init__(seed)` | [373](../src/webtester/policies.py#L373) | Seeds the random generator. | - |
+| `RandomPolicy.random_value(typ)` | [376](../src/webtester/policies.py#L376) | A random value by input type. | - |
+| `RandomPolicy.async decide(obs, mem, step, sid)` | [386](../src/webtester/policies.py#L386) | Picks a random usable element and acts on it (sometimes goes back). | checks, worker |
+
+#### `probes5.py`
+
+Active probes of v5 (waves W1-W4, D60): checks that open a fresh tab, a context with no session, or a second account. Each probe kind is capped per run and runs once per page or form kind; at most MAX_PER_STEP v5 probes per step (separate from the v4 probe budget, so neither starves the other).
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `class ProbeState` | [162](../src/webtester/probes5.py#L162) | Shared by all workers of a run (SweepState.p5). | consistency |
+| `class Probes` | [179](../src/webtester/probes5.py#L179) | The v5 active probes: fresh tabs, no-session contexts and a second account; capped per run, one per step. | consistency |
+| `Probes.__init__(ps)` | [180](../src/webtester/probes5.py#L180) | Binds the probes to the run's shared probe state (caps, caches, second accounts). | - |
+| `Probes._may(sw, rule, kind)` | [183](../src/webtester/probes5.py#L183) | Whether a probe may run now (cap, once per kind, step budget, mode); counts it and arms the rule. | - |
+| `Probes._abort(sw, rule, why)` | [202](../src/webtester/probes5.py#L202) | A probe that took its slot but could not finish: logged inconclusive, never exercised (E2: an unexecuted check is not a pass). The slot stays used, so a failing probe cannot loop. | - |
+| `Probes.async before(sw, session, obs, actions)` | [210](../src/webtester/probes5.py#L210) | R42: attach a small generated file to an empty file field of the form being submitted; R48: local storage before the actions (R48s: IndexedDB too, D61); R45: the session when a flow starts. | browser, config, consistency, crossview, evaluate, evidence, families, gate, inferred, memory, metrics, norms, oracles, reach, registry, runner, worker |
+| `Probes.async after(sw, session, facts, obs, done, ev, step)` | [263](../src/webtester/probes5.py#L263) | The probes due this step, in a fixed order; most cost one fresh tab. | appctl, browser, config, consistency, crawler, crossview, evaluate, frontier, gate, inferred, llm, memory, metrics, norms, policies, reach, runner, worker |
+| `Probes.async _fresh(session, url, context)` | [295](../src/webtester/probes5.py#L295) | (Facts, HTTP status) of `url` in a new tab of `context` (default: the worker's), or (None, None). | - |
+| `Probes.async _second(sw, session)` | [313](../src/webtester/probes5.py#L313) | A logged-in session of another account (M7), cached per worker; None when the app has none. | - |
+| `Probes._upload_check(sw, facts, step)` | [332](../src/webtester/probes5.py#L332) | R42: an attached upload must be shown after the form was accepted. | - |
+| `Probes.async _rollback(sw, session, facts, obs, done, ev, step)` | [352](../src/webtester/probes5.py#L352) | R52: a value the page showed although its save failed must not vanish on reload unannounced. | - |
+| `Probes.async _references(sw, session, facts, obs, done, ev, step)` | [369](../src/webtester/probes5.py#L369) | R49: after a delete, pages that listed the item must no longer list it. | - |
+| `Probes.async _client_state(sw, session, facts, obs, done, ev, step)` | [398](../src/webtester/probes5.py#L398) | R48: a change kept only in the browser (local storage, no request) must survive a reload. | - |
+| `Probes.async _credentials(sw, session, facts, obs, done, ev, step)` | [421](../src/webtester/probes5.py#L421) | R66: an account the run registered must be able to log in. | - |
+| `Probes.async _address_probes(sw, session, facts, obs, done, ev, step)` | [446](../src/webtester/probes5.py#L446) | R63: huge, negative or junk ids and page=0 or 9999 must not answer 5xx or show the same item. | - |
+| `Probes.async _address_replay(sw, session, facts, obs, done, ev, step)` | [489](../src/webtester/probes5.py#L489) | R62: a list address with a query string, opened again, must show the same items and filters. | - |
+| `Probes.async _search_recall(sw, session, facts, obs, done, ev, step)` | [512](../src/webtester/probes5.py#L512) | R23: searching the exact name of an item seen earlier must find it. | - |
+| `Probes.async _no_session(sw, session, facts, obs, done, ev, step)` | [566](../src/webtester/probes5.py#L566) | R24: this account's pages must not show its data to a browser with no session. | - |
+| `Probes.async _wrong_password(sw, session, facts, obs, done, ev, step)` | [589](../src/webtester/probes5.py#L589) | R28: a wrong password must not log in (once per run). | - |
+| `Probes.async _second_account(sw, session, facts, obs, done, ev, step)` | [608](../src/webtester/probes5.py#L608) | R46: an item this worker published must open for another account. | - |
+| `Probes.async _sentinels(sw, session, facts, obs, done, ev, step)` | [643](../src/webtester/probes5.py#L643) | R67: values saved in this account's settings must not show in another account's. | - |
+| `Probes.async _unchanged_save(sw, session, facts, obs, done, ev, step)` | [674](../src/webtester/probes5.py#L674) | R21b: saving an item's edit form unchanged must not change the item. | - |
+| `Probes.async _cancel(sw, session, facts, obs, done, ev, step)` | [718](../src/webtester/probes5.py#L718) | R53: cancelling a delete confirmation must keep the item; the confirmation must name it. | - |
+| `Probes.async _page_union(sw, session, facts, obs, done, ev, step)` | [760](../src/webtester/probes5.py#L760) | R39: the pages of a list must not repeat items and must add up to its stated total. | - |
+| `Probes.async _exports(sw, session, facts, obs, done, ev, step)` | [791](../src/webtester/probes5.py#L791) | R37: an export must not have fewer rows than the complete list, and must not fail. | - |
+| `Probes.async _step_skip(sw, session, facts, obs, done, ev, step)` | [827](../src/webtester/probes5.py#L827) | R45: a later step of a flow must not open without its earlier steps. | - |
+| `Probes.async _variant(sw, session, obs, done, ev, pick, kind)` | [846](../src/webtester/probes5.py#L846) | The field of an accepted create form that a form-variant probe (R59, R60) changes. | - |
+| `Probes.async _number_format(sw, session, facts, obs, done, ev, step)` | [860](../src/webtester/probes5.py#L860) | R59 (T3): '1,234.5' in a number field must not be stored as another number. | - |
+| `Probes.async _strip(sw, session, facts, obs, done, ev, step)` | [874](../src/webtester/probes5.py#L874) | R60 (controlled): with the page's limits stripped, the server must not store a value past them. | - |
+| `Probes.async _typeahead(sw, session, facts, obs, done, ev, step)` | [889](../src/webtester/probes5.py#L889) | R61 (T3): suggestions for a typed query must contain it. | - |
+| `Probes.async _double_submit(sw, session, facts, obs, done, ev, step)` | [923](../src/webtester/probes5.py#L923) | R33 and R33g (controlled): a double submit must not make two records without a warning. | - |
+| `Probes.async _lost_response(sw, session, facts, obs, done, ev, step)` | [968](../src/webtester/probes5.py#L968) | R50m (controlled): after a lost response the retry must not make a second record; records what reached the server (J6). | - |
+| `Probes.async _lost_update(sw, session, facts, obs, done, ev, step)` | [1029](../src/webtester/probes5.py#L1029) | Two tabs open the same edit form; the first saves a new name, the second then saves another field from its stale copy. The first change vanishing with no warning is a lost update (T3: last write wins is a legal design). | - |
+| `Probes.async _canvas_check(sw, session, step)` | [1076](../src/webtester/probes5.py#L1076) | R75 (RC8): a canvas clicked or pressed on that did not change and sent nothing. | - |
+| `Probes.async _storage_model(sw, session, facts)` | [1094](../src/webtester/probes5.py#L1094) | R48s (O5): what local storage and IndexedDB hold about the listed items against the list itself. Read only when one of them changed during the step (no write request: a client-only change). | - |
+| `Probes._note_duplicate(sw, facts, obs, done)` | [1128](../src/webtester/probes5.py#L1128) | Keeps a form the app rejected as a duplicate, for the R16u uniqueness probe. | - |
+| `Probes.async _back_after_logout(sw, session, facts, obs, done, ev, step)` | [1136](../src/webtester/probes5.py#L1136) | R24b (SA8, T3): Back after logging out must not show the private page again. | - |
+| `Probes.async _old_parent(sw, session, facts, obs, done, ev, step)` | [1157](../src/webtester/probes5.py#L1157) | R40m (HI3): after a move, the old parent must not list the item any more. | - |
+| `Probes.async _mail(sw, session, facts, obs, done, ev, step)` | [1171](../src/webtester/probes5.py#L1171) | R47m (WF3): a page saying a mail was sent must have a mail for the address in the catcher. | - |
+| `Probes.async _variant_probe(sw, session, obs, done, ev, rule, kind, pick)` | [1205](../src/webtester/probes5.py#L1205) | Picks the field a form-variant probe changes and submits the variant once per form kind. | - |
+| `Probes.async _legal_input(sw, session, facts, obs, done, ev, step)` | [1211](../src/webtester/probes5.py#L1211) | R16i (FM3): a name with an apostrophe, a hyphen and an accent must be accepted like the plain one. | - |
+| `Probes.async _unique(sw, session, facts, obs, done, ev, step)` | [1226](../src/webtester/probes5.py#L1226) | R16u (UQ2): a value rejected as taken must stay rejected with a trailing space or another Unicode form. | - |
+| `Probes.async _out_of_range(sw, session, facts, obs, done, ev, step)` | [1245](../src/webtester/probes5.py#L1245) | R26p (DV4, LG6): a quantity of -1, or a payment of 0, must not be accepted silently. | - |
+| `Probes.async _edge_dates(sw, session, facts, obs, done, ev, step)` | [1263](../src/webtester/probes5.py#L1263) | R36p (TM6): 29 Feb 2024 must be kept as given; 30 Feb 2025 must be rejected. | - |
+| `Probes.async _search_meta(sw, session, facts, obs, done, ev, step)` | [1283](../src/webtester/probes5.py#L1283) | R23m (SF8): '%' and '_' must be searched as characters, not wildcards; names with them must be found. | - |
+| `Probes.async _downloads(sw, session, facts, obs, done, ev, step)` | [1305](../src/webtester/probes5.py#L1305) | R02d (AR2): a download link must not answer 4xx/5xx or an empty file. | - |
+| `Probes.async _pdf(sw, session, href, main, want)` | [1319](../src/webtester/probes5.py#L1319) | R37 (AR3): a PDF export must hold the items the page lists (needs pypdf). | - |
+| `Probes.async _password_change(sw, session, facts, obs, done, ev, step)` | [1344](../src/webtester/probes5.py#L1344) | R66 extension (SA7), see the module docstring. | - |
+| `Probes.async _corrupt_storage(sw, session, facts, obs, done, ev, step)` | [1371](../src/webtester/probes5.py#L1371) | R48c (RC9): the app must still start when its local storage holds 'null'. | - |
+| `Probes.async _race(sw, session, facts, obs, done, ev, step)` | [1412](../src/webtester/probes5.py#L1412) | R77 (CC1): a slow answer for an earlier, shorter query must not replace the results of the later one. | - |
+| `Probes.async _timed(sw, session, facts, obs, done, ev, step)` | [1471](../src/webtester/probes5.py#L1471) | R72c (TM8, T3): a live countdown must end when the browser clock passes its end. | - |
+| `Probes.async _foreign_write(sw, session, facts, obs, done, ev, step)` | [1506](../src/webtester/probes5.py#L1506) | R46w (SA4, controlled), see the module docstring; reverted. | - |
+| `Probes.async _restore_name(session, edit_url, name)` | [1544](../src/webtester/probes5.py#L1544) | Puts an item's name back after a probe changed it. | - |
+| `Probes.async _half_done(sw, session, facts, obs, done, ev, step)` | [1560](../src/webtester/probes5.py#L1560) | R52f (WF6, controlled): when the last write of a submit is refused, the record must not appear. | - |
+| `Probes.async _cycle(sw, session, facts, obs, done, ev, step)` | [1608](../src/webtester/probes5.py#L1608) | R40c (HI5, controlled): an item must not be movable under its own child; reverted. | - |
+| `Probes.async _import(sw, session, facts, obs, done, ev, step)` | [1668](../src/webtester/probes5.py#L1668) | R37i (AR4, AR5, controlled): importing the app's own export must report its row count. | - |
+| `async _click_write(page, loc, ms)` | [1699](../src/webtester/probes5.py#L1699) | Click a submit control, wait until the write it sends (a form post or a fetch) is answered, then until the page is quiet. False when no write was answered within WRITE_WAIT_S. I61 (D61): waiting only for network idle could close the tab before a slow form post had started, so nothing was saved and nothing was reverted; and a click that starts a navigation can raise after the form was sent, so an answered write counts even then. | - |
+| `async _page_fetch(session, url)` | [1732](../src/webtester/probes5.py#L1732) | GET `url` from inside the worker's page: same origin, its cookies, the browser's own network. | - |
+| `async _refill(page, session, done)` | [1745](../src/webtester/probes5.py#L1745) | Fill the form in `page` as the agent did (by element key), with a short suffix on text values. | - |
+| `async _find_submit(page, last)` | [1772](../src/webtester/probes5.py#L1772) | The submit control of a refilled form, located by the agent's element key. | - |
+| `async _search_count(session, url, query)` | [1787](../src/webtester/probes5.py#L1787) | (results shown, facts, http status of the result page) for one search typed into the page's box. | - |
+
+#### `reach.py`
+
+Reach helpers for v5 phase 2 (D60): what lets workers get to more states, with data, safely.
+
+| Name | Line | What it does | Used in |
+|---|---:|---|---|
+| `destructive_kind(text)` | [31](../src/webtester/reach.py#L31) | Whether a control's text is a logout or a destructive action (lexicon). | - |
+| `defer_reason(text, budget_share, own_page, threshold)` | [36](../src/webtester/reach.py#L36) | Why a click is deferred now ('' = allowed). Destructive actions on items the run did not create wait until `threshold` of the budget is spent; logout waits until 0.9 (a lost session ends exploration). | worker |
+| `parse_discovery(base, robots, sitemap, page_html, feed)` | [57](../src/webtester/reach.py#L57) | Paths to seed the frontier with, by source (robots, sitemap, feed). Disallowed paths are kept: a tester may visit them (the app is ours), but wildcards and query patterns are dropped. | runner |
+| `feed_items(feed)` | [82](../src/webtester/reach.py#L82) | (title, link) of each RSS item or Atom entry, newest first as the feed lists them. | runner |
+| `page_words(page_html)` | [93](../src/webtester/reach.py#L93) | Visible-ish text of an HTML page (tags dropped, entities decoded, spaces collapsed), lower case. | runner |
+| `network_gets(net)` | [99](../src/webtester/reach.py#L99) | Same-origin document GETs of the network timeline (pages the app itself loaded). | worker |
+| `namespace(worker, run_suffix)` | [106](../src/webtester/reach.py#L106) | The per-worker value namespace (X3): w<worker><run suffix>. | norms |
+| `run_suffix(seed, worker)` | [110](../src/webtester/reach.py#L110) | A short seeded suffix that makes generated values unique per run and worker. | consistency |
+| `field_kind(attrs, label)` | [124](../src/webtester/reach.py#L124) | A field's kind (email, url, number, date, phone, password, text) from its type and label. | consistency |
+| `profile_value(attrs, label, base, tag, hint)` | [134](../src/webtester/reach.py#L134) | R1: a value the field should accept, from what the page declares about it (type, min/max/step, minlength/maxlength, pattern-like hints) and the app's own message. `tag` (namespace) keeps it unique. | consistency |
+| `goal_lines(prims, n)` | [187](../src/webtester/reach.py#L187) | Goal flows for the primitives of the app profile (X5), shown in the prompt. | policies |
+| `rank_primitives(prims, checks)` | [191](../src/webtester/reach.py#L191) | R10 (D61): the profile's primitives, least exercised first: by how often the rules of each primitive's own pack (its rules minus the navigation pack every app gets) have run with their preconditions met, from the check-outcome log. Ties keep the profile's order. Without a log the order is unchanged. | policies |
+| `sequence_goals(graph, n)` | [216](../src/webtester/reach.py#L216) | Sequences armed by what the state graph has seen: item pages (DB9, DB12) and pages reached from a parent page (HI3). The harness generates them; the LLM carries them out as goal flows. | policies |
+| `parse_profile(data, types, prims)` | [242](../src/webtester/reach.py#L242) | The LLM's app profile, kept to known app types and primitives. | policies |
 
 #### `registry.py`
 
@@ -1243,11 +1744,11 @@ Run registry: one tracked record of every experiment run.
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
 | `_faults_found(s)` | [22](../src/webtester/registry.py#L22) | '2/10 (F01, F02)' column text from a summary. | - |
-| `condition(agent, workers)` | [30](../src/webtester/registry.py#L30) | Research-plan name of a run's condition (agent b1 with N > 1 workers is B2). | llm, metrics, oracles, policies, runner, state, stats, worker |
+| `condition(agent, workers)` | [30](../src/webtester/registry.py#L30) | Research-plan name of a run's condition (agent b1 with N > 1 workers is B2). | annotate, cli, evaluate, llm, metrics, oracles, policies, runner, state, stats, worker |
 | `_findings(s)` | [38](../src/webtester/registry.py#L38) | Candidates, plus gate-confirmed ones for gated runs (G2). | - |
-| `_health(s)` | [45](../src/webtester/registry.py#L45) | Health column text: ok, or what went wrong (LLM failures, stalls, early stop). | - |
+| `_health(s)` | [45](../src/webtester/registry.py#L45) | Health column text: ok, or what went wrong (LLM failures, stalls, early stop). | consistency |
 | `_reach(run_dir, faults)` | [61](../src/webtester/registry.py#L61) | Recomputes a run's fault reach from its trace (backfill for old runs). | - |
-| `build(runs_dir)` | [74](../src/webtester/registry.py#L74) | Copies each run's summary and findings into logs/experiments/runs/ and rewrites run_registry.md with the status and notes from run_notes.toml. | appctl, cli |
+| `build(runs_dir)` | [74](../src/webtester/registry.py#L74) | Copies each run's summary and findings into logs/experiments/runs/ and rewrites run_registry.md with the status and notes from run_notes.toml. | appctl, browser, cli, evaluate |
 
 #### `runner.py`
 
@@ -1255,14 +1756,18 @@ Run orchestration: one run = one agent condition x N workers on one app state.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `_git_rev()` | [58](../src/webtester/runner.py#L58) | Current git commit, recorded in every run's trace. | - |
-| `async run(cfg, agent, workers, reset, label, gate, gate_cfg)` | [66](../src/webtester/runner.py#L66) | One run: health check and reset, start N isolated browser sessions, run the condition's workers in parallel until the budget ends, record exposure, run the gate (B4 family), save graph, memory, findings and summary. | appctl, browser, budget, cli, config, consistency, crawler, evidence, frontier, gate, inferred, labels, memory, metrics, registry, stategraph, stats, trace, worker |
-| `async regate(cfg, run_dir, gate_cfg, findings)` | [186](../src/webtester/runner.py#L186) | Re-run the evidence gate on a finished run from its replay.jsonl, without new exploration. | cli, worker |
-| `_frontier(shared, graph)` | [219](../src/webtester/runner.py#L219) | Creates a private frontier for a worker (the -local ablations). | - |
-| `_save_memory(path, sweep)` | [223](../src/webtester/runner.py#L223) | Writes the run memory's ledger as memory.jsonl. | - |
-| `async resweep(cfg, run_dir, client_faults)` | [229](../src/webtester/runner.py#L229) | Development tool (v4, D49): replay every worker's whole recorded log (replay.jsonl) once, with the v4 consistency oracles attached, no LLM. One reset at the start; workers replay one after another and share one memory, so data a worker created stays for the next one. Old runs have no intents, so verbs come from the word lists. Writes findings_resweep.json and returns counts per rule. `client_faults=False` replays BookStack without its injected faults (the clean app); Conduit's faults are server-side, so start it without faults instead. | cli, memory |
-| `_probe_counts(state)` | [298](../src/webtester/runner.py#L298) | Browser work of the probes added before the v4 lock (D50): reported, since it costs time, not tokens. | - |
-| `run_sync(*args, **kwargs)` | [304](../src/webtester/runner.py#L304) | Runs `run` from synchronous code and prints where the run folder is. | cli |
+| `_git_rev()` | [66](../src/webtester/runner.py#L66) | Current git commit, recorded in every run's trace. | - |
+| `async run(cfg, agent, workers, reset, label, gate, gate_cfg)` | [74](../src/webtester/runner.py#L74) | One run: health check and reset, start N isolated browser sessions, run the condition's workers in parallel until the budget ends, record exposure, run the gate (B4 family), save graph, memory, findings and summary. | annotate, appctl, browser, budget, checks, cli, config, consistency, crawler, crossview, envcheck, evaluate, evidence, families, frontier, gate, inferred, labels, memory, metrics, norms, openapi, policies, probes5, reach, registry, stategraph, stats, trace, worker |
+| `async regate(cfg, run_dir, gate_cfg, findings)` | [247](../src/webtester/runner.py#L247) | Re-run the evidence gate on a finished run from its replay.jsonl, without new exploration. | cli, worker |
+| `async _discover(session, cfg)` | [280](../src/webtester/runner.py#L280) | R7: robots.txt, sitemap.xml (and sitemaps robots names), RSS/Atom feeds linked from the home page. Returns the paths by source and the feeds' text (for _check_discovered). | - |
+| `async _check_discovered(session, cfg, ctx, found, feed)` | [305](../src/webtester/runner.py#L305) | O7 (D61): R02s, a sitemap or feed address the app itself publishes answers 4xx/5xx; R20f, the newest feed item's title is not on the page it links to. Each is read twice (k = 2) and, like R71, confirmed here: the gate cannot replay what no worker did. | - |
+| `safety_of(sweep)` | [348](../src/webtester/runner.py#L348) | Evaluation group 11 (D61): deletes of items this run did not create (incidents), and the share of the items it created that it deleted again (cleanup; only meaningful in reversible mode). | - |
+| `coverage_of(ctx, run_dir)` | [358](../src/webtester/runner.py#L358) | R5 (D61): what the run exercised, in one file: routes and states, transitions, roles, input classes per field kind, form outcomes, and oracle arm coverage (routes where some rule ran / routes visited). | - |
+| `_frontier(shared, graph)` | [373](../src/webtester/runner.py#L373) | Creates a private frontier for a worker (the -local ablations). | - |
+| `_save_memory(path, sweep)` | [377](../src/webtester/runner.py#L377) | Writes the run memory's ledger as memory.jsonl. | - |
+| `async resweep(cfg, run_dir, client_faults)` | [383](../src/webtester/runner.py#L383) | Development tool (v4, D49): replay every worker's whole recorded log (replay.jsonl) once, with the v4 consistency oracles attached, no LLM. One reset at the start; workers replay one after another and share one memory, so data a worker created stays for the next one. Old runs have no intents, so verbs come from the word lists. Writes findings_resweep.json and returns counts per rule. `client_faults=False` replays BookStack without its injected faults (the clean app); Conduit's faults are server-side, so start it without faults instead. | cli, evaluate, memory |
+| `_probe_counts(state)` | [457](../src/webtester/runner.py#L457) | Browser work of the probes added before the v4 lock (D50): reported, since it costs time, not tokens. | - |
+| `run_sync(*args, **kwargs)` | [463](../src/webtester/runner.py#L463) | Runs `run` from synchronous code and prints where the run folder is. | cli |
 
 #### `state.py`
 
@@ -1270,7 +1775,7 @@ Canonical abstract-state identity (v0).
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `route_shape(url)` | [28](../src/webtester/state.py#L28) | Abstract route of a URL: value-like segments become *, query values dropped (`/article/how-to-x-3` -> `/article/*`). | consistency, crawler, evidence, frontier, inferred, memory, oracles, policies, stategraph, worker |
+| `route_shape(url)` | [28](../src/webtester/state.py#L28) | Abstract route of a URL: value-like segments become *, query values dropped (`/article/how-to-x-3` -> `/article/*`). | browser, consistency, crawler, crossview, envcheck, evidence, frontier, inferred, memory, oracles, policies, probes5, stategraph, worker |
 | `skeleton_hash(skeleton)` | [44](../src/webtester/state.py#L44) | Short hash of a DOM skeleton. | - |
 | `state_id(url, skeleton)` | [48](../src/webtester/state.py#L48) | Abstract state id = hash(route shape, text-free skeleton), D13. | crawler, stategraph, worker |
 | `action_key(state, do, element_key, value)` | [52](../src/webtester/state.py#L52) | Identity of 'doing X in state S'. Fill values are bucketed by class, not text, so typing two different strings into the same field counts as the same action for the duplicate-action metric. | crawler, stategraph, worker |
@@ -1285,25 +1790,26 @@ Abstract state graph (harness v4, D49): states, actions and transitions seen whi
 | `action_label(actions)` | [33](../src/webtester/stategraph.py#L33) | Identity of a step's actions without the state: do + element key + value class. | - |
 | `is_navigation(actions)` | [44](../src/webtester/stategraph.py#L44) | One link click (an <a> with an href) or one navigate/back: moves without changing data. | consistency |
 | `class Node` | [58](../src/webtester/stategraph.py#L58) | One abstract state in the graph: page, URL, visits, first step. | - |
-| `class Page` | [68](../src/webtester/stategraph.py#L68) | One page (route shape): name, heading, URL, its states, visits. | browser, consistency, gate |
+| `class Page` | [68](../src/webtester/stategraph.py#L68) | One page (route shape): name, heading, URL, its states, visits. | browser, checks, consistency, gate, norms |
 | `class Edge` | [78](../src/webtester/stategraph.py#L78) | One (state, action) -> next-state distribution, with who took it (LLM, harness, crawler), data verbs and signal counts. | - |
-| `Edge.dst_pages()` | [90](../src/webtester/stategraph.py#L90) | Pages this edge has led to. | - |
-| `class StateGraph` | [94](../src/webtester/stategraph.py#L94) | The run's abstract state graph, shared by all workers (v4, D49). | runner |
-| `StateGraph.__init__()` | [95](../src/webtester/stategraph.py#L95) | Creates an empty graph. | - |
-| `StateGraph.visit(worker, sid, url, step, heading)` | [102](../src/webtester/stategraph.py#L102) | Registers a worker's arrival in a state. | crawler, frontier, memory, policies, worker |
-| `StateGraph.transition(worker, src, actions, dst, by, verb, signals)` | [117](../src/webtester/stategraph.py#L117) | Adds or updates the edge for a step's actions from one state to the next. | crawler, worker |
-| `StateGraph.name_page(route, name)` | [136](../src/webtester/stategraph.py#L136) | Stores the short page name the model gave (shown to the team). | worker |
-| `StateGraph.unnamed(route)` | [142](../src/webtester/stategraph.py#L142) | Whether a page still has no name (the prompt then asks for one). | policies |
-| `StateGraph.nondeterministic_nav()` | [146](../src/webtester/stategraph.py#L146) | Navigation edges (no data change) that led to different pages on different occasions. | - |
-| `StateGraph.travel_url(route)` | [150](../src/webtester/stategraph.py#L150) | A URL that reaches `route` directly (harness travel): the last one seen there. | - |
-| `StateGraph.path(src, dst_page, max_len)` | [155](../src/webtester/stategraph.py#L155) | Shortest known edge path from state `src` to any state of page `dst_page` (BFS). | browser, config, consistency, crawler, evidence, frontier, inferred, labels, memory, metrics, policies, runner, state, trace, worker |
-| `StateGraph.stats()` | [178](../src/webtester/stategraph.py#L178) | Graph totals for the summary: states, pages, edges, nav/data edges, nondeterministic nav, states per page, travels. | cli, frontier, runner |
-| `StateGraph.to_dict()` | [191](../src/webtester/stategraph.py#L191) | The graph as a dict (graph.json). | config, crawler, oracles, runner, worker |
-| `StateGraph.save(path)` | [203](../src/webtester/stategraph.py#L203) | Writes graph.json. | consistency, inferred, memory, policies, runner |
-| `load_graph(path)` | [207](../src/webtester/stategraph.py#L207) | Reads a saved graph.json. | cli |
-| `mermaid(graph, max_edges)` | [211](../src/webtester/stategraph.py#L211) | Page-level Mermaid flowchart of a saved graph (for figures): one node per page, one arrow per (page, page) pair with the number of edges and whether data changed. | cli |
-| `_median(xs)` | [236](../src/webtester/stategraph.py#L236) | Median of a list of integers. | - |
-| `same_origin_path(url)` | [244](../src/webtester/stategraph.py#L244) | Path + query + fragment of a URL. | - |
+| `Edge.dst_pages()` | [91](../src/webtester/stategraph.py#L91) | Pages this edge has led to. | consistency |
+| `class StateGraph` | [95](../src/webtester/stategraph.py#L95) | The run's abstract state graph, shared by all workers (v4, D49). | runner |
+| `StateGraph.__init__()` | [96](../src/webtester/stategraph.py#L96) | Creates an empty graph. | - |
+| `StateGraph.visit(worker, sid, url, step, heading)` | [103](../src/webtester/stategraph.py#L103) | Registers a worker's arrival in a state. | checks, consistency, crawler, crossview, frontier, memory, policies, reach, worker |
+| `StateGraph.transition(worker, src, actions, dst, by, verb, signals)` | [118](../src/webtester/stategraph.py#L118) | Adds or updates the edge for a step's actions from one state to the next. | crawler, worker |
+| `StateGraph.name_page(route, name)` | [138](../src/webtester/stategraph.py#L138) | Stores the short page name the model gave (shown to the team). | worker |
+| `StateGraph.unnamed(route)` | [144](../src/webtester/stategraph.py#L144) | Whether a page still has no name (the prompt then asks for one). | policies |
+| `StateGraph.nondeterministic_nav()` | [148](../src/webtester/stategraph.py#L148) | Navigation edges (no data change) that led to different pages on different occasions. | - |
+| `StateGraph.travel_url(route)` | [152](../src/webtester/stategraph.py#L152) | A URL that reaches `route` directly (harness travel): the last one seen there. | - |
+| `StateGraph.path(src, dst_page, max_len)` | [157](../src/webtester/stategraph.py#L157) | Shortest known edge path from state `src` to any state of page `dst_page` (BFS). | annotate, browser, checks, config, consistency, crawler, crossview, evaluate, evidence, families, frontier, inferred, labels, lexicon, memory, metrics, openapi, policies, probes5, reach, runner, state, trace, worker |
+| `StateGraph.nav_path(src, dst_page, max_len)` | [180](../src/webtester/stategraph.py#L180) | X2: a path of navigation-only edges (no data verb) that can be replayed to reach `dst_page`. | worker |
+| `StateGraph.stats()` | [187](../src/webtester/stategraph.py#L187) | Graph totals for the summary: states, pages, edges, nav/data edges, nondeterministic nav, states per page, travels. | cli, evaluate, frontier, runner |
+| `StateGraph.to_dict()` | [200](../src/webtester/stategraph.py#L200) | The graph as a dict (graph.json). | config, crawler, oracles, runner, worker |
+| `StateGraph.save(path)` | [212](../src/webtester/stategraph.py#L212) | Writes graph.json. | annotate, consistency, crossview, envcheck, inferred, norms, policies, probes5, runner |
+| `load_graph(path)` | [216](../src/webtester/stategraph.py#L216) | Reads a saved graph.json. | cli |
+| `mermaid(graph, max_edges)` | [220](../src/webtester/stategraph.py#L220) | Page-level Mermaid flowchart of a saved graph (for figures): one node per page, one arrow per (page, page) pair with the number of edges and whether data changed. | cli |
+| `_median(xs)` | [245](../src/webtester/stategraph.py#L245) | Median of a list of integers. | - |
+| `same_origin_path(url)` | [253](../src/webtester/stategraph.py#L253) | Path + query + fragment of a URL. | - |
 
 #### `stats.py`
 
@@ -1311,16 +1817,25 @@ Condition comparison over repeated runs: median [IQR], exact Mann-Whitney U (two
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `quartiles(xs)` | [40](../src/webtester/stats.py#L40) | Q1, median, Q3 (linear interpolation). | - |
-| `a12(x, y)` | [52](../src/webtester/stats.py#L52) | Probability that a run from x beats a run from y (ties count half). | - |
-| `magnitude(a)` | [58](../src/webtester/stats.py#L58) | Size of an Â12 effect: negligible, small, medium, large. | - |
-| `mann_whitney_p(x, y)` | [63](../src/webtester/stats.py#L63) | Exact two-sided p-value of the rank-sum statistic by enumerating all splits. | - |
-| `_ranks(v)` | [79](../src/webtester/stats.py#L79) | Ranks with ties averaged (for Mann-Whitney U). | - |
-| `load_valid_runs(agent, label_contains, workers)` | [93](../src/webtester/stats.py#L93) | Summaries of the valid runs of one condition (status from run_notes.toml), with label metrics merged in. | cli |
-| `compare(a_runs, b_runs, a_name, b_name)` | [121](../src/webtester/stats.py#L121) | The comparison table of two conditions: median [IQR], exact p, Â12 for every metric. | cli, consistency, state |
-| `_values(runs, key)` | [145](../src/webtester/stats.py#L145) | Values of `key` over runs that have it. Base metrics count a missing value as 0 (old behaviour); G2/G3 metrics skip runs without them, and FALLBACK rows appear only when some run really has the metric. | - |
-| `has_metric(runs, key)` | [157](../src/webtester/stats.py#L157) | Whether any run has a value for a metric (rows without data are left out). | - |
-| `gate_report(runs)` | [161](../src/webtester/stats.py#L161) | G2 within the same runs (A-G2 = gate off = raw candidates): per run, then medians. | cli |
+| `quartiles(xs)` | [41](../src/webtester/stats.py#L41) | Q1, median, Q3 (linear interpolation). | - |
+| `a12(x, y)` | [53](../src/webtester/stats.py#L53) | Probability that a run from x beats a run from y (ties count half). | evaluate |
+| `magnitude(a)` | [59](../src/webtester/stats.py#L59) | Size of an Â12 effect: negligible, small, medium, large. | - |
+| `mann_whitney_p(x, y)` | [64](../src/webtester/stats.py#L64) | Exact two-sided p-value of the rank-sum statistic by enumerating all splits. | evaluate |
+| `_ranks(v)` | [80](../src/webtester/stats.py#L80) | Ranks with ties averaged (for Mann-Whitney U). | - |
+| `load_valid_runs(agent, label_contains, workers)` | [94](../src/webtester/stats.py#L94) | Summaries of the valid runs of one condition (status from run_notes.toml), with label metrics merged in. | cli |
+| `compare(a_runs, b_runs, a_name, b_name)` | [122](../src/webtester/stats.py#L122) | The comparison table of two conditions: median [IQR], exact p, Â12 for every metric. | cli, consistency, envcheck, state |
+| `_values(runs, key)` | [146](../src/webtester/stats.py#L146) | Values of `key` over runs that have it. Base metrics count a missing value as 0 (old behaviour); G2/G3 metrics skip runs without them, and FALLBACK rows appear only when some run really has the metric. | - |
+| `has_metric(runs, key)` | [158](../src/webtester/stats.py#L158) | Whether any run has a value for a metric (rows without data are left out). | - |
+| `gate_report(runs)` | [162](../src/webtester/stats.py#L162) | G2 within the same runs (A-G2 = gate off = raw candidates): per run, then medians. | cli |
+| `_bisect(f, lo, hi, it)` | [190](../src/webtester/stats.py#L190) | Root of a monotone f on [lo, hi]. | - |
+| `_binom_cdf(k, n, p)` | [202](../src/webtester/stats.py#L202) | Binomial cumulative probability, for the exact (Clopper-Pearson) interval. | - |
+| `_poisson_cdf(k, mu)` | [215](../src/webtester/stats.py#L215) | Poisson cumulative probability, for the exact (Garwood) rate interval. | - |
+| `wilson(k, n, z)` | [226](../src/webtester/stats.py#L226) | Wilson score interval for k successes in n (95% by default). | - |
+| `clopper_pearson(k, n, alpha)` | [237](../src/webtester/stats.py#L237) | Exact binomial interval: conservative, the one to quote for a precision near 1 or a rate near 0. | evaluate |
+| `poisson_rate_ci(k, exposure, alpha)` | [246](../src/webtester/stats.py#L246) | Exact (Garwood) interval for a rate: k events over `exposure` units (runs, 100 steps, 100 checks). With k = 0 the upper bound is about 3.0 / exposure: the rule of three. | evaluate |
+| `holm(pvalues)` | [256](../src/webtester/stats.py#L256) | Holm-Bonferroni adjusted p-values over one family of comparisons. | evaluate |
+| `bootstrap_ci(xs, stat, reps, alpha, seed)` | [266](../src/webtester/stats.py#L266) | Percentile bootstrap interval of `stat` (default: mean) over runs or apps. | evaluate |
+| `spread(xs)` | [278](../src/webtester/stats.py#L278) | Median, IQR, mean, SD and CV of one metric across runs (seeds). | config, evaluate |
 
 #### `trace.py`
 
@@ -1330,9 +1845,9 @@ Append-only JSONL trace. Every step, LLM call and finding of a run is one line, 
 |---|---:|---|---|
 | `class Trace` | [12](../src/webtester/trace.py#L12) | The run's append-only JSONL trace writer (thread-safe). | runner, worker |
 | `Trace.__init__(path, run_id)` | [13](../src/webtester/trace.py#L13) | Opens trace.jsonl for appending. | - |
-| `Trace.event(type_, **data)` | [20](../src/webtester/trace.py#L20) | Writes one event line with a timestamp relative to the run start. | crawler, gate, memory, runner, worker |
-| `Trace.close()` | [27](../src/webtester/trace.py#L27) | Closes the trace file. | browser, consistency, gate, runner |
-| `read_trace(path)` | [31](../src/webtester/trace.py#L31) | Reads a trace.jsonl into a list of events. | metrics |
+| `Trace.event(type_, **data)` | [20](../src/webtester/trace.py#L20) | Writes one event line with a timestamp relative to the run start. | browser, checks, consistency, crawler, crossview, envcheck, gate, memory, norms, runner, worker |
+| `Trace.close()` | [27](../src/webtester/trace.py#L27) | Closes the trace file. | browser, config, consistency, envcheck, gate, probes5, reach, runner |
+| `read_trace(path)` | [31](../src/webtester/trace.py#L31) | Reads a trace.jsonl into a list of events. | evaluate, metrics |
 
 #### `worker.py`
 
@@ -1340,14 +1855,19 @@ The exploring worker loop: observe -> decide -> act -> collect signals -> log.
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `class RunContext` | [25](../src/webtester/worker.py#L25) | State shared by all workers of one run (budget, trace, findings, counters). | crawler, gate, runner |
-| `RunContext.next_step()` | [50](../src/webtester/worker.py#L50) | Next global step number (shared counter over all workers). | crawler |
-| `class StepRecord` | [56](../src/webtester/worker.py#L56) | What the gate needs to replay one step: step, start URL, session storage, actions (element key + ordinal + value), checks, intent, cited contradiction. | gate |
-| `save_replay_log(path, log)` | [66](../src/webtester/worker.py#L66) | One JSON line per step record. Holds the local test accounts' session tokens: runs/ is gitignored. | runner |
-| `load_replay_log(path)` | [74](../src/webtester/worker.py#L74) | Reads replay.jsonl back into per-worker step records. | runner |
-| `async run_worker(run, session, policy, worker, max_steps)` | [83](../src/webtester/worker.py#L83) | The LLM worker loop: observe, (v4) travel to a new focus area, decide, act, evaluate checks, run the sweeper, collect signals into findings, charge the budget, trace the step. | runner |
-| `_nth(obs, el)` | [249](../src/webtester/worker.py#L249) | Ordinal of `el` among the elements with the same key (replays locate it by key + ordinal). | gate, inferred |
-| `_history_line(step, url, thought, done, signals)` | [257](../src/webtester/worker.py#L257) | One line of the worker's recent-steps history for its next prompt. | - |
+| `class RunContext` | [26](../src/webtester/worker.py#L26) | State shared by all workers of one run (budget, trace, findings, counters). | crawler, gate, runner |
+| `RunContext.next_step()` | [51](../src/webtester/worker.py#L51) | Next global step number (shared counter over all workers). | crawler |
+| `RunContext.stop_requested()` | [59](../src/webtester/worker.py#L59) | S2: whether a stop file exists (the run then ends cleanly with its trace). | - |
+| `class StepRecord` | [64](../src/webtester/worker.py#L64) | What the gate needs to replay one step: step, start URL, session storage, actions (element key + ordinal + value), checks, intent, cited contradiction. | gate |
+| `save_replay_log(path, log)` | [76](../src/webtester/worker.py#L76) | One JSON line per step record. Holds the local test accounts' session tokens: runs/ is gitignored. | runner |
+| `load_replay_log(path)` | [84](../src/webtester/worker.py#L84) | Reads replay.jsonl back into per-worker step records. | runner |
+| `async run_worker(run, session, policy, worker, max_steps)` | [93](../src/webtester/worker.py#L93) | The LLM worker loop: observe, (v4) travel to a new focus area, decide, act, evaluate checks, run the sweeper, collect signals into findings, charge the budget, trace the step. | runner |
+| `_sid(session, obs)` | [285](../src/webtester/worker.py#L285) | The abstract state; R4 (D61): with accounts of several roles, the worker's role is part of it, so an admin's and a reader's view of one page are two states (each worker keeps one account, so this is constant per worker and cheap); so is the active context of a context switcher (workspace, team, store), when the page has one. | - |
+| `_budget_share(run)` | [297](../src/webtester/worker.py#L297) | The largest share of the step, token or time budget spent so far (R8). | - |
+| `_own_page(run, worker, url)` | [303](../src/webtester/worker.py#L303) | R8: the page is an item this worker created (its run memory says so). | - |
+| `async _replay_path(session, path)` | [314](../src/webtester/worker.py#L314) | X2: replay recorded navigation edges by element key; False as soon as one cannot be found. | - |
+| `_nth(obs, el)` | [330](../src/webtester/worker.py#L330) | Ordinal of `el` among the elements with the same key (replays locate it by key + ordinal). | gate, inferred |
+| `_history_line(step, url, thought, done, signals)` | [338](../src/webtester/worker.py#L338) | One line of the worker's recent-steps history for its next prompt. | - |
 <!-- gen:end -->
 
 # Part D: Running it
@@ -1424,7 +1944,7 @@ options:
 
 ```text
 usage: webtester run [-h]
-                     [--agent {b0,b1,b3,b3local,b3v2,b3v2local,b3v3,b4,b4det,b4nog1,b4nog3,random}]
+                     [--agent {b0,b1,b3,b3local,b3v2,b3v2local,b3v3,b4,b4annot,b4det,b4nog1,b4nog3,b5,random}]
                      [--workers WORKERS] [--minutes MINUTES] [--steps STEPS]
                      [--tokens TOKENS] [--seed SEED] [--provider PROVIDER]
                      [--model MODEL] [--headed] [--no-reset] [--label LABEL]
@@ -1433,7 +1953,7 @@ usage: webtester run [-h]
 
 options:
   -h, --help            show this help message and exit
-  --agent {b0,b1,b3,b3local,b3v2,b3v2local,b3v3,b4,b4det,b4nog1,b4nog3,random}
+  --agent {b0,b1,b3,b3local,b3v2,b3v2local,b3v3,b4,b4annot,b4det,b4nog1,b4nog3,b5,random}
   --workers WORKERS
   --minutes MINUTES
   --steps STEPS
@@ -1570,6 +2090,42 @@ positional arguments:
 options:
   -h, --help         show this help message and exit
   --mermaid MERMAID  write a page-level Mermaid flowchart to this file
+```
+</details>
+
+<details><summary><code>webtester evaluate</code></summary>
+
+```text
+usage: webtester evaluate [-h] [--clean [CLEAN ...]] [--findings FINDINGS]
+                          [--clean-findings CLEAN_FINDINGS] [--ref REF]
+                          [--json JSON] [--md MD]
+                          [runs ...]
+
+positional arguments:
+  runs                  run folders on the faulty app
+
+options:
+  -h, --help            show this help message and exit
+  --clean [CLEAN ...]   run folders on the clean app (false alarms)
+  --findings FINDINGS   findings file per run, e.g. findings_resweep.json
+  --clean-findings CLEAN_FINDINGS
+                        findings file of the clean runs (default: --findings)
+  --ref REF             reference condition for the comparisons (e.g. b4)
+  --json JSON           write the full report as JSON
+  --md MD               write the markdown summary
+```
+</details>
+
+<details><summary><code>webtester families</code></summary>
+
+```text
+usage: webtester families [-h] [--write] [--profile PROFILE]
+
+options:
+  -h, --help         show this help message and exit
+  --write            write docs/family_tracker.toml
+  --profile PROFILE  app type of fault_families.md section 4: show its rule
+                     packs
 ```
 </details>
 <!-- gen:end -->
@@ -1917,6 +2473,12 @@ The 5 valid Night 3 `b4` runs per app were replayed with the locked v4 rules and
     - I-delete could not tell apart two comment cards whose only text was author and date (whitespace-only bodies).
 - **Caveat:** development numbers. The v5 rules were written with these runs in view (D55). The test is the locked v5 on PrestaShop (Night 4).
 
+**Re-measured with the v5 evaluator (D59).** The same resweeps, through `scripts/eval_v5dev.py`:
+- Precision per distinct issue: BookStack 13 of 14 issues (93%), Conduit 11 of 12 (92%); 4.2 and 5.6 findings per issue.
+- Clean-app false alarms with exact 95% intervals: BookStack 0.6 per run (0.12-1.75), Conduit 0.4 (0.05-1.44). Five clean runs give wide bounds, which is why the clean corpus moved forward in the plan.
+- Recall funnel: of BookStack's 34 missed fault-run pairs, 29 failed at reach or trigger (never reached, or reached without the fault firing) before any rule could run; on Conduit 8 of 10. The next gains are in exploration, not in more rules.
+- On the live Night 3 runs (§11.7) the evaluator reproduces the earlier numbers and adds: precision per distinct issue is lower than per finding (Conduit b4 68%, BookStack b4 23%); b4 beats b3v3 on faults found after Holm correction on both apps (Conduit p = 0.024, BookStack p = 0.016); the LLM judge agrees with the labels 42 times in 45 on Conduit and 4 in 10 on BookStack; a confidence score fitted on one app and tested on the other is miscalibrated (I53).
+
 ### 11.9 Reserved
 Night 4 (PrestaShop) and later results are added here.
 
@@ -1964,7 +2526,7 @@ From [paper ledger §8](paper_ledger.md):
 | RQ3 (G3) | v3: Conduit 4/6 semantic faults, BookStack 0/18. v4: Conduit 3 semantic per run (4/6 across runs), BookStack 2 per run (5/18 across runs), against 0 for implicit oracles (p = 0.008) | v4 turns the BookStack zero into a positive, but on apps it was developed on; PrestaShop decides |
 | v4 | Locked; Night 3 labelled (§11.7) | Strong on both development apps; the test is PrestaShop |
 | v5 | D55 fixes built; resweeps complete (§11.8): BookStack 51% → 95% precision, faults per run 3 → 6 of 13; Conduit 85% → 99%, 5 → 6 of 8; fault-family table (163 families) and v5 plan (D58); evidence layer built, off by default | Promising on replays of recorded runs; not yet locked or run live. The plan puts measurement (recall funnel, check outcomes) before new rules |
-| Engineering | Harness, 2 apps, 106 tests, full logging, resweep and regate tools, evidence layer | Complete for the course; paper-scale runs need a VM and paid API |
+| Engineering | Harness, 2 apps, 166 tests, full logging, resweep and regate tools, evidence layer (on), check-outcome log, offline evaluator, generated family tracker, every v5 phase built (D60: 99 rules; not yet run on the apps) | Complete for the course; paper-scale runs need a VM and paid API |
 
 Overall, the system and the measurement pipeline are in place. There is one robust positive result (G1 duplicates) and one important negative held-out result (v3 G3 on BookStack). v4, and now v5, is the attempt to turn the negative into a general method. Whether the locked v5 holds on an app it was not designed on (PrestaShop) decides the paper's framing.
 
@@ -1973,7 +2535,7 @@ Overall, the system and the measurement pipeline are in place. There is one robu
 | When | Work |
 |---|---|
 | 27–28 Oct | Night 3 done and labelled (§11.7); v5 fixes (D55) and resweeps (§11.8); fault families (D56, D57); v5 plan and evidence layer (D58) |
-| 28–30 Oct | **v5 phase 0:** Conduit resweep finished and labelled (done 28 Oct); recall-funnel script; Conduit exposure log; family tracker; the author's blind 20% re-label |
+| 28–30 Oct | **v5 phase 0:** Conduit resweep finished and labelled (done 28 Oct); recall funnel, check-outcome log, evaluator and family tracker (done 28 Oct, D59); evidence capture on (done); left: the D59 resweep (`scripts/resweep_d59.sh`), Conduit exposure log, the author's blind 20% re-label. **28 Oct (D60): every v5 phase and every family rule built**; next are live pilots (`b4`, `b5`) and the corpus apps' first start |
 | 30 Oct–2 Nov | **v5 phase 1:** check-outcome log; evidence layer on and measured; waits that poll to a deadline; session storage in gate replays; harness-health check; the D55 left-overs and exploration pilots (E1-E3); the cheap rules that run on the development apps. Set up PrestaShop and write D51 (its pre-registered targets) before any run. **v5.0 lock**, then Night 4 (Conduit, BookStack, PrestaShop) |
 | 1–4 Nov | Course paper (submitted 4 Nov), with v5.0 numbers |
 | 5–9 Nov | **Framing decision**: Option A (if v5 holds on PrestaShop): deterministic consistency oracles from the agents' run memory plus an evidence gate, with G1 as a supporting result. Option B (if not): an empirical study of what spec-free LLM web testers find and why they miss what they miss |
@@ -2046,18 +2608,18 @@ Details and KPIs: [docs/issta2027_plan.md](issta2027_plan.md).
 <!-- gen:start faults -->
 **Conduit** ([`apps/realworld/faults/faults.toml`](../apps/realworld/faults/faults.toml), 10 faults)
 
-| id | class | layer | summary | trigger |
-|---|---|---|---|---|
-| F01 | crash | backend | Posting a comment longer than 280 characters returns HTTP 500 | Log in, open any article, post a comment of more than 280 characters |
-| F02 | crash | frontend | Adding a tag that contains a space throws a TypeError in the editor | Log in, New Article, type a tag with a space (e.g. 'web dev') and press Enter or publish |
-| F03 | validation | backend | Registration accepts an empty username | Sign up with an email and password but an empty username |
-| F04 | data | backend | Editing an article silently removes all of its tags | Create an article with tags, open Edit, change the body, publish |
-| F05 | data | backend | After favoriting, the displayed favorites count does not increase | Log in, click the heart/favorite button of an article you have not favorited |
-| F06 | data | backend | Deleting a comment is acknowledged but not performed | Post a comment, click its trash icon, reload the article |
-| F07 | authorization | frontend+backend | Any logged-in user sees Edit/Delete on other users' articles, and delete succeeds | Log in as a worker account, open an article written by alice/bob/carol/dave |
-| F08 | data | backend | 'Your Feed' lists articles from authors the user does not follow | Log in as a worker account (follows nobody) and open Your Feed |
-| F09 | noop-ui | frontend | Clicking a pagination link does nothing | On the home page (12 articles, 10 per page) click page 2 |
-| F10 | data | backend | Filtering by tag returns articles that do not have that tag | Click a tag in the Popular Tags sidebar |
+| id | class | layer | summary | trigger | reachable |
+|---|---|---|---|---|---|
+| F01 | crash | backend | Posting a comment longer than 280 characters returns HTTP 500 | Log in, open any article, post a comment of more than 280 characters |  |
+| F02 | crash | frontend | Adding a tag that contains a space throws a TypeError in the editor | Log in, New Article, type a tag with a space (e.g. 'web dev') and press Enter or publish |  |
+| F03 | validation | backend | Registration accepts an empty username | Sign up with an email and password but an empty username | False |
+| F04 | data | backend | Editing an article silently removes all of its tags | Create an article with tags, open Edit, change the body, publish | False |
+| F05 | data | backend | After favoriting, the displayed favorites count does not increase | Log in, click the heart/favorite button of an article you have not favorited |  |
+| F06 | data | backend | Deleting a comment is acknowledged but not performed | Post a comment, click its trash icon, reload the article |  |
+| F07 | authorization | frontend+backend | Any logged-in user sees Edit/Delete on other users' articles, and delete succeeds | Log in as a worker account, open an article written by alice/bob/carol/dave |  |
+| F08 | data | backend | 'Your Feed' lists articles from authors the user does not follow | Log in as a worker account (follows nobody) and open Your Feed |  |
+| F09 | noop-ui | frontend | Clicking a pagination link does nothing | On the home page (12 articles, 10 per page) click page 2 |  |
+| F10 | data | backend | Filtering by tag returns articles that do not have that tag | Click a tag in the Popular Tags sidebar |  |
 
 **BookStack** ([`apps/bookstack/faults/faults.toml`](../apps/bookstack/faults/faults.toml), 18 faults)
 
@@ -2147,6 +2709,10 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | D56 | 28 Oct | Fault-family coverage for generality (`docs/fault_families.md`), feeding v5 before its lock |
 | D57 | 28 Oct | Fault families extended from two reviewer chats (ChatGPT, Claude) given `docs/fault_families.md` |
 | D58 | 28 Oct | v5 plan by recall stage, and the evidence layer (`docs/v5_plan.md`) |
+| D59 | 28 Oct | v5 implementation starts: third review taken, evaluation framework, a rule for every coverable family, `capture_evidence` on |
+| D60 | 28 Oct | v5 built through every phase, with a rule for every coverable fault family (`docs/v5_plan.md` section 14) |
+| D61 | 29 Oct | Audit of v5 against its plan, the fault-family table and the paper's metric list; every gap built and tested |
+| D62 | 29 Oct | Road to the v5.0 lock: entry check, fixture tests for every built rule, pilot and final resweep |
 <!-- gen:end -->
 
 ## Appendix D: Issue index
@@ -2192,6 +2758,14 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | I50 | 28 Oct | D51 (pre-registered PrestaShop targets) and D52 (PrestaShop setup) were never written, though the plan and the guide refer to them. |
 | I51 | 28 Oct | The development apps exercise only 7 of the 13 workflow primitives, and 40 of CATTest's 102 held-out apps are canvas, 3D or SVG apps (`docs/fault_families.md` section 4) |
 | I52 | 28 Oct | Conduit resweep (D55) cut off at 12:42 by a PC shutdown |
+| I53 | 28 Oct | The confidence score does not transfer between the two development apps (D59, X8) |
+| I54 | 28 Oct | No run has a check-outcome log yet, so funnel stage S4 (armed) and false alarms per 100 checks are unmeasured; the new rules R43, R64, R26 and evidence capture (R57, R51) have not run on the apps |
+| I55 | 28 Oct | New app setups are untested: the corpus apps Parabank and Juice Shop (`apps/corpus/`, `configs/corpus_*.toml`), the rebranded BookStack (`configs/bookstack_rebrand.toml`) and the Mailpit override were |
+| I57 | 28 Oct | Extraction gaps found by the new benchmark (3 synthetic pages): a card list whose item names are headings inside links is not read as a list (0 of 3 items), and an activity entry is read as two items  |
+| I58 | 28 Oct | No real historical faults selected yet (E5 a) |
+| I59 | 28 Oct | No v5 rule has run on the apps |
+| I60 | 28 Oct | The reach changes alter exploration: element ranking, scroll once, accepted dialogs (deletes behind confirm() now happen), pop-up dismissal, destructive deferral, seeding, discovery and the profile st |
+| I72 | 29 Oct | App types, primitives and frameworks in the dev configs are the assistant's labels (`configs/*.toml`: `app_type`, `primitives`, `framework`); profile accuracy (X5) and the per-type recall use them as  |
 | I12 | 11 Oct | `gemini-3.8-flash` timed out (2 × 90 s) |
 | I24 | 16 Oct | The BookStack environment was written without running it |
 | I28 | 16 Oct | Race: `app up` re-runs the seed-loader (a full reload) and returned as soon as the web app was healthy, so the first smoke run's own reset ran concurrently: `ERROR 1062 Duplicate entry '1' for key 'ac |
@@ -2208,6 +2782,41 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | I10 | 11 Oct | Crawler: signals raised during its restore navigation had an empty action trail |
 | I14 | 11 Oct | B1 rep2 lost ~8 min to a network outage ("Connection error" after 7 retries), so a time-budgeted run became incomparable |
 | I8 | 11 Oct | The `gemini-2.5-flash` model id is closed to new API keys |
+| I56 | 28 Oct | The v4 word lists stayed in code (verbs, cue words, `_VALIDATION`, `_SYSTEM_ERR`) |
+| I61 | 28 Oct | Timing flake in the served-app probe test (`test_d60_probes.py`) |
+| I62 | 29 Oct | A v4 pattern held backspace characters: the 'add' list-heading pattern in `memory.CATEGORY` (committed v4 code) had `\b` written as a backspace by a heredoc, so 'cart' and 'bag' never matched |
+| I63 | 29 Oct | R1's retry would have crashed the step: `_retry_form` called `_submit_variant(values=...)`, whose parameter is `override`; with `input_profiles` on by default, the first rejected form with a validatio |
+| I64 | 29 Oct | Variant submits made dates invalid: other text fields get a uniqueness suffix, and v4's `value_class` calls dates, times and phone numbers 'text', so '2025-03-01' was sent as '2025-03-01-m1a2' and an  |
+| I65 | 29 Oct | G3 existed only in the tier table: nothing raised it, yet the tracker counted NV5 as built |
+| I66 | 29 Oct | State plateau rounded down: with 3 states it took the time of the 2nd (67% known), not of 95% |
+| I67 | 28 Oct | R55 never ran: the bulk-ledger page script (`BULK_JS`) and the new row script had a newline inside a JS string (a heredoc wrote `\n` as a line break), so the read failed on every page |
+| I68 | 28 Oct | R20 and R20u read the 'Not found' page at a deleted item's address as the item renamed |
+| I69 | 28 Oct | Severity-weighted recall divided by every catalog fault, not by the faults enabled in the run |
+| I70 | 28 Oct | Dead-end rate was always 0 (it matched global step numbers against per-worker ones) |
+| I71 | 29 Oct | Discovery checks joined the discovered absolute paths to the base URL (a base URL with a path would double it), and `MAX_DISCOVERED_CHECKS` was unused |
+| I73 | 29 Oct | R29 called storage-only controls dead: a button that writes only local storage or IndexedDB ('Save offline', 'Apply theme') sends no request and changes no text, so R29 and R29k reported it; found as  |
+| I74 | 29 Oct | R12c's output depended on the process: it iterated a set of typed values and kept the first two findings per page, so which two it reported changed with Python's hash seed (a run and its gate replay c |
+| I75 | 29 Oct | Aborted probes were logged as passes: `_may` arms a probe's rule when it takes its slot, so every later early exit (no submit button, a browser error, no fresh read, an exception) was settled as 'exer |
+| I76 | 29 Oct | The generated family tracker was not valid TOML: a family name containing a backslash was written unescaped, so `docs/family_tracker.toml` could not be read by any TOML reader (found by the lock check |
+| I77 | 29 Oct | R33/R33g called one submit a double submit when the form's submit sends two writes (a draft, then a publish): the probe counted two accepted writes and reported 'accepted twice' |
+| I78 | 29 Oct | R49 missed deletes: it looked only at deletes verified on the step just before, but the delete check itself waits for a probe slot, so a delete verified later was never checked; and of the pages that  |
+| I79 | 29 Oct | I-create and I-edit were never logged as run when the effect showed at once: the item shown on the page the save led to was marked verified without arming the rule, so the check log undercounted passe |
+| I80 | 29 Oct | I75 left-overs: 24 more early exits after a probe had taken its slot (no tab, form not refilled, no submit, no search box, fetch failed, no parent field, server refused) still logged the check as exer |
+| I81 | 29 Oct | 27 built rules had no fixture test (section 12.2 (1)), among them v4 rules measured only live (R02, I-delete, I-filter, I-edit, G1, request_failed); three (I-edit, R33, R49) looked tested because a st |
+| I82 | 29 Oct | R33 could never run on a real checkout: it required a 'create' event, but 'Place order', 'Pay now', 'Book now' and 'Transfer funds' have no verb in the v4 word lists, so a money form's double submit w |
+| I83 | 29 Oct | Pilot false alarms from menu entries (BookStack, R20 and R23): the cross-view registry recorded every linked list item, menus included, so R20 reported 'Actions' (a menu linking to /create-book) as an |
+| I84 | 29 Oct | The test suite reset Conduit during the pilot resweep: with Conduit up, the 4 live tests ran (`reset=True`) at about 22:49, inside the faulty-pass replays h4rep3-5; and one live test failed because it |
+| I85 | 29 Oct | Pilot: R02m and R02h reported the testers' own input (Conduit, 43 signatures on both passes): profile images and article links the workers typed ('https://example.com/pic.jpg', 'not-a-url', long bound |
+| I86 | 29 Oct | Pilot: R43 on BookStack ('Skip to main content' -> `#main-content`, 11 routes on both passes), first taken for a false alarm |
+| I87 | 29 Oct | Pilot: R65 'clipped' on screen-reader-only text (BookStack 'Enter section select mode', a 12x2 px `screen-reader-only` element) |
+| I88 | 29 Oct | Pilot: R65 'covered' on controls scrolled out of a scrolling box (BookStack's entity picker on the copy and move pages): the point under the control showed whatever lay below the box |
+| I89 | 29 Oct | Pilot: R68 'tag shown twice' on BookStack search results: the name and value parts of one tag ('Sample Tag: Sample Tag') were read as two chips |
+| I90 | 29 Oct | Pilot: R12c 'cut' on typed markdown (Conduit article bodies with '*bold*' and '<i>'), which the app renders |
+| I91 | 29 Oct | Pilot: R09d counted a card's byline as a second removed item ('worker01October 29, 2026', the I57 extraction gap) |
+| I92 | 29 Oct | Pilot: R49 matched a deleted comment to its article: with no target of its own, the delete fell back to the page's address (the article), which the home page lists |
+| I93 | 29 Oct | R48c read the corrupted start after a fixed 0.8 s (a slower start would read as blank) |
+| I94 | 29 Oct | Pilot: R30 'session ended without a logout' on Conduit (15 findings, both passes), cause not found: in the replay, clicking Settings led to the login page, while the live run reached Settings at the s |
+| I95 | 29 Oct | Pilot: R01x on BookStack's audit log ('maintenance_action_run', an event code the log lists by design) |
 <!-- gen:end -->
 
 ## Appendix E: Run registry summary

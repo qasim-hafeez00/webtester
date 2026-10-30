@@ -1,0 +1,10 @@
+h1 = "Global Feed"
+[[list]]
+heading = "Global Feed"
+items = ["How to test", "Flaky tests", "Spec-free oracles"]
+[[list]]
+heading = "Popular Tags"
+items = ["qa", "web"]
+[[count]]
+n = 12
+unit = "articles"

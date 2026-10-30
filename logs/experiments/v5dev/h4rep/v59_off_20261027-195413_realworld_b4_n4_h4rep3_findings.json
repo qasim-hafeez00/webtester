@@ -1,0 +1,359 @@
+[
+  {
+    "sig": "consistency|R48c|/|null-storage",
+    "kind": "consistency",
+    "message": "[R48c T2] with 'null' in its local storage the app shows a blank page",
+    "first_step": 12,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R48c|/|null-storage",
+      "rule": "R48c",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02h|/article/*|host|example domain",
+    "kind": "consistency",
+    "message": "[R02h T2] the link 'link' points to 'https://example.com' (example domain): a development or placeholder address",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 16,
+    "detail": {
+      "sig": "consistency|R02h|/article/*|host|example domain",
+      "rule": "R02h",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|write a comment...",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /article/* rejects an empty 'Write a comment...' but accepts one of only spaces",
+    "first_step": 20,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|write a comment...",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [200]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R50m|/article/*|retry|/article/*",
+    "kind": "consistency",
+    "message": "[R50m T2] after a lost response, the retry of /article/* made another record of 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliq'",
+    "first_step": 32,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R50m|/article/*|retry|/article/*",
+      "rule": "R50m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R49|/article/*|still-listed|/",
+    "kind": "consistency",
+    "message": "[R49 T2] '<script>alert(1)</script> & <b>bold</b> \\\\\"\\' worker01October 27, 2026' was deleted (step 47), but / still lists it",
+    "first_step": 52,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R49|/article/*|still-listed|/",
+      "rule": "R49",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R30|/settings|logged-out|/profile/*",
+    "kind": "consistency",
+    "message": "[R30 T2] the session ended without a logout: /profile/* led to a login page",
+    "first_step": 66,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R30|/settings|logged-out|/profile/*",
+      "rule": "R30",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/profile/*|image|https://example.com/pic.jpg",
+    "kind": "consistency",
+    "message": "[R02m T2] the image 'https://example.com/pic.jpg' failed to load",
+    "first_step": 70,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/profile/worker01_special",
+    "state": "",
+    "trail": [],
+    "occurrences": 6,
+    "detail": {
+      "sig": "consistency|R02m|/profile/*|image|https://example.com/pic.jpg",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "https://example.com/pic.jpg"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/settings|image|https://example.com/pic.jpg",
+    "kind": "consistency",
+    "message": "[R02m T2] the image 'https://example.com/pic.jpg' failed to load",
+    "first_step": 73,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R02m|/settings|image|https://example.com/pic.jpg",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "https://example.com/pic.jpg"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/profile/*|overflow",
+    "kind": "consistency",
+    "message": "[R65 T2] the page is wider than the window: it scrolls sideways",
+    "first_step": 81,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/profile/verylongusernamethatexceedsstandardlengthlimitsinsomewaysandcontinuestogoonandgonetoensuretheappdoesnotcrashonoverflow",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R65|/profile/*|overflow",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/profile/*|image|xpectations/for/a/profile/picture/url/string/to/test/if/the/",
+    "kind": "consistency",
+    "message": "[R02m T2] the image 'https://example.com/very/long/url/path/that/exceeds/normal/expectations/for/a/profile/picture/url/string/to/test/if/the/' failed to load",
+    "first_step": 81,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4100/profile/verylongusernamethatexceedsstandardlengthlimitsinsomewaysandcontinuestogoonandgonetoensuretheappdoesnotcrashonoverflow",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02m|/profile/*|image|xpectations/for/a/profile/picture/url/string/to/test/if/the/",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "https://example.com/very/long/url/path/that/exceeds/normal/expectations/for/a/profile/picture/url/string/to/test/if/the/"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R17|/article/*|blank|article title",
+    "kind": "consistency",
+    "message": "[R17 T2] the form at /editor rejects an empty 'Article Title' but accepts one of only spaces",
+    "first_step": 13,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-Z9-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R17|/article/*|blank|article title",
+      "rule": "R17",
+      "tier": "T2",
+      "evidence": "blank: 3 chars; writes [201]; ended on /article/*"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R68t|/article/*|tag|test article z9",
+    "kind": "consistency",
+    "message": "[R68t T2] 'Test Article Z9' was saved with 'test article z9' (step 13), but the page of 'test article z9' does not list it",
+    "first_step": 18,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Test-Article-Z9-2",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R68t|/article/*|tag|test article z9",
+      "rule": "R68t",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R30|/settings|logged-out|/",
+    "kind": "consistency",
+    "message": "[R30 T2] the session ended without a logout: / led to a login page",
+    "first_step": 27,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/settings",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R30|/settings|logged-out|/",
+      "rule": "R30",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/article/*|overflow",
+    "kind": "consistency",
+    "message": "[R65 T2] the page is wider than the window: it scrolls sideways",
+    "first_step": 72,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|R65|/article/*|overflow",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/article/*|image|xpectations/for/a/profile/picture/url/string/to/test/if/the/",
+    "kind": "consistency",
+    "message": "[R02m T2] the image 'https://example.com/very/long/url/path/that/exceeds/normal/expectations/for/a/profile/picture/url/string/to/test/if/the/' failed to load",
+    "first_step": 72,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4100/article/Flaky-tests-are-a-smell-part-two-20",
+    "state": "",
+    "trail": [],
+    "occurrences": 9,
+    "detail": {
+      "sig": "consistency|R02m|/article/*|image|xpectations/for/a/profile/picture/url/string/to/test/if/the/",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "https://example.com/very/long/url/path/that/exceeds/normal/expectations/for/a/profile/picture/url/string/to/test/if/the/"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R63|/editor/*|soft-<n>|/editor/*",
+    "kind": "consistency",
+    "message": "[R63 T2] http://127.0.0.1:4100/editor/Test-Article-Z9-2-lessscriptgreateralert%281%29lessscriptgreater-3-zzqx404 (no such item) answers 200 with an empty page instead of saying the item does not exist",
+    "first_step": 45,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4100/editor/Test-Article-Z9-2-lessscriptgreateralert%281%29lessscriptgreater-3",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R63|/editor/*|soft-<n>|/editor/*",
+      "rule": "R63",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02m|/profile/*/favorites|image|https://example.com/pic.jpg",
+    "kind": "consistency",
+    "message": "[R02m T2] the image 'https://example.com/pic.jpg' failed to load",
+    "first_step": 26,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4100/profile/testuser03-updated/favorites",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R02m|/profile/*/favorites|image|https://example.com/pic.jpg",
+      "rule": "R02m",
+      "tier": "T2",
+      "evidence": "https://example.com/pic.jpg"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]
