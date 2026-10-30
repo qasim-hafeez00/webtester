@@ -1,3 +1,4 @@
+# severity (E8, D60): data (data loss, wrong data stored, money, access) | function (a feature fails) | display
 # Ground truth for seeded faults in RealWorld/Conduit.
 #
 # Every fault is dormant unless its id is in the FAULTS variable of the run
@@ -23,6 +24,7 @@
 
 [[fault]]
 id = "F01"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "crash"
 layer = "backend"
 summary = "Posting a comment longer than 280 characters returns HTTP 500"
@@ -33,6 +35,7 @@ reach = [{ route = ["/article/*"], do = ["click", "press"], el = 'Post Comment',
 
 [[fault]]
 id = "F02"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "crash"
 layer = "frontend"
 summary = "Adding a tag that contains a space throws a TypeError in the editor"
@@ -43,6 +46,7 @@ reach = [{ route = ["/editor", "/editor/*"], do = ["click", "press"], el = 'Publ
 
 [[fault]]
 id = "F03"
+severity = "data"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "validation"
 layer = "backend"
 summary = "Registration accepts an empty username"
@@ -50,9 +54,11 @@ trigger = "Sign up with an email and password but an empty username"
 oracle = "Required field accepted (other blank fields are rejected); the new user has no name in the nav bar / profile link"
 hint = { routes = ["/register"], checks = ["route", "shows", "not_shows", "changes"] }
 reach = [{ route = ["/register"], do = ["click", "press"], el = 'Sign up', with = [{ do = ["fill", "clear"], el = 'Username', value = '^\s*$' }, { do = ["fill"], el = 'Email', value = '@' }] }]
+reachable = false  # UI-unreachable: the sign-up form never sends an empty username (I34); out of every recall denominator
 
 [[fault]]
 id = "F04"
+severity = "data"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "data"
 layer = "backend"
 summary = "Editing an article silently removes all of its tags"
@@ -60,9 +66,11 @@ trigger = "Create an article with tags, open Edit, change the body, publish"
 oracle = "Tags shown before the edit are gone afterwards although they were never removed"
 hint = { routes = ["/editor", "/editor/*", "/article/*"], checks = ["shows"] }
 reach = [{ route = ["/editor/*"], do = ["click", "press"], el = 'Publish Article' }]
+reachable = false  # UI-unreachable: the editor creates a new article instead of updating (upstream U6, I37)
 
 [[fault]]
 id = "F05"
+severity = "display"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "data"
 layer = "backend"
 summary = "After favoriting, the displayed favorites count does not increase"
@@ -73,6 +81,7 @@ reach = [{ route = ["/", "/profile/*"], do = ["click"], el = '^button "\d+"$', i
 
 [[fault]]
 id = "F06"
+severity = "data"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "data"
 layer = "backend"
 summary = "Deleting a comment is acknowledged but not performed"
@@ -83,6 +92,7 @@ reach = [{ route = ["/article/*"], do = ["click"], el = 'trash' }]
 
 [[fault]]
 id = "F07"
+severity = "data"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "authorization"
 layer = "frontend+backend"
 summary = "Any logged-in user sees Edit/Delete on other users' articles, and delete succeeds"
@@ -93,6 +103,7 @@ reach = [{ route = ["/article/*"] }]
 
 [[fault]]
 id = "F08"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "data"
 layer = "backend"
 summary = "'Your Feed' lists articles from authors the user does not follow"
@@ -103,6 +114,7 @@ reach = [{ route = ["/"], do = ["click"], el = 'Your Feed' }]
 
 [[fault]]
 id = "F09"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "noop-ui"
 layer = "frontend"
 summary = "Clicking a pagination link does nothing"
@@ -113,6 +125,7 @@ reach = [{ route = ["/", "/profile/*"], do = ["click"], el = '^button "[2-9]"$' 
 
 [[fault]]
 id = "F10"
+severity = "function"  # E8 (D60, by the assistant; to be checked with the labels)
 class = "data"
 layer = "backend"
 summary = "Filtering by tag returns articles that do not have that tag"

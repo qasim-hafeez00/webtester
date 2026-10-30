@@ -59,23 +59,29 @@ class Finding:
 
 
 class FindingStore:
-    def __init__(self):
+    def __init__(self, exclude: tuple | set = ()):
         self.by_sig: dict[str, Finding] = {}
+        self.exclude = set(exclude)  # D62: rules left out of a locked version's report
+        self.withheld: dict[str, Finding] = {}
 
     def ingest(self, signals: list[Signal], *, step: int, worker: int, state: str, trail: list[dict],
                exposed: list[str] | None = None) -> list[Finding]:
-        """Returns the findings that are new in this batch."""
+        """Returns the findings that are new in this batch (findings of excluded rules are kept apart, never
+        returned, gated or reported)."""
         new = []
         for s in signals:
             key = signature(s)
-            f = self.by_sig.get(key)
+            held = ((s.detail or {}).get("rule") or s.kind) in self.exclude
+            store = self.withheld if held else self.by_sig
+            f = store.get(key)
             if f:
                 f.occurrences += 1
                 continue
             f = Finding(key, s.kind, s.message, step, worker, s.url, state, trail[-8:], detail=s.detail,
                         exposed=list(exposed or []))
-            self.by_sig[key] = f
-            new.append(f)
+            store[key] = f
+            if not held:
+                new.append(f)
         return new
 
     def all(self) -> list[Finding]:

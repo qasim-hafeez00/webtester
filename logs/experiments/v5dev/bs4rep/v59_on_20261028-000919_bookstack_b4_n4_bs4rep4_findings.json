@@ -1,0 +1,422 @@
+[
+  {
+    "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Chapter Title' in 'Recently Created Chapters View All' links nowhere (href '#') while 4 siblings have real links",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created chapters view all|custom chapter title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Chapter Title Custom Chapter Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Custom Book Title' in 'Recently Created Books View All' links nowhere (href '#') while 3 siblings have real links",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created books view all|custom book title",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Custom Book Title Custom Book Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/user/admin|recently created shelves view all|shelf <n>",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Shelf 2' in 'Recently Created Shelves View All' links nowhere (href '#') while 1 siblings have real links",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 7,
+    "detail": {
+      "sig": "consistency|R03|/user/admin|recently created shelves view all|shelf <n>",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Shelf 2 Shelf Description"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created chapters view all|chapter",
+    "kind": "consistency",
+    "message": "[R04 T1] '4 Chapters' but 5 Chapters are listed under 'Recently Created Chapters View All'",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 14,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created chapters view all|chapter",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "chapter; chapter 1; chapter 2; chapter 2; custom chapter title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/user/admin|recently created books view all|book",
+    "kind": "consistency",
+    "message": "[R04 T1] '3 Books' but 4 Books are listed under 'Recently Created Books View All'",
+    "first_step": 13,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 14,
+    "detail": {
+      "sig": "consistency|R04|/user/admin|recently created books view all|book",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "book; book1; book2; custom book title"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23m|/settings/features|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 17,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/settings/features",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/settings/features|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23m|/user/admin|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 21,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/user/admin|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/books|views|/books/book1|created",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows created 'Created 1 day ago' here but '1 year ago' on /user/admin (step 44)",
+    "first_step": 48,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 4,
+    "detail": {
+      "sig": "consistency|R08|/books|views|/books/book1|created",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Book1 Description Created 1 day ago Updated 1 day ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/user/admin|views|/books/book1|created",
+    "kind": "consistency",
+    "message": "[R08 T2] the same item shows created '1 year ago' here but 'Created 1 day ago' on /books (step 48)",
+    "first_step": 52,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R08|/user/admin|views|/books/book1|created",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "Admin created book Book1 1 year ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/password/email|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 4,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/password/email",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/password/email|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R20|/*|name|/create-book",
+    "kind": "consistency",
+    "message": "[R20 T2] /books lists this item as 'Actions', its own page is titled 'Create New Book'",
+    "first_step": 10,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/create-book",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R20|/*|name|/create-book",
+      "rule": "R20",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R08|/books/*|touched|/books/test-book-beta|other",
+    "kind": "consistency",
+    "message": "[R08 T2] '2 days ago', but an agent created it 0 min ago (step 14)",
+    "first_step": 14,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-beta",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R08|/books/*|touched|/books/test-book-beta|other",
+      "rule": "R08",
+      "tier": "T2",
+      "evidence": "2 days ago"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R09|/books|books|+book",
+    "kind": "consistency",
+    "message": "[R09 T2] 'Book' appeared in 'Books' (revisit at step 20, last seen step 6) and no action explains it",
+    "first_step": 20,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R09|/books|books|+book",
+      "rule": "R09",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R02|/books|book|/books/book-duplicate",
+    "kind": "consistency",
+    "message": "[R02 T1] the link 'Book' in 'Books' returns HTTP 404",
+    "first_step": 32,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R02|/books|book|/books/book-duplicate",
+      "rule": "R02",
+      "tier": "T1",
+      "evidence": "http://127.0.0.1:4200/books/book-duplicate"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+    "kind": "consistency",
+    "message": "[R01x T2] untranslated message key shown: 'common.privacy_policy'",
+    "first_step": 45,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/settings/customization",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+      "rule": "R01x",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23|/|recall|/settings/features",
+    "kind": "consistency",
+    "message": "[R23 T2] searching for 'Categories', an item shown earlier, does not find it",
+    "first_step": 49,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23|/|recall|/settings/features",
+      "rule": "R23",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23|/|recall|/shelves/shelf",
+    "kind": "consistency",
+    "message": "[R23 T2] searching for 'Recently Viewed', an item shown earlier, does not find it",
+    "first_step": 61,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23|/|recall|/shelves/shelf",
+      "rule": "R23",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R03|/search?term|<n> result found|some page",
+    "kind": "consistency",
+    "message": "[R03 T1] list item 'Some Page' in '1 result found' links nowhere (href '#') while 1 siblings have real links",
+    "first_step": 7,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/search?term=Book1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R03|/search?term|<n> result found|some page",
+      "rule": "R03",
+      "tier": "T1",
+      "evidence": "Some Page Some Book This is a page description."
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R04|/search?term|<n> result found|result found",
+    "kind": "consistency",
+    "message": "[R04 T1] '1 result found' but 2 result found are listed under '1 result found'",
+    "first_step": 7,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/search?term=Book1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R04|/search?term|<n> result found|result found",
+      "rule": "R04",
+      "tier": "T1",
+      "evidence": "book1; some page"
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R68|/search?term|duplicate|sample tag",
+    "kind": "consistency",
+    "message": "[R68 T2] the tag 'sample tag' is shown twice on one item",
+    "first_step": 22,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/search?term=",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R68|/search?term|duplicate|sample tag",
+      "rule": "R68",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

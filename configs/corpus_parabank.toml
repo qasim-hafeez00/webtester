@@ -1,0 +1,46 @@
+# E4 (D60) clean corpus app: Parabank. False alarms only: no seeded faults, every finding is labelled.
+# Untested until `python -m webtester --config configs/corpus_parabank.toml app up` (I55).
+
+[app]
+name = "parabank"
+base_url = "http://127.0.0.1:4300"
+compose_dir = "apps/corpus/parabank"
+health_path = "/parabank/index.htm"
+reset_compose_args = ["restart", "parabank"]
+app_type = "Banking"
+blocked_text = ["Admin Page"]
+crawler_avoid_text = ["log out"]
+# Parabank's demo account; every worker shares it (the app has one seeded customer)
+account_template = { username = "john", email = "john", password = "demo" }
+
+[app.login]
+path = "/parabank/index.htm"
+fields = { "username" = "{username}", "password" = "{password}" }
+submit = "Log In"
+
+[llm]
+# Free tier first (see docs/00_research_plan.md section 12). Any OpenAI-compatible
+# provider works: gemini | groq | openrouter | cerebras | openai | ollama.
+provider = "gemini"
+model = "gemini-3.5-flash-lite"   # 2.5-flash is closed to new keys; 3.8-flash timed out on 11 Oct
+temperature = 0.2
+max_output_tokens = 800
+json_mode = true
+min_interval_s = 6.5   # free tier is ~10 requests/minute
+key_fallback = true
+api_key_env = "GEMINI_API_KEY"   # set per night, as for the dev apps
+price_in = 0.0
+price_out = 0.0
+
+[budget]
+max_steps = 300
+max_minutes = 15
+max_tokens = 1500000
+
+[run]
+seed = 1
+headless = true
+out_dir = "runs"
+# v5 evidence layer (D58, D59): network timeline with JSON bodies, sent data of writes, transient
+# messages (R57, R51). On from 28 Oct for every v5 run; runs and resweeps before D59 had it off.
+capture_evidence = true

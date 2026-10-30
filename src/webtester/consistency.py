@@ -46,6 +46,7 @@ import hashlib
 import math
 import re
 import time
+import unicodedata
 from dataclasses import dataclass, field
 from urllib.parse import parse_qsl, urljoin, urlsplit
 
@@ -56,6 +57,14 @@ from .oracles import normalise_message
 from .state import route_shape, value_class
 from .stategraph import is_navigation
 from .evidence import rule_messages, rule_payload
+from .openapi import TIERS as API_TIERS, rule_contract
+from .checks import CheckLog, page_arms
+from .families import rule_packs
+from .lexicon import alternation, lexicon
+from .reach import field_kind, profile_value, run_suffix
+from .norms import NORMS_JS, TIERS as NORM_TIERS, arms as norm_arms, rule_norms
+from .crossview import BULK_JS, ROW_JS, TIERS as CROSS_TIERS, CrossState, CrossView, _BULK, message_fidelity
+from .probes5 import STRIP_JS, TIERS as PROBE_TIERS, ProbeState, Probes
 
 MAX_PROBES = 2  # fresh-tab probes per step per worker
 MAX_LINK_CHECKS = 3  # link status requests per step per worker
@@ -64,6 +73,19 @@ MAX_RELOAD_PAGES = 20  # G2 reload checks per worker per run (one per route shap
 MAX_MUTATION_FORMS = 6  # R16/R17 forms per run (all workers); 3 fresh-tab submissions each
 MAX_TOGGLE_PROBES = 4  # R19 count controls per run (all workers); 2 clicks each, the second undoes the first
 MAX_FEED_PROBES = 4  # R07c author pages per run (all workers)
+MAX_SEED_FORMS = 4  # R2 (D60): forms whose first accepted create is copied seed_copies times (all workers)
+MAX_RETRY_FORMS = 6  # R1 (D61): rejected forms retried once with profiled values (all workers)
+MAX_TOPUP = 25  # R2 (D61): copies made in all to fill a seeded list past one page (all workers)
+
+
+def input_class(v: str) -> str:
+    """R5 metric: the class of a typed value (state.value_class, with negative numbers, dates and non-ASCII text)."""
+    if re.fullmatch(r"\s*-\d+([.,]\d+)?\s*", v or ""):
+        return "negative"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}", (v or "").strip()):
+        return "date"
+    c = value_class(v or "")
+    return "unicode" if c == "text" and re.search(r"[^\x00-\x7f]", v) else c
 # a person's page: an item whose only link is its author is not about the item (D55 A5)
 _PERSON = re.compile(r"/(user|users|profile|profiles|u|member|members|people|author|authors|account|accounts)/[^/?#]+/?$", re.I)
 # a list of what this account follows (D55 A9): 'Your Feed', 'Following'
@@ -79,6 +101,13 @@ TIER = {"R01": "T1", "R02": "T1", "R03": "T1", "R04": "T1", "R05": "T1", "R06": 
         "R15": "T3",
         "R51": "T2", "R57": "T2"}  # v5 evidence layer (D58), only with capture_evidence
 LLM_RULES = {"R15"}
+TIER.update(NORM_TIERS)  # v5 wave rules in their own modules (D59): every one starts at T2
+TIER.update(CROSS_TIERS)  # D60
+TIER.update(PROBE_TIERS)
+TIER.update(API_TIERS)  # D61: R57e (openapi.py)
+TIER.update({"R02s": "T2", "R20f": "T2"})  # D61: discovery checks (reach.check_discovered)
+TIER.update({"R71": "T2"})  # environment replay (envcheck.py)
+DEFAULT_TIER = "T2"  # a rule not in TIER reports at T2 (every new rule starts there, D59), never a KeyError
 
 # ---------------------------------------------------------------------------- page facts
 # Runs in the page. `typed`: values typed in this run that contain markup (R12).
@@ -445,17 +474,40 @@ class Violation:
     subject: str
     message: str
     evidence: str = ""
+    lowered: bool = False  # J3 (D60): a benign word next to the numbers ('estimated', 'excl. tax') drops one tier
 
     @property
     def tier(self) -> str:
-        return TIER[self.rule]
+        t = TIER.get(self.rule, DEFAULT_TIER)
+        return {"T1": "T2", "T2": "T3"}.get(t, t) if self.lowered else t
 
 
-def signal_of(v: Violation, url: str) -> Signal:
+# J3: words that make a number legitimately inexact or not final; numeric rules drop one tier on such pages
+BENIGN = re.compile(r"\b(" + alternation("benign") + r")\b", re.I)  # lexicon/<lang>.toml (O6 b)
+NUMERIC_RULES = {"R04", "R04b", "R06", "R20", "R26", "R32", "R35", "R36", "R38", "R41", "R47", "R69"}
+# C3: the harness, not the app: rate limits, expired CSRF tokens, sessions the run did not end
+HARNESS_TEXT = re.compile(alternation("harness"), re.I)
+# O-7: a button's text read as a list item ('Post Comment')
+_CONTROL_NAME = re.compile(r"^(post|submit|save|send|reply|publish|update|sign (in|up)|log ?in|cancel|delete|edit|"
+                           r"add|create|follow|unfollow|favou?rite)\b(\s+\w+){0,2}$", re.I)
+# O-7: a card whose only text is who and when (two comments by one author at one time cannot be told apart)
+_WHO_WHEN = re.compile(r"\b(\d{1,2}(st|nd|rd|th)?|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\b|"
+                       r"\b\d{4}\b|\d{1,2}:\d{2}|\bago\b|\b(am|pm)\b|,", re.I)
+
+
+def signal_of(v: Violation, url: str, health: str = "", probe_values: set | None = None) -> Signal:
+    """`health` (C3): why this step looks like a harness failure ('' = healthy); `probe_values` (C2): values
+    the harness itself generated; a finding about one of them is a `harness:` candidate."""
     subject = normalise_message(norm(v.subject))[:80]
     sig = f"consistency|{v.rule}|{route_shape(url)}|{subject}"
-    return Signal("consistency", f"[{v.rule} {v.tier}] {v.message}"[:300], url,
-                  {"sig": sig, "rule": v.rule, "tier": v.tier, "evidence": v.evidence[:600]})
+    detail = {"sig": sig, "rule": v.rule, "tier": v.tier, "evidence": v.evidence[:600]}
+    if health:
+        detail["health"] = health
+    if probe_values and any(len(p) >= 4 and norm(p)[:40] in norm(v.subject + " " + v.message) for p in probe_values):
+        detail["probe_value"] = True
+    if v.lowered:
+        detail["benign"] = True
+    return Signal("consistency", f"[{v.rule} {v.tier}] {v.message}"[:300], url, detail)
 
 
 _JUNK = [
@@ -727,13 +779,9 @@ def age_conflict(a: float, b: float, dt_min: float) -> bool:
     return abs(math.log(a / b)) > math.log(3) and abs(a - b) > max(60.0, 2 * dt_min)
 
 
-_SYSTEM_ERR = re.compile(r"something went wrong|unknown error|an error (has )?occurred|unexpected error|internal (server )?error|"
-                         r"could not|couldn't|failed to|unable to|try again later|service unavailable|server error", re.I)
+_SYSTEM_ERR = re.compile(lexicon()["v4"]["system_error"], re.I)  # D61: lexicon [v4], verbatim (I56)
 _LOGINISH = re.compile(r"log-?in|sign-?in|auth", re.I)
-_VALIDATION = re.compile(r"is required|are required|must be|must have|must contain|is invalid|not valid|invalid|"
-                         r"already (been )?taken|already exists|too (short|long)|at least \d|at most \d|please (enter|provide|"
-                         r"fill|select|choose)|does not match|do not match|can'?t be (blank|empty)|cannot be (blank|empty)|"
-                         r"field is|not allowed|format", re.I)
+_VALIDATION = re.compile(lexicon()["v4"]["validation"], re.I)
 NOT_A_NAME = re.compile(r"e-?mail|password|search|query|phone|tel\b|url|website|date|time|code|zip|postal|number|"
                         r"amount|price|quantity|token|captcha", re.I)
 _LOGIN_CONTROL = re.compile(r"^(sign in|log in|login)$", re.I)
@@ -779,22 +827,26 @@ def apply_template(template: str, page_url: str) -> str | None:
 _VOLATILE_HEAD = re.compile(r"random|suggest|recommend|trending|you may|for you|sponsored|\bads?\b", re.I)
 
 
-def view_diff(a: Facts, b: Facts, events: list[Event], volatile: set) -> list[Violation]:
+def view_diff(a: Facts, b: Facts, events: list[Event], volatile: set, skipped: list | None = None) -> list[Violation]:
     """G2: page `a` as the worker saw it vs `b`, the same URL opened again in a fresh tab right after,
     with no write by this worker in between. Compares the heading, the items of lists with the same
     heading (as sets: order may change) and counts with a unit shown once on both. `events`: what
     any worker did meanwhile (explains changes). A list that changes by more than half is marked
-    volatile in `volatile` (rotating content) and skipped from then on."""
+    volatile in `volatile` (rotating content) and skipped from then on. `skipped` collects the guard
+    that dropped each list (check-outcome log, D59)."""
     route, out = route_shape(a.url), []
+    skipped = skipped if skipped is not None else []
     if a.h1 and b.h1 and not same_name(a.h1, b.h1):
         out.append(Violation("G2", "h1", f"opening {route} again shows the heading {b.h1!r}, not {a.h1!r}"))
     la = {norm(L["heading"]): L for L in a.content_lists() if L["heading"]}
     lb = {norm(L["heading"]): L for L in b.content_lists() if L["heading"]}
     for h in sorted(la.keys() & lb.keys()):
         if (route, h) in volatile or _VOLATILE_HEAD.search(h):
+            skipped.append("volatile")
             continue
         A, B = la[h]["items"], lb[h]["items"]
         if len(A) >= 60 or len(B) >= 60:  # AUDIT_JS keeps 60 items: a longer list is cut
+            skipped.append("list-cut")
             continue
         na = {norm(i["name"]): i for i in A if i["name"]}
         nb = {norm(i["name"]): i for i in B if i["name"]}
@@ -804,6 +856,7 @@ def view_diff(a: Facts, b: Facts, events: list[Event], volatile: set) -> list[Vi
             continue
         if (len(added) + len(removed)) * 2 > max(len(na), len(nb)):
             volatile.add((route, h))
+            skipped.append("churn")
             continue
         head = la[h]["heading"]
         for x in sorted(added)[:3]:
@@ -860,6 +913,11 @@ def mutation_plan(done: list[dict], obj: str) -> tuple[dict, dict] | None:
 
 
 # ---------------------------------------------------------------------------- the sweeper
+_LOGIN_ROUTE = re.compile(r"log-?in|sign-?in|auth|session", re.I)  # G3: an arrival R30 owns
+_PAGE_SIZE = re.compile(r"per page|page size|items per|results per|\bshow\b", re.I)  # R2: a per-page control
+_SHAPED = re.compile(r"\s*[\d\s/:.+()-]*\d[\d\s/:.+()-]*\s*")  # a value of digits and separators only
+
+
 class SweepState:
     """Shared by all workers of a run (or of one replay): memory, graph, probe caches."""
 
@@ -891,6 +949,30 @@ class SweepState:
         self.toggle_done: set[str] = set()  # route shapes whose count controls were probed
         self.toggle_probes = 0
         self.markup_ok: set[str] = set()  # values typed into Markdown/rich-text fields
+        self.checks = CheckLog()  # v5 check-outcome log (D59): what every rule did on every page
+        # v5 phase 1-2 (D60)
+        self.probe_values: set[str] = set()  # C2: values the harness typed itself (mutations, seeds)
+        self.seeded: set[tuple] = set()  # R2: (form route shape, naming field key)
+        self.seed_forms = 0
+        self.seed_accepted = 0
+        self.seed_plans: dict = {}  # R2 (D61): seeded form key -> (form url, done, naming field, copies made, names)
+        self.topped: set = set()  # seeded form keys already filled past one page
+        self.topup_made = 0
+        self.topup_skipped: set = set()
+        self.harness_suspect = 0  # C3: findings raised on steps that looked like harness failures
+        self.cross = CrossState()  # D60: what the cross-view rules remember between steps (crossview.py)
+        self.p5 = ProbeState()  # D60: the v5 probes' caps and caches (probes5.py)
+        self.v5_rules = True  # v5 wave rules (norms.py, D59); False reproduces the D58 rule set for ablations
+        # D61 reach measures: R1 write success per form kind, R5 input classes per field kind, R8 session losses
+        self.forms: dict[str, dict] = {}  # form route shape -> {attempted, accepted, retried, retry_accepted}
+        self.input_classes: dict[str, set] = {}  # field kind -> value classes tried (agent, retries, probes)
+        self.retried: set[tuple] = set()  # R1: forms already retried with profiled values
+        self.session_losses = 0
+        self.g3_reported: set[tuple] = set()  # G3: (state, action) edges already reported
+        self.profile_of = None  # X5 ablation: a callable returning the app profile (set by the runner)
+        self.annotator = None  # O11 (b4annot): annotate.Annotator, or None
+        self.api = None  # O7: openapi.Spec when the app serves an API document
+        self.api_called: set[str] = set()  # endpoint coverage: operation templates the run called
 
 
 INTENT_VERBS = {"create": "create", "add": "create", "new": "create", "post": "create", "publish": "create",
@@ -924,7 +1006,37 @@ class Sweeper:
         self.budget = MAX_PROBES
         self.t_before = time.time()  # when the step's actions began (G2: events since then explain changes)
         self.feed_todo: list[tuple[str, list]] = []  # R07c: follow feeds seen this step
+        self.owned_paths: set[str] = set()  # S1: paths of items this worker created (shared with its session)
         self.net_mark = 0  # v5 evidence layer (D58): network timeline position when the step began
+        self.step = 0  # check-outcome log (D59): the step and route being swept, and the rules armed in it
+        self.route = ""
+        self._armed: set[str] = set()
+        self.page5: dict | None = None  # v5 (D60): this step's norms page read, for the cross-view rules
+        self.prev5: dict | None = None  # the previous step's (R22 badges before and after)
+        self.cv = CrossView(state.cross)
+        self.pre_text: str | None = None  # R29: page text before and after the actions
+        self.post_text: str | None = None
+        self.step_requests = 1  # R29: requests the step's actions caused (1 = unknown without the timeline)
+        self.dialog_mark = 0
+        self.dialogs_this_step = False
+        self.bulk_before: dict | None = None  # R55
+        self.pending_transfers: list = []  # R32 conservation
+        self.pr = Probes(state.p5)
+        self.v5_budget = 1  # v5 probes this step (probes5.MAX_PER_STEP)
+        self.pending_viol: list = []  # G3 (D61): raised when the worker records a graph edge, reported next step
+        self._session = None
+        self.ls_before: str | None = None  # R48
+        self.idb_before: str | None = None  # R48s (D61): IndexedDB signature before the step's actions
+        self.storage_changed = False  # R29: local storage or IndexedDB changed during a step that sent nothing
+        self.spinning: dict[tuple, float] = {}  # R54: (url, spinner) -> when first seen
+        self.row_name = ""  # R09r: the list row of this step's clicked control
+
+    def _ck(self, rule: str, outcome: str, why: str = "") -> None:
+        """Record a check outcome other than detected/exercised (those are settled at the end of the step)."""
+        self.st.checks.note(self.worker, self.step, rule, self.route, outcome, why)
+
+    def _arm(self, *rules: str) -> None:
+        self._armed.update(rules)
 
     # ---------- before and right after the actions ----------
     async def before(self, session, obs: Observation, actions: list[dict]) -> None:
@@ -942,6 +1054,23 @@ class Sweeper:
             self.pre = await session.page.evaluate(PRE_JS, ids)
         except PWError:
             self.pre = None
+        # D60: R29 page text, R55 selected rows, dialogs
+        self.dialog_mark = len(getattr(session, "dialogs", []))
+        try:
+            self.pre_text = await session.page.evaluate(INNER_TEXT_JS)
+            last = obs.element(clicks[-1]["id"]) if clicks else None
+            label = f"{last.text} {last.label}" if last else ""
+            self.row_name = ""
+            if last is not None and clicks:  # R09r (D61): the row whose control is clicked, read before the click
+                self.row_name = await session.page.evaluate(ROW_JS, clicks[-1]["id"]) or ""
+            if last is not None and _BULK.search(label.strip()):
+                rows = await session.page.evaluate(BULK_JS)
+                if rows.get("selected"):
+                    self.bulk_before = {**rows, "delete": bool(re.search(r"delete|remove|trash", label, re.I))}
+        except PWError:
+            self.pre_text = None
+        if self.st.v5_rules:
+            await self.pr.before(self, session, obs, actions)
 
     async def actions_done(self, session) -> None:
         """Read the marked control again and take the step's write requests."""
@@ -949,9 +1078,24 @@ class Sweeper:
 
         try:
             self.post = await session.page.evaluate(POST_JS)
+            self.post_text = await session.page.evaluate(INNER_TEXT_JS)
         except PWError:
             self.post = None
+            self.post_text = None
         self.writes = list(session.mutations)
+        self.dialogs_this_step = len(getattr(session, "dialogs", [])) > self.dialog_mark
+        self.step_requests = len(session.net_since(self.net_mark)) if getattr(session, "evidence", False) else 1
+        self.storage_changed = False  # R29 (D61): a control that only writes browser storage did do something
+        if self.st.v5_rules and not self.writes and not self.step_requests:
+            from .probes5 import IDB_JS, LS_HASH_JS
+
+            try:
+                if self.ls_before is not None and await session.page.evaluate(LS_HASH_JS) != self.ls_before:
+                    self.storage_changed = True
+                elif self.idb_before is not None and (await session.page.evaluate(IDB_JS, False))["sig"] != self.idb_before:
+                    self.storage_changed = True
+            except (PWError, KeyError, TypeError):
+                pass
 
     # ---------- after the actions ----------
     async def after(self, session, obs: Observation, done: list[dict], step: int, intent: dict | None = None,
@@ -966,7 +1110,15 @@ class Sweeper:
         self.st.markup_ok.update(d["value"] for d in done if d["do"] == "fill" and d.get("value")
                                  and _RICH_FIELD.search(d.get("el") or ""))
         facts = await audit(session, sorted(mem.typed - self.st.markup_ok))
+        if self.st.annotator is not None and not facts.content_lists():  # O11: only where extraction found no list
+            facts.lists = facts.lists + await self.st.annotator.lists_for(f"{route_shape(facts.url)}|{facts.h1}", facts.text)
         url = facts.url or session.page.url
+        self.step, self.route, self._armed = step, route_shape(url), set()
+        for rule, why in page_arms(facts, any("<" in t for t in mem.typed - self.st.markup_ok)).items():
+            if why:
+                self._ck(rule, "unarmed", why)
+            else:
+                self._arm(rule)
         mem.remember_page(self.worker, url, facts.text)
         if self.account and self.account.username and self.account.username.lower() in facts.text.lower():
             self.account_pages = (self.account_pages + [url])[-5:]
@@ -981,8 +1133,14 @@ class Sweeper:
         viol += rule_counts(facts)
         viol += rule_arithmetic(facts)
         viol += rule_echo(facts)
+        if self.st.v5_rules:
+            viol += await self._norms(session, facts)
         ev = self._event(obs, done, step, intent, facts, url)
         viol += self._effects(ev, facts, done, obs)
+        if self.st.v5_rules:
+            viol += self.cv.check(self, facts, self.page5, obs, done, ev, step)
+            viol, self.pending_viol = viol + self.pending_viol, []
+            viol += await self.pr.after(self, session, facts, obs, done, ev, step)
         viol += await self._verify_pending(session, facts, step)
         viol += self._lists(facts, step)
         viol += self._ages(facts, step)
@@ -998,15 +1156,273 @@ class Sweeper:
         viol += await self._access(session, facts)
         viol += await self._reload(session, obs, done, facts)
         if getattr(session, "evidence", False):
-            viol += await self._evidence(session)
+            viol += await self._evidence(session, ev if self.st.v5_rules else None)
+        else:
+            self._ck("R57", "unobservable", "capture-off")
+            self._ck("R51", "unobservable", "capture-off")
+        viol += await self._seed(session, obs, done, ev, step)
+        if self.st.v5_rules and int(getattr(session.cfg, "seed_copies", 0) or 0):
+            await self._top_up(session, facts, step)
+        accepted_form = self._count_form(obs, done, facts)
+        if accepted_form is False:
+            await self._retry_form(session, obs, done, facts, step)
+        viol = self._profile_filter(session, viol)
+        self._settle_checks(viol)
+        if BENIGN.search(facts.plain or ""):
+            for v in viol:
+                if v.rule in NUMERIC_RULES:
+                    v.lowered = True
+        health = self._health(facts, done, url)
+        if health == "unexpected login page":
+            self.st.session_losses += 1  # R8 metric
+        self.prev5 = self.page5
+        if hasattr(session, "owned"):
+            session.owned |= self.owned_paths
+        if health and viol:
+            self.st.harness_suspect += len(viol)
         self.last = facts
         self.pages = (self.pages + [(route_shape(url), facts.h1)])[-6:]
-        return [signal_of(v, obs.url if v.rule.startswith("I-") else url) for v in viol]
+        return [signal_of(v, obs.url if v.rule.startswith("I-") else url, health, self.st.probe_values) for v in viol]
 
-    async def _evidence(self, session) -> list[Violation]:
+    def note_edge(self, e) -> None:
+        """G3 (NV5): one navigation action from one state reached two different pages on different occasions.
+        Called by the worker when it records a graph edge; the finding is reported with the next step's.
+        Edges with a data verb, Back (it lands by history, not by state; G1 checks it), and arrivals on a login
+        page (R30's case) are left out."""
+        if e is None or not self.st.v5_rules or not e.nav or e.verb or (e.replay and e.replay[0].get("do") == "back"):
+            return
+        pages = sorted(p for p in e.dst_pages if not _LOGIN_ROUTE.search(p))
+        if len(e.dst_pages) < 2:
+            return
+        self._arm("G3")
+        if len(pages) < 2 or (e.src, e.action) in self.st.g3_reported:
+            self._ck("G3", "suppressed", "login-page")
+            return
+        self.st.g3_reported.add((e.src, e.action))
+        self.pending_viol.append(Violation("G3", f"{route_shape(self.last.url) if self.last else ''}|{e.label[:40]}",
+                                           f"{e.label!r} from one state led to {pages[0]} and, another time, {pages[1]}"))
+
+    def _count_form(self, obs: Observation, done: list[dict], facts: Facts) -> bool | None:
+        """R1/R5 measures. A step that filled fields and then clicked or pressed is a form attempt of its
+        route shape; it is accepted when a write was answered 2xx/3xx and no new validation text appeared.
+        Returns None when the step was no form attempt."""
+        fills = [d for d in done if d["do"] in ("fill", "type", "select") and d.get("ekey")]
+        if not fills or done[-1]["do"] not in ("click", "press"):
+            return None
+        for d in fills:
+            self.st.input_classes.setdefault(field_kind({}, field_label(d)), set()).add(input_class(d.get("value") or ""))
+        rec = self.st.forms.setdefault(route_shape(obs.url), {"attempted": 0, "accepted": 0, "retried": 0, "retry_accepted": 0})
+        rec["attempted"] += 1
+        ok = any(200 <= w["status"] < 400 for w in self.writes) and not self._new_validation(facts)
+        rec["accepted"] += ok
+        return ok
+
+    def _new_validation(self, facts: Facts) -> list[str]:
+        before = self.pre_text or ""
+        return [ln for ln in facts.errors + (facts.text or "").splitlines()
+                if len(ln) < 160 and _VALIDATION.search(ln) and ln not in before]
+
+    async def _retry_form(self, session, obs: Observation, done: list[dict], facts: Facts, step: int) -> None:
+        """R1 input profiles: a rejected form is submitted once more, in a fresh tab, with each field's value
+        derived from what the page declares about it and from the app's own message (reach.profile_value).
+        Only forms the mutation plan accepts (no password or search fields); at most MAX_RETRY_FORMS per run."""
+        if not getattr(session.cfg, "input_profiles", False) or mutation_plan(done, "") is None:
+            return
+        hint = " ".join(self._new_validation(facts))
+        key = (route_shape(obs.url), tuple(d.get("ekey") for d in done))
+        if not hint or key in self.st.retried or len(self.st.retried) >= MAX_RETRY_FORMS:
+            return
+        self.st.retried.add(key)
+        fields = (self.page5 or {}).get("fields") or []
+        tag = run_suffix(getattr(session.cfg, "seed", 1), self.worker)
+        values = {}
+        for d in done:
+            if d["do"] in ("fill", "type") and d.get("ekey"):
+                lab = field_label(d)
+                attrs = next((f for f in fields if f.get("label") and (norm(f["label"]) in norm(lab) or norm(lab) in norm(f["label"]))), {})
+                values[d["ekey"]] = profile_value(attrs, lab, d.get("value") or "", tag, hint)
+        rec = self.st.forms[route_shape(obs.url)]
+        rec["retried"] += 1
+        r = await self._submit_variant(session, obs.url, done, None, "profile", override=values)
+        if r is None:
+            return
+        self.st.probe_values.update(v for v in r["values"].values() if v and v.strip())
+        if r["outcome"] == "accepted" and not r["server"]:
+            rec["retry_accepted"] += 1
+            name = next((v for k, v in r["values"].items() if TITLE_FIELD.search(k)), next(iter(r["values"].values()), ""))
+            self.mem.add_event(worker=self.worker, step=step, verb="create", obj=name, url=obs.url, fields=r["values"],
+                               source="profile", status="verified", written=True)
+
+    def _profile_filter(self, session, viol: list[Violation]) -> list[Violation]:
+        """X5 ablation only (profile_gating): violations of rules outside the app profile's packs are dropped
+        and logged as suppressed:profile. Off by default, since a wrong profile would hide faults."""
+        if not getattr(session.cfg, "profile_gating", False) or self.st.profile_of is None:
+            return viol
+        prof = self.st.profile_of() or {}
+        if not prof.get("primitives"):
+            return viol
+        allowed = set(rule_packs(prims=set(prof["primitives"]))["rules"])
+        keep = []
+        for v in viol:
+            if v.rule in allowed:
+                keep.append(v)
+            else:
+                self._ck(v.rule, "suppressed", "profile")
+        return keep
+
+    def _health(self, facts: Facts, done: list[dict], url: str) -> str:
+        """C3: why this step looks like a failure of the harness rather than of the app ('' = it does not)."""
+        bad = [m["status"] for m in self.writes if m["status"] in (419, 429)]
+        if bad:
+            return f"http {bad[0]}"
+        if HARNESS_TEXT.search((facts.text or "")[:3000]):
+            return "expired session, CSRF or rate-limit text"
+        went_login = _LOGINISH.search(route_shape(url)) and self.pages and not _LOGINISH.search(self.pages[-1][0])
+        asked = any(d["do"] in ("navigate", "goto") or "log" in (d.get("el") or "").lower() for d in done)
+        if went_login and not asked and self.account is not None:
+            return "unexpected login page"
+        return ""
+
+    async def _seed(self, session, obs: Observation, done: list[dict], e: Event | None, step: int) -> list[Violation]:
+        """R2: after the first accepted create of a form, the harness (not the LLM) submits the same form
+        `seed_copies` more times with distinct names, so list rules (pagination, sort, counts, R09) have
+        2+ items to read. The copies are writes of this run (memory events, source 'seed')."""
+        st = self.st
+        copies = int(getattr(session.cfg, "seed_copies", 0) or 0)
+        if not copies or e is None or e.verb != "create" or not e.written or e.status in ("unknown", "conflict") \
+                or st.seed_forms >= MAX_SEED_FORMS:
+            return []
+        plan = mutation_plan(done, e.obj)
+        if plan is None:
+            return []
+        name = plan[0]
+        key = (route_shape(obs.url), name["ekey"])
+        if key in st.seeded:
+            return []
+        st.seeded.add(key)
+        st.seed_forms += 1
+        st.seed_plans[key] = (obs.url, list(done), name, 1 + copies, {e.obj})
+        await self._seed_copies(session, key, copies, step)
+        return []
+
+    async def _seed_copies(self, session, key: tuple, copies: int, step: int) -> int:
+        """`copies` more submits of a seeded form, numbered after the ones made before; returns those accepted."""
+        st = self.st
+        url, done, name, made, names = st.seed_plans[key]
+        ok = 0
+        for n in range(made + 1, made + 1 + copies):
+            r = await self._submit_variant(session, url, done, name, f"seed{n}")
+            if r is None:
+                break
+            st.probe_values.update(v for v in r["values"].values() if v and v.strip())
+            if r["outcome"] == "accepted":
+                ok += 1
+                st.seed_accepted += 1
+                names.add(r["values"].get(field_label(name), ""))
+                self.mem.add_event(worker=self.worker, step=step, verb="create", obj=r["values"].get(field_label(name), ""),
+                                   url=url, fields=r["values"], source="seed", status="verified", written=True)
+        st.seed_plans[key] = (url, done, name, made + copies, names)
+        return ok
+
+    def _page_size(self, session) -> int:
+        """R2: the list page size, from a per-page control on this page (its selected number), else the config."""
+        for f in (self.page5 or {}).get("fields") or []:
+            if f.get("type") == "select" and _PAGE_SIZE.search(f.get("label") or "") and \
+                    re.fullmatch(r"\d{1,3}", (f.get("value") or "").strip()):
+                return int(f["value"])
+        return int(getattr(session.cfg.app, "page_size", 0) or 0)
+
+    async def _top_up(self, session, facts: Facts, step: int) -> None:
+        """R2 (v5 plan 4.1: 0, 1, 2 and page size + 1 items): on a complete list that holds items of a seeded form,
+        with a known page size N, the form is submitted again until the list would hold N + 1 (once per form,
+        MAX_TOPUP copies in all), so pagination, sort and count rules see a second page."""
+        st = self.st
+        main = facts.main_list()
+        if not st.seed_plans or main is None or (self.page5 or {}).get("pager") or st.topup_made >= MAX_TOPUP:
+            return
+        n_page = self._page_size(session)
+        listed = {norm(i.get("name") or "") for i in main["items"]}
+        for key, (_, _, _, _, names) in list(st.seed_plans.items()):
+            if key in st.topped or not any(norm(x) in listed for x in names if x):
+                continue
+            if not n_page or len(main["items"]) > n_page:
+                st.topup_skipped.add(key)  # page size unknown, or the list already pages (reported with the sweep)
+                continue
+            st.topped.add(key)
+            want = min(n_page + 1 - len(main["items"]), MAX_TOPUP - st.topup_made)
+            if want > 0:
+                st.topup_made += want
+                await self._seed_copies(session, key, want, step)
+
+    async def _norms(self, session, facts: Facts) -> list[Violation]:
+        """R43 anchors, R64 control state, R26 declared ranges (norms.py): one page read."""
+        from playwright.async_api import Error as PWError
+
+        try:
+            raw = await session.page.evaluate(NORMS_JS)
+        except PWError:
+            raw = None
+        self.page5 = raw  # read by the cross-view rules (crossview.py) this step
+        if raw is not None:
+            raw["_lists"] = bool(facts.content_lists())
+            raw["_tables"] = bool(facts.tables)
+        for rule, why in norm_arms(raw).items():
+            if raw is None:
+                self._ck(rule, "inconclusive", "page-read-failed")
+            elif why:
+                self._ck(rule, "unarmed", why)
+            else:
+                self._arm(rule)
+        return rule_norms(raw, self.mem.typed, facts) + self._loading(raw, facts, session)
+
+    def _loading(self, raw: dict | None, facts: Facts, session) -> list[Violation]:
+        """R54: a spinner still shown 10 s later on the same page; an empty-state text on a step whose list
+        request failed (needs the network timeline)."""
+        out, url = [], facts.url.split("#")[0]
+        if not raw:
+            return out
+        now, spin = time.time(), set(raw.get("spinners") or ())
+        for k in list(self.spinning):
+            if k[0] != url or k[1] not in spin:
+                self.spinning.pop(k)
+        for sp in spin:
+            first = self.spinning.setdefault((url, sp), now)
+            if now - first >= 10:
+                out.append(Violation("R54", f"spinner|{sp}", f"a loading indicator ({sp}) is still shown "
+                                     f"{now - first:.0f} s after it first appeared, with the page settled"))
+                self.spinning[(url, sp)] = now + 3600  # once per spinner and page
+        if raw.get("empty") and getattr(session, "evidence", False):
+            failed = [r for r in session.net_since(self.net_mark) if r.get("method") == "GET" and r.get("status", 0) >= 400
+                      and r.get("type") in ("xhr", "fetch")]
+            if failed:
+                out.append(Violation("R54", f"empty|{raw['empty'][0][:30]}", f"the page says {raw['empty'][0]!r}, but the "
+                                     f"request behind it failed ({failed[0]['path']} -> HTTP {failed[0]['status']})"))
+        return out
+
+    def _settle_checks(self, viol: list[Violation]) -> None:
+        """Every rule armed this step, or that raised a violation, gets one detected/exercised row."""
+        hit = {v.rule for v in viol}
+        for rule in sorted(self._armed | hit):
+            self.st.checks.note(self.worker, self.step, rule, self.route, "detected" if rule in hit else "exercised")
+        self._armed = set()
+
+    async def _evidence(self, session, ev: Event | None = None) -> list[Violation]:
         """D58: R57 (2xx answers with an error body) and R51 (success and error messages together)."""
         await session.flush_bodies()
-        return rule_payload(session.net_since(self.net_mark)) + rule_messages(await session.drain_messages())
+        net = session.net_since(self.net_mark)
+        msgs = await session.drain_messages()
+        if any("body" in r for r in net):
+            self._arm("R57")
+        else:
+            self._ck("R57", "unarmed", "no-json")
+        if msgs:
+            self._arm("R51")
+        else:
+            self._ck("R51", "unarmed", "no-messages")
+        if self.st.api is not None:
+            self._arm("R57e")
+        return rule_payload(net) + rule_messages(msgs) + rule_contract(net, self.st.api, self.st.api_called) + \
+            (message_fidelity(self, msgs, ev, []) if ev is not None else [])
 
     # ---------- M1: what this step did ----------
     def _event(self, obs: Observation, done: list[dict], step: int, intent: dict | None, facts: Facts,
@@ -1050,6 +1466,7 @@ class Sweeper:
         if verb in ("create", "edit", "save") and pre.get("form_password"):
             # an account form (sign in, sign up, reset, password change) creates no content to look for (D55 P1)
             signin = any("password" in (d.get("el") or "").lower() for d in done if d["do"] in ("fill", "type"))
+            self._ck("I-edit" if verb == "edit" else "I-create", "suppressed", "account-form")
             verb, obj = ("login" if signin else "account"), ""
         if verb == "create" and not fills:
             if not accepted:
@@ -1118,13 +1535,24 @@ class Sweeper:
         if e.verb in WRITE_VERBS:
             if (rejected and not accepted) or (e.verb in ("create", "edit") and validation and not new_err):
                 e.status, e.note = "unknown", "input rejected" + (f" ({rejected[0]['status']})" if rejected else "")
+                if e.verb in ("create", "edit"):
+                    self._ck(f"I-{e.verb}", "inconclusive", "input-rejected")
                 return out
+            if accepted or e.verb in ("create", "edit"):
+                self._arm("I-error")
+            if new_err and accepted:
+                e.note = "said-failed"  # R50: if the effect shows later, the failure message was false
             if new_err and (accepted or e.verb in ("create", "edit")):
                 out.append(Violation("I-error", f"{e.verb}|{new_err[0][:60]}",
                                      f"{e.verb} {e.obj!r}: the app reports {new_err[0][:120]!r}", new_err[0]))
             if not accepted and not moved:
                 search_form = any(SEARCH_FIELD.search(k) for k in e.fields) or pre.get("form_get")
                 failed = [m for m in self.writes if m["status"] >= 500]
+                if e.verb in ("create", "edit") and e.fields:
+                    if search_form:
+                        self._ck("I-submit", "suppressed", "search-form")
+                    else:
+                        self._arm("I-submit")
                 if e.verb in ("create", "edit") and e.fields and not search_form and facts.url == obs.url \
                         and pre.get("form_valid") is not False and click_pre.get("submit") \
                         and self.last is not None and norm(facts.text) == norm(self.last.text) and not new_err:
@@ -1138,6 +1566,10 @@ class Sweeper:
             before, after = click_pre.get("number"), (self.post or {}).get("number")
             if e.verb in ("follow", "unfollow") and not (click_pre.get("own_number") and (self.post or {}).get("own_number")):
                 before = after = None  # a follow button shows no count; a number beside it is something else (D55 P9)
+            if before is None or after is None:
+                self._ck("I-toggle", "unarmed", "no-count")
+            else:
+                self._arm("I-toggle")
             if before is not None and after is not None:
                 want = 1 if e.verb in TOGGLES else -1
                 if after - before != want:
@@ -1149,6 +1581,9 @@ class Sweeper:
             e.status = "verified"
         if e.verb in ("create", "edit") and e.obj and shown(e.obj, facts.text):
             e.status = "verified"
+            self._arm(f"I-{e.verb}")  # D62: an effect shown at once is a check that ran and passed
+            if e.verb == "create" and route_shape(facts.url) != route_shape(obs.url):
+                self.owned_paths.add(urlsplit(facts.url).path)  # S1 reversible: this run's own items
         if e.verb in ("create", "edit") and not e.target and moved:
             e.target = entity_key(facts.url)
         if e.target and e.verb in ("create", "edit"):
@@ -1161,29 +1596,40 @@ class Sweeper:
         out = []
         for e in self.mem.pending(self.worker):
             if e.verb in ("create", "edit"):
+                rule = f"I-{e.verb}"
                 if e.obj and shown(e.obj, facts.text):
                     e.status = "verified"
+                    self._arm(rule)
+                    if e.note == "said-failed":
+                        e.note = ""
+                        out.append(Violation("R50", f"said-failed|{e.obj[:40]}", f"the app reported that {e.verb} "
+                                             f"{e.obj!r} failed, but the item is there (step {e.step})"))
                     continue
                 if step < e.due or not e.written:
                     if step >= e.due + 3:
                         e.status = "unknown"
+                        self._ck(rule, "unarmed", "not-written")
                     continue
                 if not e.obj:
                     e.status = "unknown"
+                    self._ck(rule, "unarmed", "no-name")
                     continue
                 places = list(dict.fromkeys(u for u in (e.landing, self.flow_start or e.url) if u))[:2]
                 if self.budget < len(places):
+                    self._ck(rule, "capped", "step-probes")
                     continue
                 found = False
                 for u in places:
-                    text = await self._fresh_text(session, u)
+                    text = await self._fresh_text(session, u, until=lambda t, o=e.obj: shown(o, t))
                     if text is None:
                         found = True  # could not load: no evidence against the app
+                        self._ck(rule, "inconclusive", "load-failed")
                         break
                     if shown(e.obj, text):
                         found = True
                         break
                 e.status = "verified" if found else "conflict"
+                self._arm(rule)
                 if not found:
                     out.append(Violation(f"I-{e.verb}", e.obj, f"{e.verb} {e.obj!r}: the app accepted the write, but "
                                          f"{e.obj!r} is shown neither on the page it led to nor where the flow started",
@@ -1192,15 +1638,23 @@ class Sweeper:
                 if not e.written:
                     if step >= e.due:
                         e.status = "unknown"
+                        self._ck("I-delete", "unarmed", "not-written")
                     continue
                 if step <= e.step:
                     continue
                 needle = norm(e.obj)[:60]
                 if len(needle) < 3:
                     e.status = "unknown"
+                    self._ck("I-delete", "unarmed", "no-name")
+                    continue
+                if e.before >= 2 and len(re.findall(r"[a-z]{2,}", _WHO_WHEN.sub(" ", needle))) <= 2:
+                    e.status = "unknown"  # O-7: only who and when, on several identical cards: cannot tell which went
+                    self._ck("I-delete", "inconclusive", "identical-cards")
                     continue
                 if self.budget < 1:
+                    self._ck("I-delete", "capped", "step-probes")
                     continue
+                self._arm("I-delete")
                 # Names repeat (a comment's author and date, a title several users chose), so the
                 # deleted thing is gone when the address now leads elsewhere or shows it fewer times.
                 self.budget -= 1
@@ -1233,7 +1687,9 @@ class Sweeper:
         term = norm(re.sub(r"^#", "", e.obj or ""))
         m = facts.main_list()
         if len(term) < 2 or not m:
+            self._ck("I-filter", "unarmed", "no-term" if len(term) < 2 else "no-list")
             return []
+        self._arm("I-filter")
         furniture = {norm(i["name"]) for L in (self.last.content_lists() if self.last else []) for i in L["items"]} \
             if e.verb == "search" else set()
         words = [w for w in re.findall(r"\w+", term) if len(w) >= 3] if e.verb == "search" else [term]
@@ -1258,7 +1714,9 @@ class Sweeper:
     async def _logout_check(self, session, e: Event) -> list[Violation]:
         e.status = "verified"
         if not self.account or not self.account.username or not self.account_pages:
+            self._ck("I-logout", "unarmed", "no-account-page")
             return []
+        self._arm("I-logout")
         u = self.account_pages[-1]
         st, text = await self._fetch(session, u)
         name = self.account.username.lower()
@@ -1276,6 +1734,7 @@ class Sweeper:
             info, prev = mem.snapshot(facts.url, L["heading"], items, self.worker, step)
             # R07: what this worker turned on must be in the list for it.
             if info.category in ("favourite", "follow") and info.personal:
+                self._arm("R07", "R07b")
                 on = mem.net_toggle(self.worker, info.category)
                 recent_only = len(items) >= 8
                 for k, ev in on.items():
@@ -1293,31 +1752,57 @@ class Sweeper:
                         out.append(Violation("R07b", f"{info.category}|{name}", f"{name!r} shows as {info.category}d on "
                                              f"its page (step {tg[2]}) but is missing from {L['heading']!r}"))
             # R09: a list changed on a revisit with nothing to explain it.
-            if prev is None or info.volatile or prev.step == step:
+            if prev is None or prev.step == step:
+                self._ck("R09", "unarmed", "first-visit")
+                continue
+            if info.volatile:
+                self._ck("R09", "suppressed", "volatile")
                 continue
             added, removed = diff_lists(prev.items, items)
             if not added and not removed:
+                self._arm("R09")
                 continue
             if any(e.verb in ("login", "logout") and e.worker == self.worker and e.step >= prev.step for e in mem.events):
+                self._ck("R09", "suppressed", "session-changed")
                 continue  # the session changed between the two visits: every list may differ
+            self._arm("R09")
             evs = mem.events_since(prev.event_idx, self.worker if info.personal else None)
-            ua = [a for a in added if not explained(evs, a[0], a[1]) and not (info.recency and evs)
-                  and not EVENT_FEED.search(L["heading"] or "")]
+            feed = bool(EVENT_FEED.search(L["heading"] or ""))
+            ua = []
+            for a in added:
+                if explained(evs, a[0], a[1]):
+                    continue
+                if _CONTROL_NAME.match((a[0] or "").strip()):
+                    self._ck("R09", "suppressed", "control-name")
+                    continue
+                if info.recency and evs:
+                    self._ck("R09", "suppressed", "recency")
+                elif feed:
+                    self._ck("R09", "suppressed", "event-feed")
+                else:
+                    ua.append(a)
             ur = []
             for idx, r in removed:
-                if EVENT_FEED.search(L["heading"] or ""):
+                if _CONTROL_NAME.match((r[0] or "").strip()):
+                    self._ck("R09", "suppressed", "control-name")
+                    continue
+                if feed:
+                    self._ck("R09", "suppressed", "event-feed")
                     continue  # new entries push old ones out of an activity feed (D55 P3; 6 BookStack false alarms)
                 if explained([e for e in evs if e.verb in ("delete", "edit", "unfavourite", "unfollow", "unlike")], r[0], r[1]):
                     continue
                 tail = all((norm(x[0]), x[1]) not in {(norm(n), h) for n, h in items} for x in prev.items[idx:])
                 if info.recency and tail and len(added) >= len(removed):
+                    self._ck("R09", "suppressed", "recency")
                     continue
                 if not info.recency and evs and len(prev.items) >= 10:
+                    self._ck("R09", "suppressed", "long-list")
                     continue  # long lists shift between pages when anything changed
                 ur.append(r)
             churn = len(ua) + len(ur)
             if churn and churn * 2 > max(len(items), len(prev.items)):
                 info.volatile = True
+                self._ck("R09", "suppressed", "churn")
                 continue
             for a in ua:
                 out.append(Violation("R09", f"{L['heading']}|+{a[0]}", f"{a[0]!r} appeared in {L['heading'] or 'a list'!r} "
@@ -1361,10 +1846,13 @@ class Sweeper:
             name = t.get("item_name") or ""
             if item and name and re.search(r"\bby\s+" + re.escape(name), t["context"], re.I):
                 item = ""  # 'Created 2 days ago by Admin': the link is the author, not the item
+                self._ck("R08", "suppressed", "author-link")
             if item and _PERSON.search(entity_key(item)) and not re.search(r"joined|registered|member since",
                                                                            t["context"], re.I):
                 item = ""  # a time next to a person's link (a comment's author) is not the person's age
+                self._ck("R08", "suppressed", "person-link")
             if not item and "*" not in route_shape(facts.url):
+                self._ck("R08", "unarmed", "no-owner")
                 continue  # a time on a list page that belongs to no list item: we cannot tell whose it is
             key = entity_key(item) if item else page
             if minutes < 0 and kind in ("created", "updated"):
@@ -1426,11 +1914,15 @@ class Sweeper:
         if not href or _DEAD.match(href):
             return []
         dest = urljoin(obs.url, href)
-        if route_shape(facts.url) == route_shape(obs.url) or _SEARCH_DEST.search(dest) or _SEARCH_DEST.search(facts.url):
+        if route_shape(facts.url) == route_shape(obs.url):
+            return []
+        if _SEARCH_DEST.search(dest) or _SEARCH_DEST.search(facts.url):
+            self._ck("R10", "suppressed", "search-dest")
             return []  # a tag or search link opens results, titled 'Search Results' by design (D55 P6)
         for L in self.last.content_lists():
             for i in L["items"]:
                 if i.get("abs") and entity_key(i["abs"]) == entity_key(dest) and i["name"] and not _GENERIC.match(i["name"]):
+                    self._arm("R10")
                     names = [i["name"], i.get("link_text") or ""]
                     if not any(n and (same_name(n, facts.h1) or same_name(n, facts.title)) for n in names):
                         return [Violation("R10", f"{i['name']}", f"the link {i['name']!r} in {L['heading'] or 'a list'!r} "
@@ -1448,10 +1940,13 @@ class Sweeper:
         if (self.pre or {}).get("click", {}) and "active" in (done[0].get("el") or ""):
             return []
         if not ((self.pre or {}).get("click") or {}).get("pager"):
+            self._ck("R11", "unarmed", "no-pager")
             return []  # a number outside a pager is a count (Conduit's favourite button '0', D55 P4)
         a, b = self.last.main_list(), facts.main_list()
         if not a or not b or len(a["items"]) < 3:
+            self._ck("R11", "unarmed", "short-list")
             return []
+        self._arm("R11")
         if [norm(i["name"]) for i in a["items"]] == [norm(i["name"]) for i in b["items"]]:
             return [Violation("R11", f"page|{txt}", f"clicking page control {txt!r} left the list "
                               f"{a['heading'] or ''!r} unchanged ({len(a['items'])} items)")]
@@ -1464,7 +1959,9 @@ class Sweeper:
         want_route, want_h1 = self.pages[-2]
         got = route_shape(facts.url)
         if self.mem.events and self.mem.events[-1].worker == self.worker and self.mem.events[-1].verb in ("create", "edit", "delete"):
+            self._ck("G1", "suppressed", "after-write")
             return []
+        self._arm("G1")
         if got != want_route and not _LOGINISH.search(got):
             return [Violation("G1", f"{want_route}->{got}", f"back went to {got}, not to the previous page {want_route}")]
         return []
@@ -1473,7 +1970,9 @@ class Sweeper:
         """R15: a contradiction the model cites, kept only when both quotes are really on pages it saw."""
         a, b = str(s.get("a", "")).strip(), str(s.get("b", "")).strip()
         if len(a) < 3 or len(b) < 3 or norm(a) == norm(b):
+            self._ck("R15", "inconclusive", "bad-quotes")
             return []
+        self._arm("R15")
         texts = [facts.text] + [t for _, t in self.mem.page_text.get(self.worker, [])]
         if any(norm(a) in norm(t) for t in texts) and any(norm(b) in norm(t) for t in texts):
             return [Violation("R15", f"{a[:40]}|{b[:40]}", f"cited contradiction: {a[:80]!r} vs {b[:80]!r}: "
@@ -1487,7 +1986,7 @@ class Sweeper:
         for L in facts.content_lists():
             for i in L["items"]:
                 u = i.get("abs") or ""
-                if checks >= MAX_LINK_CHECKS or not u or _DEAD.match(i["href"] or "") or not session.in_scope(u):
+                if not u or _DEAD.match(i["href"] or "") or not session.in_scope(u):
                     continue
                 if re.search(r"log-?out|sign-?out|delete|remove|destroy|toggle|favou?rite|follow|like|export|download|"
                              r"action=|/api/", u, re.I):
@@ -1495,8 +1994,13 @@ class Sweeper:
                 k = entity_key(u)
                 if k in self.st.link_status:
                     continue
+                if checks >= MAX_LINK_CHECKS:
+                    self._ck("R02", "capped", "link-checks")
+                    continue
                 if any(e.target == k and e.verb in ("edit", "delete") for e in self.mem.events):
+                    self._ck("R02", "suppressed", "renamed-or-deleted")
                     continue  # renamed (old slug) or deleted by an agent: a 404 is right (D55 P3)
+                self._arm("R02")
                 st, _ = await self._fetch(session, u, body=False)
                 checks += 1
                 self.st.link_checks += 1
@@ -1532,8 +2036,10 @@ class Sweeper:
             await page.close()
         self.st.probes += 1
         if not re.search(r"result|search|found|match", (res.h1 + " " + res.title + " " + res.text[:400]), re.I):
+            self._ck("R05", "inconclusive", "no-results-page")
             return []
-        base = {norm(i["name"]) for L in facts.lists for i in L["items"]} | {norm(c["name"]) for c in facts.cards}
+        self._arm("R05")
+        base ={norm(i["name"]) for L in facts.lists for i in L["items"]} | {norm(c["name"]) for c in facts.cards}
         phantoms = []
         for L in res.content_lists():
             if re.search(r"popular|suggest|recommend|trending|you may|related|recent|tag", L["heading"] or "", re.I):
@@ -1558,10 +2064,13 @@ class Sweeper:
         for heading, items in todo:
             for i in items:
                 if st.feed_probes >= MAX_FEED_PROBES or self.budget < 1:
+                    self._ck("R07c", "capped", "feed-probes" if st.feed_probes >= MAX_FEED_PROBES else "step-probes")
                     return []
                 authors = [u for u in i.get("links") or [] if _PERSON.search(entity_key(u)) and session.in_scope(u)]
                 if not authors:
+                    self._ck("R07c", "unarmed", "no-author-link")
                     continue
+                self._arm("R07c")
                 st.feed_probes += 1
                 self.budget -= 1
                 self.st.probes += 1
@@ -1590,9 +2099,12 @@ class Sweeper:
 
         st = self.st
         route = route_shape(facts.url)
-        if st.toggle_probes >= MAX_TOGGLE_PROBES or self.budget < 1 or route in st.toggle_done or _LOGINISH.search(route):
+        if route in st.toggle_done or _LOGINISH.search(route):
             return []
         if not any(classify(x) in ("favourite", "like") or re.fullmatch(r"\d[\d,]*", x.strip()) for x in facts.toggles):
+            return []
+        if st.toggle_probes >= MAX_TOGGLE_PROBES or self.budget < 1:
+            self._ck("R19", "capped", "toggle-probes" if st.toggle_probes >= MAX_TOGGLE_PROBES else "step-probes")
             return []
         st.toggle_done.add(route)
         opened = await _open(session, facts.url)
@@ -1622,7 +2134,9 @@ class Sweeper:
         finally:
             await page.close()
         if moved or after is None or not writes or not all(200 <= s < 400 for s in writes):
+            self._ck("R19", "inconclusive", "no-accepted-write")
             return []  # signed out, refused or navigated: no evidence
+        self._arm("R19")
         if after["number"] == cand["number"]:
             return [Violation("R19", f"{cand['verb']}|count", f"clicking {cand['text']!r} on {route} (the app accepted "
                               f"the write) left its count at {cand['number']}", f"item: {cand['item'][:120]}")]
@@ -1641,6 +2155,7 @@ class Sweeper:
         own = any(e.worker == w and e.verb == "create" and (e.target == key or same_name(e.obj, facts.h1))
                   for e in self.mem.events)
         if st.access_probes.get(w, 0) >= MAX_ACCESS_PROBES and not own:
+            self._ck("R13", "capped", "access-probes")
             return []
         edit = None
         for o in facts.owner:
@@ -1686,6 +2201,7 @@ class Sweeper:
     async def _probe_form(self, session, url: str) -> dict | None:
         from playwright.async_api import Error as PWError
 
+        self._arm("R13")
         self.budget -= 1
         self.st.probes += 1
         self.st.access_probes[self.worker] = self.st.access_probes.get(self.worker, 0) + 1
@@ -1708,8 +2224,10 @@ class Sweeper:
                 or not all(d.get("ok", True) for d in done):
             return []
         route = route_shape(facts.url)
-        if _LOGINISH.search(route) or (w, route) in st.reload_done or \
-                sum(1 for k in st.reload_done if k[0] == w) >= MAX_RELOAD_PAGES:
+        if _LOGINISH.search(route) or (w, route) in st.reload_done:
+            return []
+        if sum(1 for k in st.reload_done if k[0] == w) >= MAX_RELOAD_PAGES:
+            self._ck("G2", "capped", "reload-pages")
             return []
         st.reload_done.add((w, route))
         self.budget -= 1
@@ -1724,23 +2242,34 @@ class Sweeper:
         finally:
             await page.close()
         if not fresh.url or route_shape(fresh.url) != route:
+            self._ck("G2", "inconclusive", "redirected")
             return []  # redirected (e.g. the session ended): nothing to compare
+        self._arm("G2")
         events = [e for e in self.mem.events if e.t >= self.t_before - 1 and e.verb != "view"]
-        return view_diff(facts, fresh, events, st.volatile_views)
+        skipped: list[str] = []
+        out = view_diff(facts, fresh, events, st.volatile_views, skipped)
+        for why in skipped:
+            self._ck("G2", "suppressed", why)
+        return out
 
     # ---------- R16/R17: the accepted form again, with boundary values ----------
     async def _mutate(self, session, obs: Observation, done: list[dict], e: Event | None, step: int) -> list[Violation]:
         st = self.st
-        if e is None or e.verb != "create" or not e.written or e.status in ("unknown", "conflict") or \
-                st.mutation_forms >= MAX_MUTATION_FORMS:
+        if e is None or e.verb != "create" or not e.written or e.status in ("unknown", "conflict"):
+            return []
+        if st.mutation_forms >= MAX_MUTATION_FORMS:
+            self._ck("R16", "capped", "mutation-forms")
+            self._ck("R17", "capped", "mutation-forms")
             return []
         plan = mutation_plan(done, e.obj)
         if plan is None:
+            self._ck("R16", "unarmed", "not-a-create-form")
             return []
         name, long_ = plan
         key = (route_shape(obs.url), name["ekey"])
         if key in st.mutated:
             return []
+        self._arm("R16", "R17")
         st.mutated.add(key)
         st.mutation_forms += 1
         route, label = route_shape(obs.url), field_label(name)
@@ -1758,6 +2287,7 @@ class Sweeper:
                 what = r["server"][0] if r["server"] else f"uncaught page error {r['errors'][0]!r}"
                 out.append(Violation("R16", f"{kind}|{fl}", f"submitting the form at {route} again with "
                                      f"{_DESC[kind].format(n=r['length'])} in {fl!r}: {what}", r["detail"]))
+            self.st.probe_values.update(v for v in r["values"].values() if v and v.strip())
             if r["outcome"] == "accepted":
                 self.mem.typed.update(v for v in r["values"].values() if v.strip())
                 self.mem.add_event(worker=self.worker, step=step, verb="create", obj=r["values"].get(field_label(name), ""),
@@ -1771,10 +2301,12 @@ class Sweeper:
                                  "accepts one of only spaces", bl["detail"]))
         return out
 
-    async def _submit_variant(self, session, form_url: str, done: list[dict], target: dict, kind: str) -> dict | None:
+    async def _submit_variant(self, session, form_url: str, done: list[dict], target: dict | None, kind: str,
+                              override: dict | None = None) -> dict | None:
         """Open the form in a fresh tab, fill it as the agent did except `target` (empty, spaces or long;
         other text fields get a short suffix so a unique-name rule does not reject the copy), submit
-        it the same way, and report what the app answered."""
+        it the same way, and report what the app answered. `override` (R1, D61): element key -> value used
+        as given for those fields."""
         from playwright.async_api import Error as PWError
 
         opened = await _open(session, form_url)
@@ -1784,11 +2316,19 @@ class Sweeper:
         self.st.probes += 1
         self.st.mutation_submits += 1
         tag = "m" + hashlib.sha1(f"{route_shape(form_url)}|{kind}".encode()).hexdigest()[:3]
+        limit = None
         try:
+            if kind == "strip":  # R60 (controlled mode): the page's own limits go first
+                cap = await page.evaluate("""() => { const m = [...document.querySelectorAll('[maxlength]')].map(e => +e.maxLength)
+                    .filter(n => n > 0 && n < 5000); return m.length ? Math.min(...m) : null; }""")
+                limit = cap
+                await page.evaluate(STRIP_JS)
             raw = await page.evaluate(OBSERVE_JS, session.cfg.max_elements)
-            els = [Element(**x) for x in raw["elements"]]
+            els = [Element(**{k: v for k, v in x.items() if k in Element.__dataclass_fields__}) for x in raw["elements"]]
             before = await page.evaluate(INNER_TEXT_JS)
             values, length = {}, 0
+            if target is not None:  # R5 metric: the input class this variant tries
+                self.st.input_classes.setdefault(field_kind({}, field_label(target)), set()).add(kind.rstrip("0123456789"))
             *fills, submit = done
             for d in fills:
                 if d["do"] not in ("fill", "type", "select") or not d.get("ekey"):
@@ -1798,8 +2338,26 @@ class Sweeper:
                     return None
                 loc = page.locator(f'[data-wt-id="{el.id}"]')
                 v = d.get("value") or ""
-                if d is target:
-                    if kind == "long":
+                if override is not None and d["ekey"] in override:
+                    v = override[d["ekey"]]
+                elif d is target:
+                    if kind.startswith("seed"):  # R2: the agent's own value plus a copy number
+                        v = f"{v} {kind[4:]}"
+                    elif kind == "numfmt":  # R59
+                        v = "1,234.5"
+                    elif kind == "intl":  # R16i (FM3): legal input with an apostrophe, a hyphen and an accent
+                        v = f"{v} O'Brien-Zoë"
+                    elif kind == "uniq":  # R16u (UQ2): a value the app rejected as taken, with a trailing space
+                        v = f"{v} "
+                    elif kind == "uniqnfd":  # R16u: the same value in another Unicode normal form
+                        v = unicodedata.normalize("NFD", v) if unicodedata.normalize("NFD", v) != v else v.upper()
+                    elif kind in ("neg", "zero"):  # R26p (DV4, LG6)
+                        v = "-1" if kind == "neg" else "0"
+                    elif kind in ("dateinv", "dateleap"):  # R36p (TM6)
+                        v = "2025-02-30" if kind == "dateinv" else "2024-02-29"
+                    elif kind == "strip":  # R60: past the limit the page declared
+                        v = long_value(v, (limit or 255) + 20)
+                    elif kind == "long":
                         cap = await loc.get_attribute("maxlength")
                         n = int(cap) if cap and cap.isdigit() and 0 < int(cap) <= 5000 else \
                             (1000 if d["ekey"].startswith("textarea|") else 300)
@@ -1807,8 +2365,8 @@ class Sweeper:
                     else:
                         v = "" if kind == "empty" else "   "
                     length = len(v)
-                elif d["do"] != "select" and value_class(v) == "text":
-                    v = f"{v}-{tag}"
+                elif d["do"] != "select" and value_class(v) == "text" and not (self.st.v5_rules and _SHAPED.fullmatch(v)):
+                    v = f"{v}-{tag}"  # dates, times, phone numbers (D61) keep their shape: a suffix makes them invalid
                 elif d["do"] != "select" and value_class(v) == "email":
                     v = v.replace("@", f"+{tag}@", 1)
                 if d["do"] == "select":
@@ -1840,13 +2398,17 @@ class Sweeper:
         invalid = any(_VALIDATION.search(ln) for ln in shown)
         accepted = any(200 <= s < 400 for s in net.writes) and not invalid
         return {"outcome": "accepted" if accepted else "rejected", "server": net.server, "errors": net.errors,
-                "values": values, "length": length,
+                "values": values, "length": length, "after": after[:8000], "limit": limit,
                 "detail": f"{kind}: {length} chars; writes {net.writes[:4]}; ended on {route_shape(end)}"
                           + (f"; shown {shown[0][:80]!r}" if invalid else "")}
 
-    async def _fresh_text(self, session, url: str) -> str | None:
+    async def _fresh_text(self, session, url: str, until=None) -> str | None:
+        """A fresh view of `url`; with `until` (O3, D60) it is re-read until the predicate holds or the
+        deadline passes, so a slow app is not reported for an effect still on its way."""
         self.budget -= 1
         self.st.probes += 1
+        if until is not None and hasattr(session, "fresh_text_until"):
+            return await session.fresh_text_until(url, until)
         return await session.fresh_text(url)
 
     async def _fetch(self, session, url: str, body: bool = True) -> tuple[int | None, str | None]:

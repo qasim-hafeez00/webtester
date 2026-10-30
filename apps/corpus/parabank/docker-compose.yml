@@ -1,0 +1,7 @@
+# E4 (D60) clean corpus: Parabank (Parasoft's public demo bank), used only for false alarms (no seeded faults).
+# Data lives in an in-memory database, so `docker compose restart parabank` restores it (the config's reset).
+services:
+  parabank:
+    image: parasoft/parabank:latest
+    ports:
+      - "4300:8080"

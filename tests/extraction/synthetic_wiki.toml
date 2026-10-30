@@ -1,0 +1,10 @@
+h1 = "Shelf Alpha"
+[[list]]
+heading = "Books on this shelf"
+items = ["Book One", "Book Two", "Book Three"]
+[[count]]
+n = 3
+unit = "books"
+[[list]]
+heading = "Recent Activity"
+items = ["Admin updated Book One 2 hours ago"]

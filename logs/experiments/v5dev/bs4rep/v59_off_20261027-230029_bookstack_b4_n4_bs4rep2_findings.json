@@ -1,0 +1,359 @@
+[
+  {
+    "sig": "consistency|R23m|/user/admin|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/user/admin|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23m|/search?term|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 19,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/search?term=Custom",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/search?term|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R68|/search?term|duplicate|sample tag",
+    "kind": "consistency",
+    "message": "[R68 T2] the tag 'sample tag' is shown twice on one item",
+    "first_step": 44,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/search?term=",
+    "state": "",
+    "trail": [],
+    "occurrences": 5,
+    "detail": {
+      "sig": "consistency|R68|/search?term|duplicate|sample tag",
+      "rule": "R68",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/page/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 67,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-copied",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*/page/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23|/|recall|/*",
+    "kind": "consistency",
+    "message": "[R23 T2] searching for 'Actions', an item shown earlier, does not find it",
+    "first_step": 11,
+    "worker": 2,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23|/|recall|/*",
+      "rule": "R23",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R20|/*|name|/create-book",
+    "kind": "consistency",
+    "message": "[R20 T2] /books lists this item as 'Actions', its own page is titled 'Create New Book'",
+    "first_step": 10,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/create-book",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R20|/*|name|/create-book",
+      "rule": "R20",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc",
+    "kind": "consistency",
+    "message": "[R63 T2] http://127.0.0.1:4200/books/test-book-bx7b-co/draft/abc answers HTTP 500",
+    "first_step": 32,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/draft/9",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc",
+      "rule": "R63",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/books/*/page/*|clipped|enter section select mode",
+    "kind": "consistency",
+    "message": "[R65 T2] the text 'Enter section select mode' is cut off by its box (overflow hidden, no ellipsis)",
+    "first_step": 36,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7",
+    "state": "",
+    "trail": [],
+    "occurrences": 3,
+    "detail": {
+      "sig": "consistency|R65|/books/*/page/*|clipped|enter section select mode",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/books/*/page/*/copy|covered|book1 description",
+    "kind": "consistency",
+    "message": "[R65 T2] the control 'Book1 Description' is covered by another element (NAV.breadcrumbs text-center): a click lands on that instead",
+    "first_step": 58,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-edited/copy",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R65|/books/*/page/*/copy|covered|book1 description",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/books/*/page/*/copy|covered|book2 description",
+    "kind": "consistency",
+    "message": "[R65 T2] the control 'Book2 Description' is covered by another element (H1.list-heading): a click lands on that instead",
+    "first_step": 58,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-edited/copy",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R65|/books/*/page/*/copy|covered|book2 description",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/books/*/page/*/copy|covered|book description",
+    "kind": "consistency",
+    "message": "[R65 T2] the control 'Book Description' is covered by another element (INPUT.): a click lands on that instead",
+    "first_step": 58,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-edited/copy",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R65|/books/*/page/*/copy|covered|book description",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R65|/books/*/page/*/move|covered|chapter <n> book2 description",
+    "kind": "consistency",
+    "message": "[R65 T2] the control 'Chapter 1 Book2 Description' is covered by another element (DIV.form-group text-right): a click lands on that instead",
+    "first_step": 65,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-copied/move",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R65|/books/*/page/*/move|covered|chapter <n> book2 description",
+      "rule": "R65",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/password/email|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 4,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/password/email",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/password/email|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23|/|recall|/shelves/shelf",
+    "kind": "consistency",
+    "message": "[R23 T2] searching for 'Recently Viewed', an item shown earlier, does not find it",
+    "first_step": 13,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23|/|recall|/shelves/shelf",
+      "rule": "R23",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+    "kind": "consistency",
+    "message": "[R01x T2] untranslated message key shown: 'common.privacy_policy'",
+    "first_step": 21,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/customization",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+      "rule": "R01x",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R01x|/settings/audit|key|maintenance_action_run",
+    "kind": "consistency",
+    "message": "[R01x T2] untranslated message key shown: 'maintenance_action_run'",
+    "first_step": 59,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/audit",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R01x|/settings/audit|key|maintenance_action_run",
+      "rule": "R01x",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R01x|/settings/audit?date_from&date_to&ip&user|key|maintenance_action_run",
+    "kind": "consistency",
+    "message": "[R01x T2] untranslated message key shown: 'maintenance_action_run'",
+    "first_step": 64,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/audit?date_from=&date_to=&user=&ip=172.19.0.1",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R01x|/settings/audit?date_from&date_to&ip&user|key|maintenance_action_run",
+      "rule": "R01x",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

@@ -33,7 +33,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass
+from datetime import datetime
+from dataclasses import dataclass, replace
 
 from .browser import BrowserSession, Observation
 from .consistency import SweepState, Sweeper
@@ -58,12 +59,20 @@ agrees) or whether it reveals a BUG. Reply with one JSON object and nothing else
 ("wrong_expectation" = a correct app can show this.)"""
 
 
+# C4 (D61): rules whose verdict depends on the current time; their replays run on the recorded step's clock
+TIME_RULES = ("R08", "R18", "R72", "R72c", "R36", "R20t")
+
+
 @dataclass(frozen=True)
 class GateConfig:
     k: int = 3
     windows: tuple[int, ...] = (1, 4, 0)  # minimal-trace search: suffix lengths in steps, 0 = full prefix
     max_minutes: float = 20.0
     judge: bool = True
+    t1_first: bool = True  # C6 (D60): T1 findings are replayed first, so the time cap never costs them
+    ddmin: bool = True  # C5: shrink a confirmed window by dropping prefix steps (at most `ddmin_tries` replays)
+    ddmin_tries: int = 4
+    engines: tuple = ()  # X9: replay each confirmed finding once more in these engines (firefox, webkit)
 
 
 def label(reproduced: int, k: int, tried: bool, ran: bool = True) -> str:
@@ -100,17 +109,32 @@ def windows_for(log: list[StepRecord], step: int, sizes: tuple[int, ...]) -> lis
     return out
 
 
-async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) -> dict:
+async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding, context_kw: dict | None = None,
+                 annot=None) -> dict:
     """One replay of `window` on freshly reset data. Returns {reproduced, missing, failed, reason, seconds}."""
     t0 = time.monotonic()
     if ctl is not None:
         await asyncio.to_thread(ctl.reset)
-    s = BrowserSession(browser, cfg, finding.worker)
-    await s.start(storage_state=window[0].storage)
+    # v5 (D60): replays read every element (no ranking cap: the original worker's ranking cannot be rebuilt),
+    # restore session storage too (C1), and take the context options of an environment axis when given
+    rcfg = replace(cfg, max_elements=cfg.max_elements * max(1, getattr(cfg, "observe_pool", 1)), observe_pool=1)
+    s = BrowserSession(browser, rcfg, finding.worker)
+    await s.start(storage_state=window[0].storage, session_storage=getattr(window[0], "session", None),
+                  context_kw=context_kw)
+    t_rec = getattr(window[0], "t", 0.0)
+    if t_rec and (finding.detail or {}).get("rule") in TIME_RULES:  # C4 (D61): the browser clock of the recorded step
+        try:
+            await s.page.clock.install(time=datetime.fromtimestamp(t_rec))
+        except Exception:  # noqa: BLE001 - an engine without a controllable clock replays in real time
+            pass
     missing = failed = 0
     reproduced = False
     sw = Sweeper(SweepState(), finding.worker, cfg.app.account(finding.worker)) \
         if finding.kind == "consistency" else None
+    if sw is not None and annot is not None:  # O11: the run's annotations, read only (no LLM call in a replay)
+        from .annotate import Annotator
+
+        sw.st.annotator = Annotator(None, annot.cache)
     try:
         await s.goto(window[0].url)
         for i, rec in enumerate(window):
@@ -129,6 +153,13 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
                 if a["do"] == "click":
                     clicked.append(el)
                 if a["ekey"] and el is None:
+                    href = _href_of_key(a["ekey"])
+                    if a["do"] == "click" and href:  # C6: a link gone after the reset: follow its address
+                        res = await s.goto(href)
+                        done.append({"do": "navigate", "id": None, "value": href, "el": None, "ekey": None, "nth": 0,
+                                     "ok": res.ok, "url_after": res.url_after})
+                        if res.ok:
+                            continue
                     missing += 1
                     ran_all = False
                     break
@@ -156,6 +187,13 @@ async def replay(browser, cfg, ctl, window: list[StepRecord], finding: Finding) 
             "seconds": round(time.monotonic() - t0, 1)}
 
 
+def _href_of_key(ekey: str | None) -> str:
+    """The href in an element key (tag|type|role|text|label|href), when the element was an in-app link."""
+    parts = (ekey or "").split("|")
+    href = parts[5] if len(parts) > 5 and parts[0] == "a" else ""
+    return href if href and not href.startswith(("#", "javascript:")) else ""
+
+
 async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, obs: Observation,
                           active_click: bool = False) -> bool:
     exp = dict(finding.detail["expect"])
@@ -168,12 +206,64 @@ async def _violated_again(s: BrowserSession, finding: Finding, rec: StepRecord, 
     return r.status == "violated" and oracle_signature(exp, rec.url) == finding.sig
 
 
-async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) -> dict:
+def _tier_rank(f: Finding) -> int:
+    t = (f.detail or {}).get("tier") or ("implicit" if f.kind not in ("consistency", "oracle_violation") else "T3")
+    return {"T1": 0, "implicit": 1, "T2": 2, "T3": 3}.get(t, 2)
+
+
+async def _ddmin(browser, cfg, ctl, window: list, f: Finding, tries: int, annot=None) -> tuple[list, int]:
+    """C5: drop prefix steps (never the finding's own step) while the finding still reproduces; greedy,
+    halves first, then single steps, at most `tries` replays. Returns the smaller window and replays used."""
+    used, cur = 0, list(window)
+    if len(cur) <= 2:
+        return cur, 0
+    cands = [cur[len(cur) // 2:]] + [cur[:i] + cur[i + 1:] for i in range(len(cur) - 1)]
+    for cand in cands:
+        if used >= tries or len(cand) >= len(cur):
+            continue
+        r = await replay(browser, cfg, ctl, cand, f, **({"annot": annot} if annot is not None else {}))
+        used += 1
+        if r["reproduced"]:
+            cur = cand
+    return cur, used
+
+
+async def _engine_check(engines: dict, cfg, ctl, window: list, f: Finding) -> dict:
+    """X9: one replay per extra engine. A finding that holds in Chromium only is 'engine-specific' (an EN1
+    candidate), not harness-suspect: browser-specific bugs are real (v5 plan X9)."""
+    out = {}
+    for name, br in engines.items():
+        if br is None:
+            out[name] = "unavailable"
+            continue
+        try:
+            out[name] = (await replay(br, cfg, ctl, window, f))["reproduced"]
+        except Exception as e:  # noqa: BLE001
+            out[name] = f"error: {type(e).__name__}"
+    return out
+
+
+def _annot(run: RunContext) -> dict:
+    """O11: the run's annotations for a replay, as keyword arguments (none when the run has no annotator)."""
+    a = getattr(getattr(run, "sweep", None), "annotator", None)
+    return {"annot": a} if a is not None else {}
+
+
+async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig, pw=None) -> dict:
     t_start = time.monotonic()
     deadline = t_start + gcfg.max_minutes * 60
-    findings = sorted(run.findings.all(), key=lambda f: f.first_step)
+    findings = sorted(run.findings.all(), key=lambda f: (_tier_rank(f) if gcfg.t1_first else 0, f.first_step))
+    engines: dict = {}
+    for name in gcfg.engines:
+        try:
+            engines[name] = await getattr(pw, name).launch(headless=True) if pw is not None else None
+        except Exception:  # noqa: BLE001 - not installed: reported per finding
+            engines[name] = None
     replays = 0
     for f in findings:
+        if (f.gate or {}).get("env"):  # R71: confirmed by its own two axis reads (envcheck.py)
+            run.trace.event("gate_result", sig=f.sig, kind=f.kind, status=f.status, gate=f.gate)
+            continue
         if time.monotonic() > deadline:
             f.status = label(0, gcfg.k, tried=False)
             f.gate = {"reason": "gate time limit"}
@@ -182,7 +272,7 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
         wins = windows_for(run.replay_log.get(f.worker, []), f.first_step, gcfg.windows)
         attempts, hits, minimal = [], 0, None
         for w in wins:
-            r = await replay(browser, cfg, ctl, w, f)
+            r = await replay(browser, cfg, ctl, w, f, **_annot(run))
             replays += 1
             attempts.append({"steps": len(w), **r})
             run.trace.event("gate_replay", sig=f.sig, steps=len(w), **r)
@@ -191,15 +281,28 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
                 break
         if minimal is not None:
             for _ in range(gcfg.k - 1):
-                r = await replay(browser, cfg, ctl, minimal, f)
+                r = await replay(browser, cfg, ctl, minimal, f, **_annot(run))
                 replays += 1
                 attempts.append({"steps": len(minimal), **r})
                 run.trace.event("gate_replay", sig=f.sig, steps=len(minimal), **r)
                 hits += r["reproduced"]
         ran = any(a.get("reason", "ran, not reproduced") in ("reproduced", "ran, not reproduced") for a in attempts)
         f.status = label(hits, gcfg.k, tried=bool(wins), ran=ran)
+        extra = {}
+        if f.status == "confirmed" and minimal is not None and gcfg.ddmin and time.monotonic() < deadline:
+            small, used = await _ddmin(browser, cfg, ctl, minimal, f, gcfg.ddmin_tries, **_annot(run))
+            replays += used
+            extra["ddmin_steps"] = len(small)
+            minimal = small
+        if f.status == "confirmed" and engines and minimal is not None:
+            ok = await _engine_check(engines, cfg, ctl, minimal, f)
+            replays += sum(1 for v in ok.values() if isinstance(v, bool))
+            extra["engines"] = ok
+            if ok and all(v is False for v in ok.values()):
+                extra["engine_specific"] = "chromium"
+        causes = sorted({a["reason"] for a in attempts if a.get("reason") not in ("reproduced", None)})
         f.gate = {"reproduced": hits, "k": gcfg.k, "minimal_steps": len(minimal) if minimal else None,
-                  "attempts": attempts,
+                  "attempts": attempts, **extra, **({"causes": causes} if causes else {}),
                   **({} if wins else {"reason": "no step record to replay"}),
                   **({"reason": "could not replay"} if wins and not ran else {})}
         run.trace.event("gate_result", sig=f.sig, kind=f.kind, status=f.status, gate=f.gate)
@@ -212,6 +315,9 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
             if judged and f.status in ("confirmed", "flaky"):
                 f.judge = await _judge(llm, f, judge_usage)
                 run.trace.event("gate_judge", sig=f.sig, **f.judge)
+    for br in engines.values():
+        if br is not None:
+            await br.close()
     if ctl is not None:
         await asyncio.to_thread(ctl.reset)  # leave the app as the next run expects it
     counts: dict[str, int] = {}
@@ -219,7 +325,8 @@ async def run_gate(browser, cfg, run: RunContext, ctl, llm, gcfg: GateConfig) ->
         counts[f.status] = counts.get(f.status, 0) + 1
     out = {"candidates": len(findings), **counts, "replays": replays,
            "minutes": round((time.monotonic() - t_start) / 60, 2), "k": gcfg.k, "windows": list(gcfg.windows),
-           "judge_calls": judge_usage["calls"], "judge_tokens": judge_usage["tokens"]}
+           "judge_calls": judge_usage["calls"], "judge_tokens": judge_usage["tokens"],
+           "engines": list(gcfg.engines), "engine_specific": sum(1 for f in findings if (f.gate or {}).get("engine_specific"))}
     run.trace.event("gate_done", **out)
     return out
 

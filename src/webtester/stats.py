@@ -6,6 +6,7 @@ permutation distribution is cheap and better than the normal approximation."""
 from __future__ import annotations
 
 import itertools
+import math
 import json
 import tomllib
 from pathlib import Path
@@ -180,3 +181,106 @@ def gate_report(runs: list[dict]) -> str:
         lines.append(f"\n{missing} finding(s) unlabelled: precision is left out for those runs "
                      "(python -m webtester triage <run>).")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------- v5 evaluation (D59)
+# Intervals for rates and proportions, a family-wise correction and a bootstrap, all without SciPy.
+# Exact intervals are found by bisection on the exact CDFs (a few hundred evaluations, n is small).
+
+def _bisect(f, lo: float, hi: float, it: int = 80) -> float:
+    """Root of a monotone f on [lo, hi]."""
+    flo = f(lo)
+    for _ in range(it):
+        mid = (lo + hi) / 2
+        if (f(mid) > 0) == (flo > 0):
+            lo, flo = mid, f(mid)
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def _binom_cdf(k: int, n: int, p: float) -> float:
+    if k < 0:
+        return 0.0
+    if k >= n:
+        return 1.0
+    term = (1 - p) ** n
+    total = term
+    for i in range(1, k + 1):
+        term *= (n - i + 1) / i * p / (1 - p) if p < 1 else 0
+        total += term
+    return min(total, 1.0)
+
+
+def _poisson_cdf(k: int, mu: float) -> float:
+    if k < 0:
+        return 0.0
+    term = math.exp(-mu)
+    total = term
+    for i in range(1, k + 1):
+        term *= mu / i
+        total += term
+    return min(total, 1.0)
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score interval for k successes in n (95% by default)."""
+    if n == 0:
+        return 0.0, 1.0
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return max(0.0, c - h), min(1.0, c + h)
+
+
+def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
+    """Exact binomial interval: conservative, the one to quote for a precision near 1 or a rate near 0."""
+    if n == 0:
+        return 0.0, 1.0
+    lo = 0.0 if k == 0 else _bisect(lambda p: (1 - _binom_cdf(k - 1, n, p)) - alpha / 2, 0.0, 1.0)
+    hi = 1.0 if k == n else _bisect(lambda p: _binom_cdf(k, n, p) - alpha / 2, 0.0, 1.0)
+    return lo, hi
+
+
+def poisson_rate_ci(k: int, exposure: float, alpha: float = 0.05) -> tuple[float, float]:
+    """Exact (Garwood) interval for a rate: k events over `exposure` units (runs, 100 steps, 100 checks).
+    With k = 0 the upper bound is about 3.0 / exposure: the rule of three."""
+    if exposure <= 0:
+        return 0.0, float("inf")
+    hi_mu = _bisect(lambda mu: _poisson_cdf(k, mu) - alpha / 2, 0.0, 10.0 * (k + 5))
+    lo_mu = 0.0 if k == 0 else _bisect(lambda mu: (1 - _poisson_cdf(k - 1, mu)) - alpha / 2, 0.0, 10.0 * (k + 5))
+    return lo_mu / exposure, hi_mu / exposure
+
+
+def holm(pvalues: dict[str, float]) -> dict[str, float]:
+    """Holm-Bonferroni adjusted p-values over one family of comparisons."""
+    order = sorted(pvalues, key=pvalues.get)
+    m, out, run = len(order), {}, 0.0
+    for i, k in enumerate(order):
+        run = max(run, min(1.0, (m - i) * pvalues[k]))
+        out[k] = run
+    return out
+
+
+def bootstrap_ci(xs: list[float], stat=None, reps: int = 2000, alpha: float = 0.05, seed: int = 7) -> tuple[float, float]:
+    """Percentile bootstrap interval of `stat` (default: mean) over runs or apps."""
+    import random
+
+    if not xs:
+        return float("nan"), float("nan")
+    stat = stat or (lambda v: sum(v) / len(v))
+    rng = random.Random(seed)
+    vals = sorted(stat([rng.choice(xs) for _ in xs]) for _ in range(reps))
+    return vals[int(alpha / 2 * reps)], vals[min(reps - 1, int((1 - alpha / 2) * reps))]
+
+
+def spread(xs: list[float]) -> dict:
+    """Median, IQR, mean, SD and CV of one metric across runs (seeds)."""
+    if not xs:
+        return {}
+    q1, md, q3 = quartiles(xs)
+    mean = sum(xs) / len(xs)
+    sd = math.sqrt(sum((x - mean) ** 2 for x in xs) / (len(xs) - 1)) if len(xs) > 1 else 0.0
+    return {"n": len(xs), "median": md, "q1": q1, "q3": q3, "mean": round(mean, 4), "sd": round(sd, 4),
+            "cv": round(sd / mean, 4) if mean else None}

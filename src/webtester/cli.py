@@ -12,6 +12,9 @@
   python -m webtester regate runs/<run_id>                  re-run the evidence gate on a finished run
   python -m webtester resweep runs/<run_id> [--clean]       v4 oracles over a gated run's recorded actions (no LLM)
   python -m webtester graph runs/<run_id> [--mermaid out]   state-graph summary, optional Mermaid export
+  python -m webtester evaluate runs/<a> runs/<b> --clean runs/<c> [--ref b4] [--json out] [--md out]
+                                                            v5 evaluation: recall, precision, funnel, false alarms (D59)
+  python -m webtester families [--write] [--profile "Shop"]  fault-family registry, tracker, app-profile rule packs
 """
 
 from __future__ import annotations
@@ -95,7 +98,22 @@ def main(argv: list[str] | None = None) -> int:
     gp.add_argument("run_dir")
     gp.add_argument("--mermaid", help="write a page-level Mermaid flowchart to this file")
 
+    ev = sub.add_parser("evaluate", help="v5 evaluation over run folders (offline, labels needed, D59)")
+    ev.add_argument("runs", nargs="*", help="run folders on the faulty app")
+    ev.add_argument("--clean", nargs="*", default=[], help="run folders on the clean app (false alarms)")
+    ev.add_argument("--findings", default="findings.json", help="findings file per run, e.g. findings_resweep.json")
+    ev.add_argument("--clean-findings", help="findings file of the clean runs (default: --findings)")
+    ev.add_argument("--ref", help="reference condition for the comparisons (e.g. b4)")
+    ev.add_argument("--json", help="write the full report as JSON")
+    ev.add_argument("--md", help="write the markdown summary")
+
+    fm = sub.add_parser("families", help="fault-family registry from docs/fault_families.md (D59)")
+    fm.add_argument("--write", action="store_true", help="write docs/family_tracker.toml")
+    fm.add_argument("--profile", help="app type of fault_families.md section 4: show its rule packs")
+
     args = ap.parse_args(argv)
+    if args.cmd in ("evaluate", "families"):
+        return _offline(args)
     cfg = load_config(args.config)
 
     if args.cmd == "app":
@@ -191,6 +209,34 @@ def main(argv: list[str] | None = None) -> int:
         _print_summary(summarize(run_dir / "trace.jsonl"))
         return 0
     return 1
+
+
+def _offline(args) -> int:
+    """Commands that need no app config: evaluation and the family registry."""
+    if args.cmd == "evaluate":
+        from .evaluate import evaluate, load_run, report_md
+
+        runs = [load_run(Path(d), findings=args.findings, clean=False) for d in args.runs]
+        runs += [load_run(Path(d), findings=args.clean_findings or args.findings, clean=True) for d in args.clean]
+        rep = evaluate(runs, ref=args.ref)
+        if args.json:
+            Path(args.json).write_text(json.dumps(rep, indent=1, default=str), encoding="utf-8")
+        md = report_md(rep)
+        if args.md:
+            Path(args.md).write_text(md, encoding="utf-8")
+        print(md)
+        return 0
+    from .families import DOC, rule_packs, tally, tracker, tracker_toml
+
+    rows = tracker()
+    if args.write:
+        out = DOC.parent / "family_tracker.toml"
+        out.write_text(tracker_toml(rows), encoding="utf-8")
+        print(f"wrote {out}")
+    print(json.dumps(tally(rows), indent=1))
+    if args.profile:
+        print(json.dumps(rule_packs(args.profile), indent=1, ensure_ascii=False))
+    return 0
 
 
 def _print_summary(s: dict) -> None:

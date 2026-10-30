@@ -129,9 +129,9 @@ class OracleScriptedLLM(ScriptedLLM):
     answers the gate's judge prompt too."""
 
     async def complete_json(self, system, user):
-        from webtester.gate import JUDGE_SYSTEM
+        from webtester.gate import JUDGE_CONSISTENCY, JUDGE_SYSTEM
 
-        if system == JUDGE_SYSTEM:
+        if system in (JUDGE_SYSTEM, JUDGE_CONSISTENCY):  # D62: consistency findings (R71's live axes) are judged too
             u = Usage(prompt_tokens=50, completion_tokens=10, calls=1)
             self.usage.add(u)
             return {"verdict": "wrong_expectation", "reason": "scripted"}, u

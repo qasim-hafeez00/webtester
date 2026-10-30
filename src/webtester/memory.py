@@ -27,25 +27,16 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from urllib.parse import parse_qsl, urlsplit
 
+from .lexicon import lexicon
 from .state import route_shape
 
 MAX_ENTITIES = 2000
 MAX_LISTS = 300
 
 # Order matters: the first pattern that matches the control's text, label or class wins.
-_VERB_RULES = [
-    ("unfavourite", r"\bun-?favou?rite|\bunstar\b|remove (from )?(my )?(favou?rites|wishlist|bookmarks)|\bunbookmark"),
-    ("unfollow", r"\bun-?follow\b|\bunsubscribe\b|\bunwatch\b"),
-    ("unlike", r"\bunlike\b"),
-    ("favourite", r"\bfavou?rite|\bstar\b|\bbookmark|\bwishlist\b|\bheart\b|ion-heart|fa-heart|fa-star|bi-star|bi-heart"),
-    ("follow", r"\bfollow\b|\bsubscribe\b|\bwatch\b"),
-    ("like", r"\blike\b|\bupvote\b|thumbs.?up"),
-    ("delete", r"\bdelete\b|\bremove\b|\btrash\b|\bdestroy\b|\bdiscard\b|ion-trash|fa-trash|bi-trash"),
-    ("logout", r"\blog ?out\b|\bsign ?out\b"),
-    ("login", r"\blog ?in\b|\bsign ?in\b"),
-    ("create", r"\bcreate\b|\bnew\b|\badd\b|\bpublish\b|\bpost\b|\bregister\b|\bsign ?up\b|\bsend\b"),
-    ("save", r"\bsave\b|\bupdate\b|\bsubmit\b|\bapply\b|\bconfirm\b|\bok\b|\bdone\b"),
-]
+# The v4 word lists live in lexicon/<lang>.toml, [v4] (D61, I56: moved verbatim; tests pin the patterns).
+_V4 = lexicon()["v4"]
+_VERB_RULES = [tuple(x) for x in _V4["verbs"]]
 VERB_RES = [(v, re.compile(p, re.I)) for v, p in _VERB_RULES]
 TOGGLES = {"favourite": "unfavourite", "follow": "unfollow", "like": "unlike"}
 OFF = {v: k for k, v in TOGGLES.items()}
@@ -55,17 +46,11 @@ TITLE_FIELD = re.compile(r"\b(title|name|subject|heading|summary)\b", re.I)
 
 # List headings: which lists are about the viewer (compared with that worker's own events only)
 # and which are ordered by recency (items legitimately drop off the end).
-PERSONAL = re.compile(r"\bmy\b|\byour\b|favou?rite|starred|bookmark|wishlist|saved|liked|following|\bfeed\b|"
-                      r"recently viewed|viewed|history|watch(ed|ing|list)", re.I)
-RECENCY = re.compile(r"recent|latest|\bnew\b|newest|activity|updated|popular|trending|\bfeed\b|history|last", re.I)
+PERSONAL = re.compile(_V4["personal"], re.I)
+RECENCY = re.compile(_V4["recency"], re.I)
 # Event feeds: anyone's action anywhere adds an entry, so additions there explain nothing and prove nothing.
-EVENT_FEED = re.compile(r"activit|audit|\blogs?\b|changelog|timeline|notification", re.I)
-CATEGORY = [  # list heading -> the verb whose objects it must contain
-    ("favourite", re.compile(r"favou?rite|starred|bookmark|wishlist|saved|liked", re.I)),
-    ("follow", re.compile(r"following|followed|subscri", re.I)),
-    ("view", re.compile(r"recently viewed|viewed|history|recently visited", re.I)),
-    ("add", re.compile(r"cart|basket|bag|order summary|your items", re.I)),
-]
+EVENT_FEED = re.compile(_V4["event_feed"], re.I)
+CATEGORY = [(v, re.compile(p, re.I)) for v, p in _V4["categories"]]  # list heading -> the verb its objects need
 
 
 def norm(s: str) -> str:
@@ -77,6 +62,15 @@ def entity_key(url: str) -> str:
     u = urlsplit(url or "")
     path = u.fragment if u.fragment.startswith("/") else u.path
     return (path.rstrip("/") or "/").lower()
+
+
+def item_key(item: dict, page_url: str, heading: str = "") -> str:
+    """O6 (c), D61: an item's identity: its link when it has one, else the page's route, the list heading and
+    the item's name (cards and rows with no link of their own). Used by the v5 rules; the v4 rules keep
+    entity_key."""
+    if item.get("abs"):
+        return entity_key(item["abs"])
+    return f"{route_shape(page_url)}#{norm(heading)[:40]}#{norm(item.get('name') or '')[:60]}"
 
 
 def list_key(url: str, heading: str) -> str:

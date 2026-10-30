@@ -5,6 +5,11 @@
 
 [app]
 name = "bookstack"
+# D61 evaluation truth (X5 profile accuracy, per-app-type recall, framework axis): set by the assistant from
+# fault_families.md section 4, to be checked by the author
+app_type = "Wiki, CMS"
+primitives = ["CRUD", "TREE", "QUERY", "ID", "REL", "SHARE", "FILE"]
+framework = "Laravel (SSR)"
 base_url = "http://127.0.0.1:4200"
 compose_dir = "apps/bookstack"
 health_path = "/login"
@@ -52,3 +57,13 @@ max_tokens = 1500000
 seed = 1
 headless = true
 out_dir = "runs"
+# v5 evidence layer (D58, D59): network timeline with JSON bodies, sent data of writes, transient
+# messages (R57, R51). On from 28 Oct for every v5 run; runs and resweeps before D59 had it off.
+capture_evidence = true
+# D61: every v5 mechanism on for the pilots: environment replay (R71: time zones, locale, phone width; add
+# "firefox", "webkit" after `playwright install firefox webkit`) and the measured-only coverage (R12, JS).
+env_axes = ["tz-west", "tz-east", "locale", "phone"]
+coverage_metrics = true
+# D62a: rules left out of the v5.0 report (they still run; findings go to findings_withheld.json).
+# Proposed set (D62a), switched on for the v5.0 candidate and its live pilots on 30 Oct:
+exclude_rules = ["R02h", "R02m", "R09", "R09d", "R12c", "R21b", "R30", "R50m", "R65", "R68t"]

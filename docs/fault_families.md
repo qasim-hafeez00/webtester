@@ -97,18 +97,18 @@ at T2 until it is measured.
 | PR1 | Template or serialisation junk (`undefined`, `NaN`, `{{x}}`, `[object Object]`) | MRT A2f1, B1f1 | norm | R01 | covered | |
 | PR2 | Encoding or escaping alters data (`>` saved as `&gt;`, mojibake, accents lost) | MRT A3f9 (36 bugs, 2nd-largest class), A6f7, B5f1; VK i18n | intent-effect | R01 (escaped entity shown); **R12b echo fidelity** | partial | |
 | PR3 | Typed markup rendered as markup (XSS-shaped) | MvD 5.1.4 | intent-effect | R12 | covered | |
-| PR4 | Untranslated keys, mixed languages | MRT B5f3 | norm | **R01 extension** (translation-key pattern), low priority | coverable | |
+| PR4 | Untranslated keys, mixed languages | MRT B5f3 | norm | **R01 extension** (translation-key pattern), low priority (D61: **R01x**) | coverable |  |
 | PR5 | Visual layout defects (overlap, truncation, blank area) | GN incorrect display | norm (DOM geometry) | **R65 geometry** (M14): a visible control whose centre `elementFromPoint` returns another element (no modal open); page wider than the window; text clipped by `overflow: hidden`; text colour equal to its background. Aesthetic layout judgement stays out | coverable (DOM part) | |
 | PR6 | Invalid DOM, accessibility, i18n compliance | MvD 5.1.1, 5.1.3; VK compliance; A11Y | norm | none | out (non-functional; an axe/validator pass could be added; A11Y shows such checkers miss about half of injected bugs, so it would be its own dimension) | |
 | PR7 | A control the page needs is missing (create button, submit button) | WTP missing-element | in-page | **R31 referenced control**: the page's own text names a control ('use Create X', an empty state 'no X yet, create one') that it lacks; otherwise spec | coverable, low | BS13 |
 | PR8 | A widget's state disagrees with itself: `aria-checked`, `aria-selected` or `aria-expanded` against the shown or saved state; two options of a single-choice group selected; the active tab's panel hidden; a carousel indicator on another slide | MvD 5.1.3; REV | norm | **R64 control state** (M14) | coverable | |
-| PR9 | Placeholder or development leftovers: lorem ipsum, TODO, `example.com`, links to `localhost` or another host of the same app, call-to-action links to `#` or `javascript:void(0)` | CAT marketing/landing; REV | norm | **R01 extension** (text patterns), **R02 extension** (hosts, empty targets) | coverable | |
+| PR9 | Placeholder or development leftovers: lorem ipsum, TODO, `example.com`, links to `localhost` or another host of the same app, call-to-action links to `#` or `javascript:void(0)` | CAT marketing/landing; REV | norm | **R01 extension** (text patterns), **R02 extension** (hosts, empty targets) (D61: **R01x, R02h**) | coverable |  |
 
 ### 3.3 Navigation and addressing
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
-| NV1 | Broken link, missing resource | MRT D1f1, D2f1, D2f2 | norm | R02 | covered | (upstream BookStack slug) |
+| NV1 | Broken link, missing resource | MRT D1f1, D2f1, D2f2 | norm | R02 (D61: **R02s**) | covered | (upstream BookStack slug) |
 | NV2 | Link opens the wrong page (URL or parameter built wrong) | MRT D3f1, D3f4 | cross-view | R10 | covered | |
 | NV3 | Back button breaks the state | MRT A1f2; MvD 5.3.2; VK navigation | metamorphic | G1 | covered | |
 | NV4 | Pagination does nothing, repeats or skips | VK navigation | norm | R11, R04b | covered | F09 |
@@ -118,7 +118,7 @@ at T2 until it is measured.
 | NV8 | An in-page link (`#section`) points to no element; a menu entry leads to an empty section | CAT marketing/landing; MRT D1f1 | norm | **R43 anchors** (R02 extension) | coverable | |
 | NV9 | The page's own address, opened in a fresh tab of the same session, shows a different list state (the filter, sort, page or tab in the URL not applied, or applied but not shown in the controls) | MvD state machine; REV | metamorphic | **R62 address replay** | coverable | |
 | NV10 | Edge addresses (`/items/999999`, `/items/-1`, `/items/abc`, `?page=0`, `?page=9999`) give a 5xx, a page with no data under status 200 ('soft 404'), or another item | MRT D3f4; REV | probe | **R63 address probes**: built from item addresses the run saw | coverable | |
-| NV11 | Shown contact text differs from its link target (a phone number against its `tel:`, an address against its `mailto:`) | REV | in-page | **R10 extension** | coverable, low | |
+| NV11 | Shown contact text differs from its link target (a phone number against its `tel:`, an address against its `mailto:`) | REV | in-page | **R10 extension** (D61: **R10x**) | coverable, low |  |
 
 ### 3.4 Forms and input
 
@@ -126,15 +126,15 @@ at T2 until it is measured.
 |---|---|---|---|---|---|---|
 | FM1 | Missing validation (empty, spaces only) | MRT A3f5, A4f1 | probe | R17 | covered | F03 |
 | FM2 | Boundary input crashes the server | MRT A3f5 | probe | R16 | covered | F01 |
-| FM3 | Validation rejects legal input (apostrophe, accents, long but legal) | VK i18n ("registration fields do not accept international characters") | probe | **R16 variant**: `O'Brien`, `Zoë`, rejected while the plain value was accepted | coverable | |
+| FM3 | Validation rejects legal input (apostrophe, accents, long but legal) | VK i18n ("registration fields do not accept international characters") | probe | **R16 variant**: `O'Brien`, `Zoë`, rejected while the plain value was accepted (D61: **R16i**) | coverable |  |
 | FM4 | Edit form not filled with the item's current values, or filled with another item's (open A's edit, then B's: B shows A's values) | MRT A4f1; REV | cross-view | **R21a edit prefill** | coverable | |
 | FM5 | Saving an edit form unchanged changes the item (a field dropped), or is rejected ('name already taken' by the item itself) | GN silent data loss; MRT A6f7; REV | metamorphic | **R21b unchanged save** | coverable | F04 |
 | FM6 | Typed input lost after a rejected submit | VK usability, navigation ("state changed/lost") | metamorphic | **R27 input kept** | coverable | |
-| FM7 | Submitting twice creates two items | VK | metamorphic | none (many apps allow duplicates; T3 at best) | coverable, low | |
-| FM8 | Saved text silently differs from what was typed: cut at a limit the page did not state, whitespace collapsed, emoji or other astral characters cut or replaced; a character counter ('12/280') that differs from the real length | MRT A3f9; REV | intent-effect, declared | **R12b extension** (long values, emoji, double spaces) with the field's declared `maxlength` and counter | coverable | |
+| FM7 | Submitting twice creates two items | VK | metamorphic | **R33g** double-submit probe on any create form (D60, controlled mode; T3: many apps allow duplicates); R33 for money and order forms | coverable, low |  |
+| FM8 | Saved text silently differs from what was typed: cut at a limit the page did not state, whitespace collapsed, emoji or other astral characters cut or replaced; a character counter ('12/280') that differs from the real length | MRT A3f9; REV | intent-effect, declared | **R12b extension** (long values, emoji, double spaces) with the field's declared `maxlength` and counter (D61: **R12c**) | coverable |  |
 | FM9 | A number typed in another format is misread without a message ('1,5' saved as 15, '1,000' as 1, digits from other scripts dropped) | VK i18n; SET | probe, metamorphic | **R59 number format probe**; **R71** locale replay | coverable, low | |
 | FM10 | The server does not enforce what the page declares (`maxlength`, `min`, `max`, `step`, `pattern`, `required`, a read-only or disabled field), or rejects a value the page allowed with a message about another field | MRT A3f5, A4f1; OWA API3 (property level); REV | declared | **R60 declared constraints** (M13): submit once past the client check; a finding needs the server to store the forbidden value | coverable | |
-| FM11 | A select or dependent input saves something other than what was chosen (label 'Canada', saved 'United States'); a child list keeps the old parent's options; a hidden required field blocks the submit | REV | intent-effect | **I-edit extension** to selects and radios (the shown label after the save) | coverable | |
+| FM11 | A select or dependent input saves something other than what was chosen (label 'Canada', saved 'United States'); a child list keeps the old parent's options; a hidden required field blocks the submit | REV | intent-effect | **I-edit extension** to selects and radios (the shown label after the save) (D61: **R21s**) | coverable |  |
 
 ### 3.5 Persistence (create, read, update, delete)
 
@@ -143,15 +143,15 @@ at T2 until it is measured.
 | DB1 | Created item not saved or not shown | MRT A6f2; GN | intent-effect | I-create | covered | |
 | DB2 | Edit not saved | MRT A6f7 | intent-effect | I-edit (typed fields); FM5 for the others | covered | |
 | DB3 | Delete acknowledged but not done | MRT A6f7 | intent-effect | I-delete | covered | F06 |
-| DB4 | Delete or edit hits the wrong or extra items | MRT A6f7 | intent-effect | R09 (removal on a revisit); **I-delete extension**: every other item of the list still there | partial | |
-| DB5 | The same item shows different attributes in different views (name, price, count, status, description) | MRT A6f4 (26 bugs, 3rd-largest class); GN incorrect display | cross-view | **R20 cross-view attribute registry** | coverable | BS12; BS15, BS18 (need the spec's data) |
+| DB4 | Delete or edit hits the wrong or extra items | MRT A6f7 | intent-effect | R09 (removal on a revisit); **I-delete extension**: every other item of the list still there (D61: **R09d**) | partial |  |
+| DB5 | The same item shows different attributes in different views (name, price, count, status, description) | MRT A6f4 (26 bugs, 3rd-largest class); GN incorrect display | cross-view | **R20 cross-view attribute registry** (D61: **R20f**) | coverable | BS12; BS15, BS18 (need the spec's data) |
 | DB6 | Stale value after an update (cache) | MRT A7f1, A7f4 | cross-view | G2 (reload); **R20** with the write ledger: a view still showing the old value | partial | |
 | DB7 | Phantom or missing list items | GN; WTP missing-element, data | in-page, intent-effect | R03, R05, R07, R09 | covered | BS01-BS08 |
 | DB8 | Dangling reference after a delete (a product's deleted category shows blank or 404s; a deleted author's posts break) | MRT A6f7; EHR hidden connections | cross-view | R02 when the link is clicked; **R49 references**: after a delete, pages that showed the item are revisited | partial | |
-| DB9 | After a sort, filter or page change, an inline edit or delete hits the item that used to be at that row, not the one clicked | MRT A6f7; REV | intent-effect | **I-edit/I-delete extension**: the changed item is the one whose row held the control (key: its link) | coverable | |
+| DB9 | After a sort, filter or page change, an inline edit or delete hits the item that used to be at that row, not the one clicked | MRT A6f7; REV | intent-effect | **I-edit/I-delete extension**: the changed item is the one whose row held the control (key: its link) (D61: **R09r**) | coverable |  |
 | DB10 | Two routes for one action give different results or validation (quick-add vs the full form, inline edit vs the edit page, drag vs 'Move to', bulk vs single) | REV (logic flaws cluster where two paths do one job) | metamorphic | **R56 route parity**: the same values through both routes, item pages compared | coverable, low | |
-| DB11 | A shown value differs from the response it was rendered from (field swapped, number rounded, a long id rounded past 2^53, a write answered 4xx/5xx while the page shows the new value) | PBF (model vs layout); REV | cross-view (payload) | **R57 payload** (M12) | coverable | |
-| DB12 | An archived, trashed or soft-deleted item still shows in active lists, search, autocomplete or counts; restoring it loses its children, attachments or position | MRT A6f7; REV | intent-effect | **R49 extension**: archive treated like delete for active views; restore compared with the item before | coverable | |
+| DB11 | A shown value differs from the response it was rendered from (field swapped, number rounded, a long id rounded past 2^53, a write answered 4xx/5xx while the page shows the new value) | PBF (model vs layout); REV | cross-view (payload) | **R57 payload** (M12) (D61: **R57e**) | coverable |  |
+| DB12 | An archived, trashed or soft-deleted item still shows in active lists, search, autocomplete or counts; restoring it loses its children, attachments or position | MRT A6f7; REV | intent-effect | **R49 extension**: archive treated like delete for active views; restore compared with the item before (D61: **R49a**) | coverable |  |
 | DB13 | A copy shares state with its original (editing the copy changes the original), or loses the original's children | REV | metamorphic | **R58 clone** | coverable, low | |
 
 ### 3.6 Derived values (counts, sums, ranges, times, order)
@@ -160,8 +160,8 @@ at T2 until it is measured.
 |---|---|---|---|---|---|---|
 | DV1 | Count disagrees with the items listed (also 'Showing 11-20 of 95' against the rows shown) | WTP data | in-page | R04, R04b | covered | BS05-BS08 |
 | DV2 | Count not updated after an action | VK calculation ("adding an item does not update the total") | intent-effect | I-toggle, R19 | covered | F05 |
-| DV3 | Arithmetic: qty x price, subtotal, total | VK calculation | in-page | R06 (terms shown); **R06 extension**: percentage discounts, a shown tax rate times its base | partial | |
-| DV4 | Out-of-range numbers (negative quantity or price, % over 100, rating over its maximum) | VK calculation ("negative number of items discounts the total") | norm, probe | R01 (negative count); **R26 range**: page invariants plus a negative-quantity probe | partial | |
+| DV3 | Arithmetic: qty x price, subtotal, total | VK calculation | in-page | R06 (terms shown); **R06 extension**: percentage discounts, a shown tax rate times its base (D61: **R06s**) | partial |  |
+| DV4 | Out-of-range numbers (negative quantity or price, % over 100, rating over its maximum) | VK calculation ("negative number of items discounts the total") | norm, probe | R01 (negative count); **R26 range**: page invariants plus a negative-quantity probe (D61: **R26p**) | partial |  |
 | DV5 | Times and ages wrong | WTP data | cross-view | R08, R18 | covered | BS09-BS11 |
 | DV6 | Order wrong (active sort not respected, 'latest' not newest first) | VK usability; WTP data | norm | R18 (time order); **R25 sort invariant** | partial | BS17 (label: spec) |
 
@@ -171,12 +171,12 @@ at T2 until it is measured.
 |---|---|---|---|---|---|---|
 | SF1 | Results that do not match | MRT A6f4 | probe, intent-effect | R05, I-filter | covered | F10, BS08 |
 | SF2 | Search misses an item that exists | MRT A6f4 | probe | **R23 search recall**: search a known item's exact name | coverable | BS12 |
-| SF3 | Filter composition (adding a filter adds results; clearing does not restore) | our analysis (metamorphic) | metamorphic | none | coverable, low | |
+| SF3 | Filter composition (adding a filter adds results; clearing does not restore) | our analysis (metamorphic) | metamorphic | **R38c** filter composition (D60, T3: relevance search may widen) | coverable, low |  |
 | SF4 | Personalised list holds the wrong items | | intent-effect | R07c | covered | F08 |
 | SF5 | A facet or tab count ('Shoes (12)', 'Pending (3)') differs from the results it opens | SEG; VK | cross-view | **R38 facet counts** | coverable | |
 | SF6 | Pages of a list overlap, skip items, or their union differs from the stated total (also 'load more' and infinite scroll) | SEG ordering | metamorphic | R11 (repeats); **R39 page union** | partial | |
 | SF7 | A range filter (price, date, amount) returns items outside the range | SEG filtering | intent-effect | **R38 range filter** (I-filter extension to numbers and dates) | coverable | |
-| SF8 | A search with metacharacters (`%`, `_`, `'`, `\`, `*`, `(`) returns everything, an error, or nothing for a name that contains them | MRT A3f5; REV | probe | **R23 variant**: search a known name that holds the character, and the bare character | coverable | |
+| SF8 | A search with metacharacters (`%`, `_`, `'`, `\`, `*`, `(`) returns everything, an error, or nothing for a name that contains them | MRT A3f5; REV | probe | **R23 variant**: search a known name that holds the character, and the bare character (D61: **R23m**) | coverable |  |
 | SF9 | Autocomplete suggestions that do not contain the query, or a chosen suggestion opening another item | REV | intent-effect | **R61 typeahead** | coverable, low | |
 
 ### 3.8 Session, authentication, authorisation
@@ -186,11 +186,11 @@ at T2 until it is measured.
 | SA1 | Logout does not end the session | MRT C1f6 | intent-effect | I-logout | covered | |
 | SA2 | Session lost mid-flow (logged out without logging out), or the header says 'Log in' while private pages still load | MRT C1f2, C1f4 | metamorphic | **R30 session kept**: a login form appears with no logout in the trail | coverable, low | |
 | SA3 | Wrong credentials accepted | MRT F1f2 | probe | **R28 wrong-password probe** | coverable | |
-| SA4 | Resource used without permission (edit or delete another user's item) | MRT F1f6 | probe | R13 (same session); **R24 no-session probe** | partial | F07 |
+| SA4 | Resource used without permission (edit or delete another user's item) | MRT F1f6 | probe | R13 (same session); **R24 no-session probe** (D61: **R46w**) | partial | F07 |
 | SA5 | Roles grant the wrong rights | MRT F1f8; OWA API5 | spec | R13 catches contradictions only; partly reachable with M7: a write the UI offers only to role A, replayed from role B's session, is accepted | spec | |
 | SA6 | Private data reachable without the owner's session (cart, account pages) | VK client privacy; MRT C1f5 | probe | **R24 no-session probe** | coverable | |
 | SA7 | Credential round trip fails: a new account cannot log in; after a password or email change the old one still works or the new one does not | MAI authentication; OWA WSTG-ATHN-09 | intent-effect | **R66 credential round trip** (sandbox accounts only) | coverable | |
-| SA8 | Private content still reachable after a security change: Back after logout shows private pages (browser cache), a reset link works twice (needs a mailbox, WF3) | OWA WSTG-ATHN-06, -09; MRT C1f6 | probe | **R24 extension** (Back after logout) | coverable, low | |
+| SA8 | Private content still reachable after a security change: Back after logout shows private pages (browser cache), a reset link works twice (needs a mailbox, WF3) | OWA WSTG-ATHN-06, -09; MRT C1f6 | probe | **R24 extension** (Back after logout) (D61: **R24b**) | coverable, low |  |
 
 ### 3.9 Collections and toggles
 
@@ -200,7 +200,7 @@ at T2 until it is measured.
 | CT2 | Item added to a collection (cart, wishlist, compare, bookmarks, watch list) missing from that collection's page, or its badge count wrong | VK shopping cart | intent-effect | R07 (favourite and follow only); **R22 collection ledger** | partial | BS01 |
 | CT3 | Undo does not restore | | metamorphic | R19 (second click) | covered | |
 | CT4 | Collection lost on navigation | VK navigation | metamorphic | R09 (revisit); **R22** revisit | partial | BS02, BS03 |
-| CT5 | A guest's collection (cart, wishlist) merged at login with lines duplicated or lost | VK shopping cart; REV | intent-effect | **R22 extension** (fill as guest, log in, compare) | coverable, low | |
+| CT5 | A guest's collection (cart, wishlist) merged at login with lines duplicated or lost | VK shopping cart; REV | intent-effect | **R22 extension** (fill as guest, log in, compare) (D61: **R22g**) | coverable, low |  |
 
 ### 3.10 Workflows and business rules
 
@@ -208,17 +208,17 @@ at T2 until it is measured.
 |---|---|---|---|---|---|---|
 | WF1 | A multi-step flow loses data between steps (wizard, checkout) | VK | metamorphic | G1, FM6 | partial | |
 | WF2 | Business rule values (tax rate, discount eligibility, shipping rule, reply nesting, sort label) | VK calculation | spec | DV3 when the page shows every term | spec | BS14, BS17 |
-| WF3 | Notification or email not sent | VK ISP | intent-effect | In-app notification centres through **R47 badges**; email only on our own deployments, through a local mail catcher (Mailpit) the harness can read | coverable, low | |
+| WF3 | Notification or email not sent | VK ISP | intent-effect | In-app notification centres through **R47 badges**; email only on our own deployments, through a local mail catcher (Mailpit) the harness can read (D61: **R47m**) | coverable, low |  |
 | WF4 | A later step of a flow opens by its address with an earlier step skipped (checkout without shipping, a wizard's step 3) | MAI access control; PortSwigger logic flaws; OWA API6 | probe | **R45 step skip** | coverable | |
 | WF5 | A review, confirmation or history page differs from what was entered or chosen in earlier steps (quantity, dates, guests, price, address) | VK; REV | intent-effect | **R70 funnel ledger**: the values the worker typed or chose in the flow, compared with each later step | coverable | |
-| WF6 | A flow broken off mid-way leaves a half-done state: a payment without an order, a seat or room still held after the booking failed | REV (sagas and compensation) | intent-effect | **R52 extension** with M11: one write of the flow aborted; flag only states the app's own error message denies | coverable, low | |
+| WF6 | A flow broken off mid-way leaves a half-done state: a payment without an order, a seat or room still held after the booking failed | REV (sagas and compensation) | intent-effect | **R52 extension** with M11: one write of the flow aborted; flag only states the app's own error message denies (D61: **R52f**) | coverable, low |  |
 
 ### 3.11 Concurrency
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
-| CC1 | Race, out-of-order async response (results for 'ab' arriving after 'abc' and shown) | MRT B6f1, C1f2; OC | metamorphic | G2, G3 see the symptoms; M11 can provoke it by delaying the first of two responses | partial | |
-| CC2 | Lost update: two sessions edit one item, one change vanishes with no warning | DBK | probe (two sessions) | none (T3 at best: last-write-wins is a legal design) | coverable, low | |
+| CC1 | Race, out-of-order async response (results for 'ab' arriving after 'abc' and shown) | MRT B6f1, C1f2; OC | metamorphic | G2, G3 see the symptoms; M11 can provoke it by delaying the first of two responses (D61: **R77**) | partial |  |
+| CC2 | Lost update: two sessions edit one item, one change vanishes with no warning | DBK | probe (two sessions) | **R46c** two-tab lost-update probe on own items (D60, controlled mode; T3: last-write-wins is a legal design) | coverable, low |  |
 
 ### 3.12 Environment and non-functional
 
@@ -226,7 +226,7 @@ at T2 until it is measured.
 |---|---|---|---|
 | EN1 | Browser incompatibility | MRT A1f1 (49 bugs, the largest class) | coverable: **R71** replays the trail in Firefox and WebKit (Playwright ships both) and compares item text and findings, not pixels; layout-only differences stay out |
 | EN2 | Plugins, frames | MRT A1f3, B3 | out |
-| EN3 | Server, framework or file-system configuration | MRT A3f4, A3f7, A3f8 | partial: only when it shows as a 5xx or an error page (RT1, RT3) |
+| EN3 | Server, framework or file-system configuration | MRT A3f4, A3f7, A3f8 | partial: only when it shows as a 5xx or an error page (RT1 HTTP 5xx signal, RT3 R01) |
 | EN4 | Protocols, TLS, proxies | MRT E1-E3 | out |
 | EN5 | Performance, scale, network, hardware, hosting, upgrades | VK | out |
 | EN6 | Security beyond R12/R13/R24 (SQL injection, CSRF, buffer overflow, open redirects, CSV formula injection, mass assignment of fields the page does not show) | VK security; OWA | out: not a security scanner |
@@ -245,9 +245,9 @@ write-ups or our own analysis back a family, the Sources cell says so.
 | LG1 | A transfer is not conserved (source minus x, destination not plus x; stock moved but not received) | FIN logic; our analysis | intent-effect | **R32 ledger** | coverable | |
 | LG2 | A balance differs from its opening value plus its listed transactions; a running-balance column breaks | FIN algorithm; VK calculation | in-page | **R32 ledger** (running balance) | coverable | |
 | LG3 | An accepted payment, transfer or order applied twice when resubmitted (back and submit, double click, reload) | PortSwigger logic flaws; DBK | metamorphic | **R33 resubmit** | coverable | |
-| LG4 | Rounding and precision: wrong number of decimals, rounded lines that do not add up to the total, float noise | RND; VK calculation | in-page | R01 (float noise), R06 (tolerance); **R32** decimals per currency | partial | |
+| LG4 | Rounding and precision: wrong number of decimals, rounded lines that do not add up to the total, float noise | RND; VK calculation | in-page | R01 (float noise), R06 (tolerance); **R32** decimals per currency (D61: **R32d**) | partial |  |
 | LG5 | The same amount shown with different currency, unit or decimals in different views; a currency switch not applied everywhere | VK i18n | cross-view | **R20** (amount attributes) | coverable | |
-| LG6 | Zero, negative or above-available amounts accepted for a transfer, payment or withdrawal | VK calculation; PortSwigger | probe | **R26 range** probe | coverable | |
+| LG6 | Zero, negative or above-available amounts accepted for a transfer, payment or withdrawal | VK calculation; PortSwigger | probe | **R26 range** probe (D61: **R26p**) | coverable |  |
 
 ### 3.14 Lifecycles (orders, requests, invoices, tickets, registrations)
 
@@ -255,7 +255,7 @@ write-ups or our own analysis back a family, the Sources cell says so.
 |---|---|---|---|---|---|---|
 | SM1 | Status not updated after a status action (approve, cancel, mark paid, close) | GN function failure | intent-effect | **R34 lifecycle** | coverable | |
 | SM2 | Status differs between views or between accounts (the requester sees Pending, the approver Approved) | EHR unmet display needs | cross-view | **R20**, **R46** (second account) | coverable | |
-| SM3 | An action works in a state the app itself calls closed (edit a cancelled order, pay a paid invoice, the page says 'locked') | PortSwigger workflow flaws | probe | **R34** (T2) | coverable | |
+| SM3 | An action works in a state the app itself calls closed (edit a cancelled order, pay a paid invoice, the page says 'locked') | PortSwigger workflow flaws | probe | **R34** (T2) (D61: **R34c**) | coverable |  |
 | SM4 | An item listed under two exclusive status tabs, or under none | our analysis | cross-view | **R34** | coverable | |
 | SM5 | Who may move an item to which state (self-approval, separation of duties) | MAI access control | spec | none | spec | |
 
@@ -271,13 +271,13 @@ write-ups or our own analysis back a family, the Sources cell says so.
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
 | TM1 | End before start accepted; duration shown differs from end minus start (including off-by-one counting: Mon-Fri shown as 4 days when the page counts days) | DT | probe, in-page | **R36 intervals** | coverable | |
-| TM2 | One resource booked twice for overlapping times (room, appointment, leave days) | DBK | probe | **R36** (the same slot booked twice, one after the other; true races out of scope) | coverable | |
-| TM3 | Time-zone shift: the same event's time differs by whole hours between views or after a save | DT (time zones the largest factor) | cross-view | **R20** (time attributes) | coverable | |
-| TM4 | A calendar places an item on another day than its list or detail page says | our analysis | cross-view | **R20** | coverable | |
+| TM2 | One resource booked twice for overlapping times (room, appointment, leave days) | DBK | probe | **R36** (the same slot booked twice, one after the other; true races out of scope) (D61: **R36b**) | coverable |  |
+| TM3 | Time-zone shift: the same event's time differs by whole hours between views or after a save | DT (time zones the largest factor) | cross-view | **R20** (time attributes) (D61: **R20t**) | coverable |  |
+| TM4 | A calendar places an item on another day than its list or detail page says | our analysis | cross-view | **R20** (D61: **R20t**) | coverable |  |
 | TM5 | A date-only value (birthday, due date, all-day event) moves by one day when the browser is in another time zone (stored as midnight UTC) | DT (time zones the largest factor); SET | metamorphic | **R71** time-zone replay (UTC-11 and UTC+14): the same item's date text must not change | coverable | |
-| TM6 | Invalid or edge dates mishandled: 30 Feb or 31 Apr accepted; 29 Feb, a month end plus one month, or a daylight-saving day giving an error or a wrong date | DT (edge cases) | probe | **R36 extension** (date probes) | coverable | |
-| TM7 | A recurrence lists a different number of occurrences than its own rule states ('weekly, 5 times' listing 4) | our analysis (REV) | in-page | **R36 extension** | coverable, low | |
-| TM8 | A relative label disagrees with the shown date and the current time ('Overdue' on a future date, 'Upcoming' on a past one, 'expires in -2 days'); a timed state (hold, trial, code) does not end at the time the page states | DT; REV | in-page, metamorphic | **R72 relative time** (in-page now; the timed state with Playwright's fake clock, M10) | coverable | |
+| TM6 | Invalid or edge dates mishandled: 30 Feb or 31 Apr accepted; 29 Feb, a month end plus one month, or a daylight-saving day giving an error or a wrong date | DT (edge cases) | probe | **R36 extension** (date probes) (D61: **R36p**) | coverable |  |
+| TM7 | A recurrence lists a different number of occurrences than its own rule states ('weekly, 5 times' listing 4) | our analysis (REV) | in-page | **R36 extension** (D61: **R36r**) | coverable, low |  |
+| TM8 | A relative label disagrees with the shown date and the current time ('Overdue' on a future date, 'Upcoming' on a past one, 'expires in -2 days'); a timed state (hold, trial, code) does not end at the time the page states | DT; REV | in-page, metamorphic | **R72 relative time** (in-page now; the timed state with Playwright's fake clock, M10) (D61: **R72c**) | coverable |  |
 
 ### 3.17 Hierarchies (book > chapter > page, category > product, board > list > card)
 
@@ -285,9 +285,9 @@ write-ups or our own analysis back a family, the Sources cell says so.
 |---|---|---|---|---|---|---|
 | HI1 | Breadcrumb or parent link disagrees with where the item is listed | MRT D3f1 | cross-view | **R40 hierarchy** | coverable | |
 | HI2 | A parent's child count differs from the children shown | WTP data | in-page | R04 (same page) | partial | BS05-BS07 |
-| HI3 | A move is not reflected in both parents (still in the old, missing from the new) | our analysis | intent-effect | **R40** | coverable | |
+| HI3 | A move is not reflected in both parents (still in the old, missing from the new) | our analysis | intent-effect | **R40** (D61: **R40m**) | coverable |  |
 | HI4 | Children still shown, or orphaned, after their parent is deleted | EHR hidden connections | intent-effect | **R49 references** | coverable | |
-| HI5 | A cycle accepted: an item moved into its own descendant, or made its own parent or manager | our analysis (REV) | probe | **R40 extension** (one move probe per tree kind; the probe is undone) | coverable | |
+| HI5 | A cycle accepted: an item moved into its own descendant, or made its own parent or manager | our analysis (REV) | probe | **R40 extension** (one move probe per tree kind; the probe is undone) (D61: **R40c**) | coverable |  |
 
 ### 3.18 Aggregates and reports (dashboards, charts, totals)
 
@@ -295,24 +295,24 @@ write-ups or our own analysis back a family, the Sources cell says so.
 |---|---|---|---|---|---|---|
 | AG1 | A dashboard tile or summary number differs from the count or sum of the list it summarises | CAT data management; MRT A6f4 | cross-view | **R41 aggregates** | coverable | |
 | AG2 | A chart or report total differs from its table (when the chart's values are in the DOM text or ARIA labels) | CAT 3D/visualisation | cross-view | **R41** | coverable | |
-| AG3 | A 'Total' row differs from the sum of its column (hours, points, amounts, quantities) | VK calculation | in-page | R06 (line totals to subtotal); **R06 extension**: any total row against its column | partial | |
+| AG3 | A 'Total' row differs from the sum of its column (hours, points, amounts, quantities) | VK calculation | in-page | R06 (line totals to subtotal); **R06 extension**: any total row against its column (D61: **R06c**) | partial |  |
 
 ### 3.19 Several users (sharing, notifications)
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
 | MU1 | Content one account published is not visible to another account (or to visitors) | GN; EHR interface | probe (second session) | **R46 second account** | coverable | |
-| MU2 | A notification badge differs from the unread items; read state not kept | our analysis | cross-view | **R47 badges** | coverable | |
+| MU2 | A notification badge differs from the unread items; read state not kept | our analysis | cross-view | **R47 badges** (D61: **R47r**) | coverable |  |
 
 ### 3.20 Files and exports
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
 | AR1 | An upload not attached, shown with the wrong name or size, or an ordinary file rejected | MRT A3f4 | intent-effect | **R42 uploads** | coverable | |
-| AR2 | A broken image or media file (404, zero size), or a 'Download' link that returns no file | MRT D2f1 | norm | **R02 extension** to `img`/`video` sources and download links | coverable | |
+| AR2 | A broken image or media file (404, zero size), or a 'Download' link that returns no file | MRT D2f1 | norm | **R02 extension** to `img`/`video` sources and download links (D61: **R02m, R02d**) | coverable |  |
 | AR3 | An export, print view or PDF disagrees with the screen (rows, totals) | VK; CAT data management | cross-view | **R37 exports** (CSV first; PDF needs text extraction) | coverable | |
-| AR4 | Importing an exported file does not restore the data | our analysis | metamorphic | **R37** round trip | coverable, low | |
-| AR5 | An import's report differs from what it stored (rows reported imported missing, rejected rows stored, duplicates merged without a word) | REV | intent-effect | **R37 extension** with a generated file of good, bad, duplicate and dangling-reference rows | coverable, low | |
+| AR4 | Importing an exported file does not restore the data | our analysis | metamorphic | **R37** round trip (D61: **R37i**) | coverable, low |  |
+| AR5 | An import's report differs from what it stored (rows reported imported missing, rejected rows stored, duplicates merged without a word) | REV | intent-effect | **R37 extension** with a generated file of good, bad, duplicate and dangling-reference rows (D61: **R37i**) | coverable, low |  |
 
 ### 3.21 Settings
 
@@ -325,14 +325,14 @@ write-ups or our own analysis back a family, the Sources cell says so.
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
 | RC1 | A drag-and-drop reorder or move not kept after a reload; per-column counts not updated | CAT web application | metamorphic | **R48 client state** | coverable | |
-| RC2 | Client-side state lost on reload (local-storage apps, unsaved drafts) | DLB (the web analogue of state lost on rotation) | metamorphic | G2 (reload); **R48** | coverable | |
-| RC3 | Undo then redo does not return to the same state | our analysis | metamorphic | **R48** | coverable | |
-| RC4 | A keyboard shortcut or pointer interaction ignored (no DOM change; on a canvas, no pixel change, RC8) | TRU action | metamorphic | **R29** variant | coverable, low | |
+| RC2 | Client-side state lost on reload (local-storage apps, unsaved drafts) | DLB (the web analogue of state lost on rotation) | metamorphic | G2 (reload); **R48** (D61: **R48s**) | coverable |  |
+| RC3 | Undo then redo does not return to the same state | our analysis | metamorphic | **R48** (D61: **R48u**) | coverable |  |
+| RC4 | A keyboard shortcut or pointer interaction ignored (no DOM change; on a canvas, no pixel change, RC8) | TRU action | metamorphic | **R29** variant (D61: **R29k**) | coverable, low |  |
 | RC5 | Game or tool values break their own rules (negative score or lives, timer running backwards or while paused, restart not resetting every number, high score below the last score, 'Game over' with lives left) | TRU value, context state, event occurrence | norm | **R26** on numbers shown in the DOM | coverable | |
 | RC6 | Canvas or 3D content wrong by the game's or chart's own rules (positions, bounds, collisions, what is drawn) | TRU graphics, position, bounds, collision | needs vision or game semantics | none | out (RC7 and RC8 take the parts the DOM or a screenshot hash can show) | |
 | RC7 | SVG geometry broken: `NaN` or negative sizes in attributes, shapes outside their `viewBox`, a chart's bars or labels outside the plot area | TRU bounds; CAT SVG, 3D/visualisation | norm | **R75 canvas and SVG sanity** (M14) | coverable | |
 | RC8 | A canvas or WebGL area blank, frozen (same screenshot hash while the app claims to animate), unchanged after input, or its context lost | TRU graphics; CAT game, 3D | norm, metamorphic | **R75** (screenshot hashes of the canvas only; no vision model) | coverable | |
-| RC9 | The app does not start when its local storage holds `null`, garbage or an older shape of its own data (white screen) | DLB; REV | probe | **R48 extension** (one corrupted-storage reload per app) | coverable, low | |
+| RC9 | The app does not start when its local storage holds `null`, garbage or an older shape of its own data (white screen) | DLB; REV | probe | **R48 extension** (one corrupted-storage reload per app) (D61: **R48c**) | coverable, low |  |
 
 Groups 3.23-3.30 come from the reviewer chats (REV, D57): the families a check of the 106 above showed
 to be missing, kept only where a spec-free check exists. Families the reviewers proposed that were already
@@ -347,7 +347,7 @@ The converse of intent-effect: the app's own message, toast or state contradicts
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
 | FB1 | An error shown but the write landed (seen on a revisit); a retry then creates a duplicate | GN function failure; REV | intent-effect | **R50 false failure**; with M11 the response is aborted after the server answered, then R33's resubmit | coverable | |
-| FB2 | A message (toast, banner, an in-app assistant's reply) contradicts the action: success and error together, 'Deleted 3' when 1 changed, another item named, a message left over from an earlier action | GN incorrect display; REV | in-page, intent-effect | **R51 message fidelity**: the success-and-error-together form is built (D58, `evidence.py`, transient messages caught by a MutationObserver; T2); the count and name against the write ledger not yet | partial | |
+| FB2 | A message (toast, banner, an in-app assistant's reply) contradicts the action: success and error together, 'Deleted 3' when 1 changed, another item named, a message left over from an earlier action | GN incorrect display; REV | in-page, intent-effect | **R51 message fidelity**: the success-and-error-together form is built (D58, `evidence.py`, transient messages caught by a MutationObserver; T2); the count and name against the write ledger not yet (D61: **R51c**) | partial |  |
 | FB3 | An optimistic update kept after its write failed (the page shows the new value, the response was 4xx/5xx or aborted, a reload shows the old one) | OC; REV | cross-view (payload), metamorphic | **R52 rollback** (M11, M12) | coverable | |
 | FB4 | A confirmation names another item than the one clicked; Cancel or Esc still performs the action | MvD 5.3.1; REV | metamorphic | **R53 cancel probe** | coverable | |
 | FB5 | Loading never ends while the network is idle; an empty state ('No results', 'Nothing here yet') shown where the request behind it failed | MvD 5.3.1; REV | implicit, norm | **R54 loading and empty states** | coverable | |
@@ -363,9 +363,9 @@ The converse of intent-effect: the app's own message, toast or state contradicts
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
-| UQ1 | Two items share one address or one identifier the app shows as unique (slug, order or invoice number); a rename leaves the app's own links on the old address broken | MRT D3f1; REV | cross-view, norm | **R20 extension**: address to item must be one-to-one in the registry | coverable | |
-| UQ2 | A uniqueness the app enforces for exact duplicates ('already taken') bypassed by a variant: trailing space, another Unicode normal form, case where the app folds case elsewhere | VK i18n; REV | probe | **R16 variant**, armed only after the app rejected an exact duplicate | coverable, low | |
-| UQ3 | Digits lost in identifier-like values: leading zeros (zip, phone, account number), long numbers rounded (ids past 2^53 in JavaScript) | MRT A3f9; REV | intent-effect, cross-view (payload) | **R12b extension**; **R57** | coverable | |
+| UQ1 | Two items share one address or one identifier the app shows as unique (slug, order or invoice number); a rename leaves the app's own links on the old address broken | MRT D3f1; REV | cross-view, norm | **R20 extension**: address to item must be one-to-one in the registry (D61: **R20u**) | coverable |  |
+| UQ2 | A uniqueness the app enforces for exact duplicates ('already taken') bypassed by a variant: trailing space, another Unicode normal form, case where the app folds case elsewhere | VK i18n; REV | probe | **R16 variant**, armed only after the app rejected an exact duplicate (D61: **R16u**) | coverable, low |  |
+| UQ3 | Digits lost in identifier-like values: leading zeros (zip, phone, account number), long numbers rounded (ids past 2^53 in JavaScript) | MRT A3f9; REV | intent-effect, cross-view (payload) | **R12b extension**; **R57** (D61: **R12c**) | coverable |  |
 
 ### 3.26 Context isolation (accounts, workspaces, organisations, patients)
 
@@ -373,7 +373,7 @@ The converse of intent-effect: the app's own message, toast or state contradicts
 |---|---|---|---|---|---|---|
 | CX1 | After logging out as A and in as B in the same browser, A's data shows for B (names, drafts, cart, local storage) | MRT C1f5; VK client privacy | probe (two accounts) | **R67 context sentinels**: each account writes a unique marker; B's pages must not hold A's | coverable | |
 | CX2 | After switching workspace, organisation, store, project or patient, the old context's items stay on screen, in autocompletes, counters or after Back, or a write goes to the old context | EHR (data of another patient entered into a record; ECRI wrong record); OWA multi-tenant | probe | **R67** | coverable | |
-| CX3 | Items listed, searched or counted for this account that are forbidden when opened (403), or counts that include them | BAC; REV | cross-view | **R67**; **R20** | coverable | |
+| CX3 | Items listed, searched or counted for this account that are forbidden when opened (403), or counts that include them | BAC; REV | cross-view | **R67**; **R20** (D61: **R67f**) | coverable |  |
 
 ### 3.27 Relations, votes and ratings (many-to-many)
 
@@ -381,9 +381,9 @@ P-TREE covers one-to-many; these are the links between peers.
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
-| RL1 | The two sides of a relation disagree (A follows B but B's followers lack A; an assignee's 'my items' lacks the item; a tag's page lacks the tagged item), also after the relation is removed on one side or an end is deleted | PBF (model vs layout); GN independent views | cross-view | **R68 inverse relations** | coverable | |
+| RL1 | The two sides of a relation disagree (A follows B but B's followers lack A; an assignee's 'my items' lacks the item; a tag's page lacks the tagged item), also after the relation is removed on one side or an end is deleted | PBF (model vs layout); GN independent views | cross-view | **R68 inverse relations** (D61: **R68t**) | coverable |  |
 | RL2 | A relation added twice or to itself (assigned twice, the same tag twice, following yourself) | REV | probe | **R68** | coverable, low | |
-| RL3 | A vote or rating summary disagrees with its parts: average differs from the mean of the ratings listed, a histogram not summing to the count, likes differing from the likers listed, one user's vote counted twice | VK calculation; REV | in-page | **M2 identity library** (section 5.1) | coverable | |
+| RL3 | A vote or rating summary disagrees with its parts: average differs from the mean of the ratings listed, a histogram not summing to the count, likes differing from the likers listed, one user's vote counted twice | VK calculation; REV | in-page | **M2 identity library** (section 5.1): **R06s** rating histogram and average (D60) | coverable |  |
 
 ### 3.28 Prices and carts
 
@@ -391,8 +391,8 @@ P-TREE covers one-to-many; these are the links between peers.
 |---|---|---|---|---|---|---|
 | PX1 | Cart algebra broken: add A, add B, remove A differs from adding B alone; another adding order changes the total; quantity n then n-1 not giving n-1; quantity 0 not removing the line | VK shopping cart; SEG | metamorphic | **R69 cart algebra** | coverable | |
 | PX2 | Removing a coupon or discount does not restore the total; one applied twice (reload, re-entry); a code the page itself calls expired or below its minimum accepted | VK calculation; PortSwigger logic flaws | metamorphic, declared | **R69**; **R34** (state the page states) | coverable | |
-| PX3 | A shown saving disagrees with its prices ('-30%' against (was - now)/was, 'Save $X', 'spend $12 more for free shipping' against the threshold the page states) | VK calculation | in-page, declared | **M2 identity library** | coverable | |
-| PX4 | The chosen variant (size, colour, plan) differs in cart or order; price, stock or image not updated when it changes | VK shopping cart | intent-effect | **R22 extension** | coverable | |
+| PX3 | A shown saving disagrees with its prices ('-30%' against (was - now)/was, 'Save $X', 'spend $12 more for free shipping' against the threshold the page states) | VK calculation | in-page, declared | **M2 identity library**: **R06s** discount, saving and spend-more identities (D60) | coverable |  |
+| PX4 | The chosen variant (size, colour, plan) differs in cart or order; price, stock or image not updated when it changes | VK shopping cart | intent-effect | **R22 extension** (D61: **R22v**) | coverable |  |
 
 ### 3.29 History and audit
 
@@ -418,6 +418,8 @@ P-TREE covers one-to-many; these are the links between peers.
 | out | 8 |
 | **total** | **163** |
 
+D61 changes: every extension or variant a row names is now built under its own rule id, named in the row ("D61: ..."; 48 rows), and `families.EXTENSIONS` maps each such phrase to the id that implements it, so the tracker counts an extension only once its id exists. Statuses are unchanged (they move with measurement, v5 plan 12.2).
+D60 changes: every family marked covered, partial or coverable now names a rule that exists in the code (`docs/family_tracker.toml`: 152 built, 11 spec or out); FM7, SF3, CC2, RL3 and PX3 got rules (R33g, R38c, R46c, R06s), EN3 names its signals. **The statuses above are unchanged**: a status moves to covered only when its rule has found a seeded fault or passed its fixture test on a development app, which the D59 resweep and the pilots decide (v5 plan 12.2, I59).
 D58 changes: RT5 covered (R57), FB2 partial (R51), both behind `capture_evidence`.
 D57 changes: 57 families added (55 coverable; EN8 and EN9 out); EN1, PR5 and WF3 moved from out to
 coverable (M10, M14, a local mail catcher); RC6 narrowed to what still needs vision.

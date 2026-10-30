@@ -1,0 +1,80 @@
+{
+ "v4": {
+  "validation": "is required|are required|must be|must have|must contain|is invalid|not valid|invalid|already (been )?taken|already exists|too (short|long)|at least \\d|at most \\d|please (enter|provide|fill|select|choose)|does not match|do not match|can'?t be (blank|empty)|cannot be (blank|empty)|field is|not allowed|format",
+  "system_error": "something went wrong|unknown error|an error (has )?occurred|unexpected error|internal (server )?error|could not|couldn't|failed to|unable to|try again later|service unavailable|server error",
+  "personal": "\\bmy\\b|\\byour\\b|favou?rite|starred|bookmark|wishlist|saved|liked|following|\\bfeed\\b|recently viewed|viewed|history|watch(ed|ing|list)",
+  "recency": "recent|latest|\\bnew\\b|newest|activity|updated|popular|trending|\\bfeed\\b|history|last",
+  "event_feed": "activit|audit|\\blogs?\\b|changelog|timeline|notification"
+ },
+ "verbs": [
+  [
+   "unfavourite",
+   "\\bun-?favou?rite|\\bunstar\\b|remove (from )?(my )?(favou?rites|wishlist|bookmarks)|\\bunbookmark"
+  ],
+  [
+   "unfollow",
+   "\\bun-?follow\\b|\\bunsubscribe\\b|\\bunwatch\\b"
+  ],
+  [
+   "unlike",
+   "\\bunlike\\b"
+  ],
+  [
+   "favourite",
+   "\\bfavou?rite|\\bstar\\b|\\bbookmark|\\bwishlist\\b|\\bheart\\b|ion-heart|fa-heart|fa-star|bi-star|bi-heart"
+  ],
+  [
+   "follow",
+   "\\bfollow\\b|\\bsubscribe\\b|\\bwatch\\b"
+  ],
+  [
+   "like",
+   "\\blike\\b|\\bupvote\\b|thumbs.?up"
+  ],
+  [
+   "delete",
+   "\\bdelete\\b|\\bremove\\b|\\btrash\\b|\\bdestroy\\b|\\bdiscard\\b|ion-trash|fa-trash|bi-trash"
+  ],
+  [
+   "logout",
+   "\\blog ?out\\b|\\bsign ?out\\b"
+  ],
+  [
+   "login",
+   "\\blog ?in\\b|\\bsign ?in\\b"
+  ],
+  [
+   "create",
+   "\\bcreate\\b|\\bnew\\b|\\badd\\b|\\bpublish\\b|\\bpost\\b|\\bregister\\b|\\bsign ?up\\b|\\bsend\\b"
+  ],
+  [
+   "save",
+   "\\bsave\\b|\\bupdate\\b|\\bsubmit\\b|\\bapply\\b|\\bconfirm\\b|\\bok\\b|\\bdone\\b"
+  ]
+ ],
+ "categories": [
+  [
+   "favourite",
+   "favou?rite|starred|bookmark|wishlist|saved|liked"
+  ],
+  [
+   "follow",
+   "following|followed|subscri"
+  ],
+  [
+   "view",
+   "recently viewed|viewed|history|recently visited"
+  ],
+  [
+   "add",
+   "\\bcart\\b|basket|\\bbag\\b|order summary|your items"
+  ]
+ ],
+ "flags": {
+  "validation": 34,
+  "system_error": 34,
+  "personal": 34,
+  "recency": 34,
+  "event_feed": 34
+ }
+}

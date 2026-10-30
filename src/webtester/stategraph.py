@@ -85,6 +85,7 @@ class Edge:
     verb: str = ""
     nav: bool = False
     signals: int = 0
+    replay: list = field(default_factory=list)  # X2 (D60): the first-seen actions as {do, ekey, nth, value}
 
     @property
     def dst_pages(self) -> set:
@@ -123,7 +124,8 @@ class StateGraph:
         if e is None:
             first = actions[0]
             e = self.edges[key] = Edge(src, key[1], f"{first['do']} {(first.get('el') or first.get('value') or '')}"[:80],
-                                       nav=is_navigation(actions))
+                                       nav=is_navigation(actions),
+                                       replay=[{k: a.get(k) for k in ("do", "ekey", "nth", "value")} for a in actions])
         e.dst[f"{dst}@{self.nodes[dst].page}"] += 1
         e.workers.add(worker)
         e.by[by] += 1
@@ -174,6 +176,13 @@ class StateGraph:
                     seen.add(sid)
                     q.append((sid, p + [e]))
         return None
+
+    def nav_path(self, src: str, dst_page: str, max_len: int = 4) -> list[Edge] | None:
+        """X2: a path of navigation-only edges (no data verb) that can be replayed to reach `dst_page`."""
+        p = self.path(src, dst_page, max_len)
+        if not p or any(e.verb or not e.nav or not e.replay for e in p):
+            return None
+        return p
 
     def stats(self) -> dict:
         by = Counter()

@@ -1,0 +1,27 @@
+2026-10-30 02:18 v63 code 2964342f50ab3d9b5599ee1df8689ce05fabdde1edc430e5ad29ecd2904caaa9 38 files
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+02:27 done logs/experiments/v5dev/bs4rep/v63_on_20261027-221950_bookstack_b4_n4_bs4rep1.json
+02:35 done logs/experiments/v5dev/bs4rep/v63_on_20261027-230029_bookstack_b4_n4_bs4rep2.json
+02:41 done logs/experiments/v5dev/bs4rep/v63_on_20261027-232821_bookstack_b4_n4_bs4rep3.json
+02:46 done logs/experiments/v5dev/bs4rep/v63_on_20261028-000919_bookstack_b4_n4_bs4rep4.json
+02:53 done logs/experiments/v5dev/bs4rep/v63_on_20261028-004736_bookstack_b4_n4_bs4rep5.json
+03:00 done logs/experiments/v5dev/bs4rep/v63_off_20261027-221950_bookstack_b4_n4_bs4rep1.json
+03:07 done logs/experiments/v5dev/bs4rep/v63_off_20261027-230029_bookstack_b4_n4_bs4rep2.json
+03:12 done logs/experiments/v5dev/bs4rep/v63_off_20261027-232821_bookstack_b4_n4_bs4rep3.json
+03:16 done logs/experiments/v5dev/bs4rep/v63_off_20261028-000919_bookstack_b4_n4_bs4rep4.json
+03:23 done logs/experiments/v5dev/bs4rep/v63_off_20261028-004736_bookstack_b4_n4_bs4rep5.json
+down
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+03:28 done logs/experiments/v5dev/h4rep/v63_on_20261027-081619_realworld_b4_n4_h4rep1.json
+03:32 done logs/experiments/v5dev/h4rep/v63_on_20261027-191138_realworld_b4_n4_h4rep2.json
+03:36 done logs/experiments/v5dev/h4rep/v63_on_20261027-195413_realworld_b4_n4_h4rep3.json
+03:40 done logs/experiments/v5dev/h4rep/v63_on_20261027-205941_realworld_b4_n4_h4rep4.json
+03:44 done logs/experiments/v5dev/h4rep/v63_on_20261027-214443_realworld_b4_n4_h4rep5.json
+up at http://127.0.0.1:4100 with faults: none
+03:48 done logs/experiments/v5dev/h4rep/v63_off_20261027-081619_realworld_b4_n4_h4rep1.json
+03:52 done logs/experiments/v5dev/h4rep/v63_off_20261027-191138_realworld_b4_n4_h4rep2.json
+03:56 done logs/experiments/v5dev/h4rep/v63_off_20261027-195413_realworld_b4_n4_h4rep3.json
+04:01 done logs/experiments/v5dev/h4rep/v63_off_20261027-205941_realworld_b4_n4_h4rep4.json
+04:06 done logs/experiments/v5dev/h4rep/v63_off_20261027-214443_realworld_b4_n4_h4rep5.json
+down
+2026-10-30 04:06 resweep v63 done
