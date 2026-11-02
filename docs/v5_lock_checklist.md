@@ -94,4 +94,4 @@ The v5 pilots (30 Oct) showed R71 noise and reached F05 and BS01-BS03 without a 
 | BookStack recall / precision / clean FA per run | 8/13, 0.98, 0.4 | 8/13, **0.98**, **0.4** |
 | Conduit recall / precision / clean FA per run | 7/8, 0.99, 0.2 | **8/8**, **0.99**, **0.2** |
 
-Step 2.3 (commit) must now give hash b63ea788 (`exclude_rules` in the configs adds R71); 2.6 live pilots done (`h5pilotb`, `bs5pilotb`); 2.8 tag after the user's go.
+**Done 3 Nov: commit `a31885b`, tag `v5.0`** (the commit equals the measured code file by file, up to Windows line endings, D64). Was: step 2.3 (commit) must now give hash b63ea788 (`exclude_rules` in the configs adds R71); 2.6 live pilots done (`h5pilotb`, `bs5pilotb`); 2.8 tag after the user's go.
