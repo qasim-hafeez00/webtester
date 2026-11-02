@@ -346,6 +346,8 @@ class PagesApp:
                      3: {"title": "Coffee rota", "body": "Who brings coffee.", "v": 1, "file": ""},
                      4: {"title": "Design notes", "body": "Sketches and ideas.", "v": 1, "file": ""}}
         self.fav3 = False
+        self.stale_add = False  # I97: favouriting answers the count from before the update (Conduit F05's shape)
+        self.local_count = False  # I97: the page counts the click itself and ignores the answer (Conduit's frontend)
         self.parent = {1: None, 2: 1}
         self.folders = {1: "Root folder", 2: "Child folder"}
         self.lock = threading.Lock()
@@ -357,7 +359,9 @@ class PagesApp:
             extra = "<button type=button>Unfavourite</button>"
         elif i == 3:
             on = "Unfavourite" if self.fav3 else "Favourite"
-            upd = "" if self.faulty else "fv.textContent = (d.on ? 'Unfavourite' : 'Favourite') + ' (' + d.count + ')';"
+            local = (r"const n = parseInt(fv.textContent.match(/\d+/)[0]) + (d.on ? 1 : -1); "
+                     "fv.textContent = (d.on ? 'Unfavourite' : 'Favourite') + ' (' + n + ')';")
+            upd = local if self.local_count else "" if self.faulty and not self.stale_add else "fv.textContent = (d.on ? 'Unfavourite' : 'Favourite') + ' (' + d.count + ')';"
             extra = f"<button type=button class=favourite id=fv>{on} ({3 + self.fav3})</button>" + FAV_JS % upd
         if i >= 5:
             extra = (f"<p><a href='/docs/{i}/edit'>Edit</a> <a href='/docs/{i}/rename'>Rename</a></p>"
@@ -495,7 +499,8 @@ class PagesApp:
                     self.send(303, location=f"/docs/{i}")
                 elif u.path == "/api/docs/3/favourite":
                     app.fav3 = not app.fav3
-                    self.send(200, json.dumps({"on": app.fav3, "count": 3 + app.fav3}), "application/json")
+                    count = 3 + app.fav3 - (app.stale_add and app.fav3)
+                    self.send(200, json.dumps({"on": app.fav3, "count": count}), "application/json")
                 elif re.fullmatch(r"/folders/\d+", u.path):
                     i = int(u.path.split("/")[2])
                     p = self.form().get("parent") or ""
@@ -723,6 +728,37 @@ def test_d62_page_rules_find_the_faults():
                  "No items yet", "a child of its own child", "opens directly", "is not there after a reload",
                  "is not shown afterwards", "two tabs edited the same item", "though the save failed"):
         assert want in msgs, (want, msgs)
+
+
+@pytest.mark.parametrize("stale", [True, False])
+def test_r19_checks_the_undo_click_too(stale):
+    """I97: the probe's first click unfavourites an item this account had favourited; only the second click
+    adds, and a fault that breaks only the add (Conduit F05) shows there."""
+    app = PagesApp(False)
+    app.fav3, app.stale_add = True, stale
+    sigs, st, _ = sweep(app, [("/docs/3", [], None)])
+    r19 = [x.message for x in sigs if "[R19 " in x.message]
+    assert ("R19", "exercised") in {(r["rule"], r["outcome"]) for r in st.checks.records()} or r19
+    if stale:
+        assert any("again" in m and "left its count at 3; it was 4" in m for m in r19), r19
+    else:
+        assert not r19, r19
+
+
+@pytest.mark.parametrize("stale", [True, False])
+def test_r19r_answer_against_the_page(stale):
+    """I97: the page counts the click itself, so only the app's answer shows that favouriting kept the old
+    count (Conduit F05)."""
+    app = PagesApp(False)
+    app.stale_add, app.local_count = stale, True
+    sigs, st, _ = sweep(app, [("/docs/3", [], None)])
+    msgs = [x.message for x in sigs]
+    assert ("R19r", "exercised") in {(r["rule"], r["outcome"]) for r in st.checks.records()} or         any("[R19r " in m for m in msgs), msgs
+    assert not any("[R19 " in m for m in msgs), msgs
+    if stale:
+        assert any("[R19r " in m and "answered count = 3, but the page shows 4" in m for m in msgs), msgs
+    else:
+        assert not any("[R19r " in m for m in msgs), msgs
 
 
 def test_d62_page_rules_quiet_on_the_clean_app():

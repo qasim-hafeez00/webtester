@@ -1,0 +1,128 @@
+[
+  {
+    "sig": "consistency|R23m|/user/admin|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 16,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/user/admin",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/user/admin|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R23m|/search?term|wildcard|%",
+    "kind": "consistency",
+    "message": "[R23m T2] searching for '%' returns 14 results, none containing it (the character is read as a wildcard)",
+    "first_step": 19,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/search?term=Custom",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R23m|/search?term|wildcard|%",
+      "rule": "R23m",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/books/*/page/*|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 67,
+    "worker": 1,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/page/test-page-x7-copied",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R43|/books/*/page/*|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc",
+    "kind": "consistency",
+    "message": "[R63 T2] http://127.0.0.1:4200/books/test-book-bx7b-co/draft/abc answers HTTP 500",
+    "first_step": 32,
+    "worker": 3,
+    "page_url": "http://127.0.0.1:4200/books/test-book-bx7b-co/draft/9",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc",
+      "rule": "R63",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R43|/password/email|#main-content",
+    "kind": "consistency",
+    "message": "[R43 T2] the in-page link 'Skip to main content' points to '#main-content', but nothing on the page has that id or name",
+    "first_step": 4,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/password/email",
+    "state": "",
+    "trail": [],
+    "occurrences": 2,
+    "detail": {
+      "sig": "consistency|R43|/password/email|#main-content",
+      "rule": "R43",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  },
+  {
+    "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+    "kind": "consistency",
+    "message": "[R01x T2] untranslated message key shown: 'common.privacy_policy'",
+    "first_step": 21,
+    "worker": 4,
+    "page_url": "http://127.0.0.1:4200/settings/customization",
+    "state": "",
+    "trail": [],
+    "occurrences": 1,
+    "detail": {
+      "sig": "consistency|R01x|/settings/customization|key|common.privacy_policy",
+      "rule": "R01x",
+      "tier": "T2",
+      "evidence": ""
+    },
+    "status": "candidate",
+    "gate": {},
+    "judge": null,
+    "exposed": []
+  }
+]

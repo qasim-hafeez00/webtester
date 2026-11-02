@@ -335,6 +335,7 @@
 # ---- D60: v5 phases 1-4 and every wave rule
 "browser.BrowserSession.note_activated" = "X1: records that an element key was acted on in this kind of page, so ranking puts it last."
 "crossview._written_since" = "Whether any worker wrote to an item (by key or name) since a step: such changes are explained."
+"crossview._first_seg" = "The first path segment of an item address ('books' for /books/x/page/y): which kinds of items a list holds (R22h)."
 "crossview._status_of" = "The first status word (open, paid, shipped, ...) in a text, from the lexicon."
 "crossview._complete" = "Whether a list is complete: no pager, at most 50 items, no 'view all' or 'load more'."
 "crossview._path" = "A URL's path without the trailing slash (navigation badges and collection pages are keyed by it)."

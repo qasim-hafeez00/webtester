@@ -2458,3 +2458,207 @@ by = "claude"
 ["20261028-004736_bookstack_b4_n4_bs4rep5"."consistency|R09|/shelves/*|recent activity|-worker <n>"]
 label = "fp"  # fp: Recent Activity rotates as new activity is recorded | unverified
 by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."oracle_violation|shows|/register|now|worker02"]
+label = "fp"  # sign-up rejected as taken; the check expected the name | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|R48c|/|null-storage"]
+label = "new: Conduit shows a blank page when its stored values are 'null'"  # known upstream (I93) | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|I-submit|/editor|create|test article alpha x9"]
+label = "F02"  # F02: a tag with a space throws in addTag, so submit sends nothing | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|R07c|/|tab: your feed|/profile/dave"]
+label = "F08"  # feed holds articles of accounts not followed | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|I-submit|/editor|create|test article special <b>x9</b>"]
+label = "F02"  # F02: a tag with a space throws in addTag, so submit sends nothing | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # long comment -> 500 (F01) | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # known upstream U3 | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."consistency|I-delete|/article/*|<h> uniqueworker99november <n>, <n>"]
+label = "F06"  # deleted comment still shown when the article is reopened (F06) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|R48c|/|null-storage"]
+label = "new: Conduit shows a blank page when its stored values are 'null'"  # known upstream (I93) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."console_error|ERROR {}"]
+label = "U5"  # missing article redirects home and logs an error (I9) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|R17|/article/*|blank|article title"]
+label = "U3"  # known upstream U3 | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."http_5xx|PUT /api/user|500"]
+label = "U1"  # known upstream U1 | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|R16|/article/*|long|write a comment..."]
+label = "F01"  # long comment -> 500 (F01) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|R17|/article/*|blank|write a comment..."]
+label = "U3"  # known upstream U3 | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|R11|/|page|<n>"]
+label = "F09"  # page 2 shows page 1 (F09) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|I-filter|/|filter|backend"]
+label = "F10"  # tag filter lists articles without the tag (F10) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|I-delete|/article/*|<b>test comment</b> <!-- comment -->"]
+label = "F06"  # deleted comment still shown when the article is reopened (F06) | D63 pilot
+by = "claude"
+
+["20261102-202748_realworld_b5_n2_h5pilotb"."consistency|I-filter|/|filter|frontend"]
+label = "F10"  # tag filter lists articles without the tag (F10) | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R03|/search?term|<n> result found|some page"]
+label = "BS08"  # phantom search result | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R04|/search?term|<n> result found|result found"]
+label = "BS08"  # result count below the list (phantom result) | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R23m|/books|wildcard|%"]
+label = "new: BookStack's search for '%' returns results that do not contain it (read as a wildcard)"  # known upstream, I86 family | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|G2|/books|recently viewed|+test book x7"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R23m|/*|wildcard|%"]
+label = "new: BookStack's search for '%' returns results that do not contain it (read as a wildcard)"  # known upstream, I86 family | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R08|/books/*|touched|/books/test-book-x7|other"]
+label = "BS10"  # book/shelf created now reads '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R08|/books/*|touched|/books/atlas-q7-btestb|other"]
+label = "BS10"  # book/shelf created now reads '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc"]
+label = "new: BookStack answers HTTP 500 for a draft address with a non-numeric id"  # known upstream | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R08|/books/*/page/*|touched|/books/test-book-x7/page/test-page-x7|updated"]
+label = "BS11"  # page Details read '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R02|/books|book|/books/book-duplicate"]
+label = "BS04"  # phantom book card on 2nd arrival | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R08|/books/*/page/*|views|/books/test-book-x7/page/test-page-x7|created"]
+label = "BS11"  # page Details read '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R18|/books/*/page/*|before-created|/books/test-book-x7/page/test-page-x7"]
+label = "BS11"  # page Details '2 days ago' older than its creation | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|R08|/|views|/books/test-book-x7/page/test-page-x7|created"]
+label = "BS11"  # page Details '2 days ago' vs activity's true age | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|G2|/|my recently viewed|+page <n>"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|G2|/|my recently viewed|-book"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-205620_bookstack_b4_n2_bs5pilotb"."consistency|G2|/|my recently viewed|-test book x7"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R03|/search?term|<n> result found|some page"]
+label = "BS08"  # phantom search result | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R04|/search?term|<n> result found|result found"]
+label = "BS08"  # result count below the list (phantom result) | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R23m|/*|wildcard|%"]
+label = "new: BookStack's search for '%' returns results that do not contain it (read as a wildcard)"  # known upstream, I86 family | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R08|/books/*|touched|/books/test-book-x7|other"]
+label = "BS10"  # book/shelf created now reads '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R08|/shelves/*|touched|/shelves/scriptalertxssscript-test-shelf|created"]
+label = "BS10"  # book/shelf created now reads '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R08|/shelves/*|touched|/shelves/scriptalertxssscript-test-shelf|updated"]
+label = "BS10"  # book/shelf created now reads '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R63|/books/*/draft/*|5xx|/books/*/draft/*|abc"]
+label = "new: BookStack answers HTTP 500 for a draft address with a non-numeric id"  # known upstream | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R08|/books/*/page/*|touched|/books/test-book-x7/page/test-page-z9|updated"]
+label = "BS11"  # page Details read '2 days ago' | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R46|/shelves|hidden|/shelves/*"]
+label = "fp"  # unverified: a 404 for the second account was not reproduced by hand | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R08|/|views|/books/test-book-x7/page/test-page-z9|created"]
+label = "BS11"  # page Details '2 days ago' vs activity's true age | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|G2|/|my recently viewed|+page <n>"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|G2|/|my recently viewed|-page"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R23m|/settings/maintenance|wildcard|%"]
+label = "new: BookStack's search for '%' returns results that do not contain it (read as a wildcard)"  # known upstream, I86 family | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R23|/settings/*|recall|/books/*/page/*"]
+label = "fp"  # unverified: seeded pages may lack a search index | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|G2|/|my recently viewed|-book2"]
+label = "fp"  # view history changes with every view (probes and other tabs view items too) | D63 pilot
+by = "claude"
+
+["20261102-212454_bookstack_b5_n2_bs5pilotb"."consistency|R62|/settings/*|replay|/settings/*"]
+label = "fp"  # the recycle bin changes as other workers delete | D63 pilot
+by = "claude"
+
+["20261102-195913_realworld_b4_n2_h5pilotb"."console_error|ERROR TypeError: Cannot read properties of undefined (reading <s>)\n    at n.addTag (http://<n>.<n>.<n>.<n>:<n>/chunk-BVFSTUM7.js:<n>:<n>)\n    at n.submitForm (h"]
+label = "F02"  # F02 throws in addTag | D63 pilot
+by = "claude"

@@ -40,6 +40,8 @@ Passive: they read the page facts (consistency.audit), this step's page read (no
   R49a archive (DB12)                  an archived item still in an active list; a restore that lost its children
   R22g guest merge (CT5)               items added as a guest lost or doubled after logging in
   R22v variant kept (PX4)              the size or colour chosen is not on the collection line
+  R22h view history (CT4, I97)         an item this worker opened a moment ago is missing from its own 'recently
+                                        viewed' list (seen on a later visit of that list)
   R34c closed state (SM3)              a write accepted on an item its own page calls closed or locked
   R36b double booking (TM2)            one slot of one resource booked twice, both accepted
   R67f listed but forbidden (CX3)      an item listed to this account answers 'forbidden' when opened
@@ -76,7 +78,7 @@ TIERS = {r: "T2" for r in ("R20", "R20d", "R21a", "R40", "R47", "R31", "R73", "R
                            "R12b", "R30", "R27", "R29", "R38", "R44", "R55", "R58", "R69", "R50")}
 TIERS["R56"] = "T3"
 TIERS["R38c"] = "T3"  # SF3: filter composition (low: relevance search may widen)
-TIERS.update({r: "T2" for r in ("R20t", "R20u", "R21s", "R09d", "R09r", "R49a", "R22g", "R22v", "R34c", "R36b", "R67f",
+TIERS.update({r: "T2" for r in ("R20t", "R20u", "R21s", "R09d", "R09r", "R49a", "R22g", "R22v", "R22h", "R34c", "R36b", "R67f",
                                 "R68t", "R48u", "R29k", "R51c")})
 TIERS["R47r"] = "T3"  # MU2: many apps mark read only on an explicit action
 RULES = tuple(TIERS)
@@ -217,6 +219,7 @@ class CrossState:
     creates: dict = field(default_factory=dict)  # form route -> (landing kind, labels shown, labels not shown)
     coupon: dict = field(default_factory=dict)  # worker -> total before a coupon
     reported: set = field(default_factory=set)
+    visits: dict = field(default_factory=dict)  # worker -> [(step, entity key, h1)] item pages it landed on (R22h)
     # D61
     extra: dict = field(default_factory=dict)  # entity key -> {route: (currency, datetimes, step)}
     idents: dict = field(default_factory=dict)  # shown identifier ('order #1234') -> (entity key, step)
@@ -242,6 +245,16 @@ class CrossState:
 def _who_when(name: str) -> bool:
     """A name made only of one name token and a date or time (a card's byline, 'worker01October 29, 2026')."""
     return bool(_BYLINE.fullmatch(name.strip()))
+
+
+_RECENT_VIEWED = re.compile(r"recently (viewed|visited|opened|seen)|viewing history|browsing history|"
+                            r"(last|recent) (views|visited)", re.I)
+_NOT_A_VIEW = re.compile(r"/(edit|create|new|draft|drafts|export|revisions?|permissions|delete|move|copy|sort|"
+                         r"settings|search)(/|$)", re.I)
+
+
+def _first_seg(url: str) -> str:
+    return (entity_key(url).strip("/").split("/") or [""])[0]
 
 
 def _written_since(mem, key: str, names: list[str], step: int) -> bool:
@@ -297,7 +310,7 @@ class CrossView:
                      "_session", "_input_kept", "_dead", "_facets", "_prefs", "_bulk", "_clone", "_cart", "_declared",
                      "_times", "_idents", "_choice", "_collateral", "_archive", "_guest", "_closed", "_status_tabs",
                      "_booking", "_dates", "_forbidden", "_tag_pages", "_undo", "_keys", "_unread", "_shuffle", "_header",
-                     "_empty_state", "_suggestion", "_cart_algebra", "_fidelity"):
+                     "_empty_state", "_suggestion", "_cart_algebra", "_fidelity", "_viewed"):
             try:
                 out += getattr(self, name)(sw, facts, raw, obs, done, ev, step)
             except (KeyError, IndexError, TypeError, ValueError, AttributeError) as e:  # a rule must never stop a run
@@ -582,6 +595,48 @@ class CrossView:
                     if not shown(e.obj, facts.text) and not _written_since(sw.mem, e.target, [], e.step + 1):
                         out.append(Violation("R22", f"missing|{e.obj[:40]}", f"{e.obj!r} was added (step {e.step}) but is "
                                              f"not on the {st.collections[here]} page"))
+        return out
+
+    # ---------------------------------------------------------------- R22h
+    def _viewed(self, sw, facts, raw, obs, done, ev, step):
+        """A 'recently viewed' list must hold the item this worker opened last (or the one before), unless an
+        edit or delete since explains its absence. Only items of a kind the app keeps in that history are checked:
+        their address must share its first segment with an item of the list, and form, draft and export pages
+        are no views. Tolerant of probes that add views in between: only the last two items, within 6 steps."""
+        from .consistency import Violation, item_matches
+
+        st, out = self.st, []
+        visits = st.visits.setdefault(sw.worker, [])
+        for L in facts.content_lists():
+            items = L.get("items") or []
+            if not _RECENT_VIEWED.search(L.get("heading") or "") or len(items) < 3:
+                continue
+            heads = {_first_seg(i["abs"]) for i in items if i.get("abs")}
+            last, seen = [], set()
+            for v in reversed(visits):  # every item page the worker landed on, not only plain clicks (I97)
+                if v[1] in seen:
+                    continue
+                seen.add(v[1])
+                last.append(v)
+                if len(last) == 2:
+                    break
+            for v_step, key, name in last:
+                if step - v_step > 6 or (key, v_step, "R22h") in st.reported or _first_seg(key) not in heads:
+                    continue
+                if _written_since(sw.mem, key, [name], v_step + 1) or \
+                        any(x.verb == "delete" and x.step >= v_step for x in sw.mem.events):
+                    sw._ck("R22h", "suppressed", "written-since")
+                    continue
+                sw._arm("R22h")
+                if not any(item_matches(i, name, key) for i in items):
+                    st.reported.add((key, v_step, "R22h"))
+                    out.append(Violation("R22h", f"missing|{key}", f"{name!r} was opened (step {v_step}) but is "
+                                         f"missing from {L['heading']!r}"))
+        key = entity_key(facts.url)
+        if "*" in route_shape(facts.url) and facts.h1 and len(facts.h1) >= 3 and not _NOT_A_VIEW.search(key) \
+                and not _GONE.search(facts.h1):  # a 'Page not found' answer is no view of an item (v65 pilot check)
+            visits.append((step, key, facts.h1))
+            del visits[:-20]
         return out
 
     # ---------------------------------------------------------------- R34

@@ -96,7 +96,7 @@ _RICH_FIELD = re.compile(r"markdown|\bbody\b|content|\bhtml\b|rich|editor|articl
 _SEARCH_DEST = re.compile(r"[?&](term|search|q|query|tag|tags|filter|keyword)=|/(search|tags?)(/|$)", re.I)
 TIER = {"R01": "T1", "R02": "T1", "R03": "T1", "R04": "T1", "R05": "T1", "R06": "T1", "R07": "T1",
         "I-create": "T1", "I-edit": "T1", "I-delete": "T1", "I-toggle": "T1", "I-logout": "T1", "R16": "T1",
-        "R19": "T1", "R07b": "T2", "R07c": "T2", "R18": "T2", "R04b": "T2", "R08": "T2", "R09": "T2", "R10": "T2", "R11": "T2", "R12": "T2", "R13": "T2",
+        "R19": "T1", "R19r": "T2", "R07b": "T2", "R07c": "T2", "R18": "T2", "R04b": "T2", "R08": "T2", "R09": "T2", "R10": "T2", "R11": "T2", "R12": "T2", "R13": "T2",
         "R17": "T2", "I-filter": "T2", "I-submit": "T2", "I-error": "T2", "G1": "T2", "G2": "T2", "G3": "T2",
         "R15": "T3",
         "R51": "T2", "R57": "T2"}  # v5 evidence layer (D58), only with capture_evidence
@@ -824,7 +824,10 @@ def apply_template(template: str, page_url: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------- G2: reload invariance
-_VOLATILE_HEAD = re.compile(r"random|suggest|recommend|trending|you may|for you|sponsored|\bads?\b", re.I)
+# a view history changes with every page opened, the reload and the probes included (I97: 7 G2 false alarms on
+# BookStack's 'My Recently Viewed' in the D63 pilots)
+_VOLATILE_HEAD = re.compile(r"random|suggest|recommend|trending|you may|for you|sponsored|\bads?\b|"
+                            r"recently (viewed|visited|opened|seen)|viewing history|browsing history", re.I)
 
 
 def view_diff(a: Facts, b: Facts, events: list[Event], volatile: set, skipped: list | None = None) -> list[Violation]:
@@ -1502,6 +1505,9 @@ class Sweeper:
                 target = entity_key(base)
         if verb in ("delete", "add", *TOGGLES, *OFF):
             item = click_pre.get("item") or ""
+            if item and (norm(item) == norm(click_pre.get("text") or "")
+                         or (len(item.split()) <= 2 and classify(item) in (*TOGGLES, *OFF))):
+                item = ""  # the control's own box ('Favourite' alone), not an item card: the page's item (I97)
             if not obj and item and norm(item) != norm(facts.h1):
                 obj = " ".join(item.split()[:12])
             elif not obj:
@@ -1733,7 +1739,9 @@ class Sweeper:
             items = [(i["name"], entity_key(i["abs"]) if i.get("abs") else "") for i in L["items"] if i["name"]]
             info, prev = mem.snapshot(facts.url, L["heading"], items, self.worker, step)
             # R07: what this worker turned on must be in the list for it.
-            if info.category in ("favourite", "follow") and info.personal:
+            # a 'most viewed' or 'top' selection of favourites need not hold a new one (I97)
+            if info.category in ("favourite", "follow") and info.personal and \
+                    not re.search(r"most (viewed|visited|popular|used)|\btop\b|popular", L["heading"] or "", re.I):
                 self._arm("R07", "R07b")
                 on = mem.net_toggle(self.worker, info.category)
                 recent_only = len(items) >= 8
@@ -2101,7 +2109,9 @@ class Sweeper:
         route = route_shape(facts.url)
         if route in st.toggle_done or _LOGINISH.search(route):
             return []
-        if not any(classify(x) in ("favourite", "like") or re.fullmatch(r"\d[\d,]*", x.strip()) for x in facts.toggles):
+        # an 'on' control with a count counts too: its first click removes, the second adds (I97)
+        if not any(classify(x) in ("favourite", "like") or re.fullmatch(r"\d[\d,]*", x.strip())
+                   or (classify(x) in ("unfavourite", "unlike") and re.search(r"\d", x)) for x in facts.toggles):
             return []
         if st.toggle_probes >= MAX_TOGGLE_PROBES or self.budget < 1:
             self._ck("R19", "capped", "toggle-probes" if st.toggle_probes >= MAX_TOGGLE_PROBES else "step-probes")
@@ -2125,10 +2135,15 @@ class Sweeper:
             await asyncio.sleep(session.cfg.settle_ms / 1000)
             after = await page.evaluate(TOGGLE_READ_JS)
             writes, moved = list(net.writes), route_shape(page.url) != route
+            said = await _answered_count(net.write_resps)
+            back, writes2, said2 = None, [], None
             if not moved and after is not None:
                 net.reset()
                 await page.locator('[data-wt-toggle="1"]').first.click()  # undo
                 await net.quiet(max_s=5.0)
+                await asyncio.sleep(session.cfg.settle_ms / 1000)
+                back, writes2 = await page.evaluate(TOGGLE_READ_JS), list(net.writes)
+                said2 = await _answered_count(net.write_resps)
         except PWError:
             return []
         finally:
@@ -2140,6 +2155,22 @@ class Sweeper:
         if after["number"] == cand["number"]:
             return [Violation("R19", f"{cand['verb']}|count", f"clicking {cand['text']!r} on {route} (the app accepted "
                               f"the write) left its count at {cand['number']}", f"item: {cand['item'][:120]}")]
+        # R19r (I97): the app's own answer to the click names another count than the page shows; a page that
+        # counts locally hides a server that answers the old number (Conduit F05)
+        for shown_n, told in ((after, said), (back, said2)):
+            if shown_n is not None and told is not None and told[1] != shown_n["number"]:
+                self._arm("R19r")
+                return [Violation("R19r", f"{cand['verb']}|answer", f"clicking {cand['text']!r} on {route}: the app answered "
+                                  f"{told[0]} = {told[1]}, but the page shows {shown_n['number']}",
+                                  f"item: {cand['item'][:120]}")]
+            if told is not None:
+                self._arm("R19r")
+        # I97: the first click may undo an earlier favourite of this account, so the adding direction is
+        # often the second click; it must move the count back too (Conduit F05 breaks only the add)
+        if back is not None and writes2 and all(200 <= s < 400 for s in writes2) and back["number"] == after["number"]:
+            return [Violation("R19", f"{cand['verb']}|count", f"clicking {cand['text']!r} again on {route} (the app "
+                              f"accepted the write) left its count at {after['number']}; it was {cand['number']} "
+                              f"before the first click", f"item: {cand['item'][:120]}")]
         return []
 
     # ---------- R13: does the app's access agree with its own controls? ----------
@@ -2440,6 +2471,7 @@ class _ProbeNet:
         self.pending: set = set()
         self.last = time.monotonic()
         self.writes: list[int] = []  # statuses of same-origin write requests
+        self.write_resps: list = []  # their responses, for bodies read after the fact (R19r)
         self.server: list[str] = []  # same-origin 5xx responses
         self.errors: list[str] = []  # uncaught page errors
         page.on("request", self._request)
@@ -2464,11 +2496,12 @@ class _ProbeNet:
         req = resp.request
         if req.method not in ("GET", "HEAD", "OPTIONS") and req.resource_type in NET_TYPES:
             self.writes.append(resp.status)
+            self.write_resps.append(resp)
         if resp.status >= 500:
             self.server.append(f"{req.method} {urlsplit(resp.url).path} -> HTTP {resp.status}")
 
     def reset(self) -> None:
-        self.writes, self.server, self.errors = [], [], []
+        self.writes, self.server, self.errors, self.write_resps = [], [], [], []
 
     async def quiet(self, quiet_s: float = 0.3, max_s: float = 4.0) -> None:
         """Like BrowserSession.wait_quiet: no xhr/fetch/document request in flight for `quiet_s`."""
@@ -2478,6 +2511,37 @@ class _ProbeNet:
             if not self.pending and time.monotonic() - self.last >= quiet_s:
                 return
             await asyncio.sleep(0.05)
+
+
+_COUNT_KEY = re.compile(r"^(count|total)$|(favou?rite|like|heart|star|vote|upvote)s?_?(count|total)$", re.I)
+
+
+async def _answered_count(resps: list) -> tuple[str, int] | None:
+    """R19r: the one count-like number (favoritesCount, likes_count, count) in the JSON answers to a click, or None
+    when there is none or more than one."""
+    found: list[tuple[str, int]] = []
+
+    def walk(o, depth=0):
+        if depth > 4:
+            return
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if isinstance(v, int) and not isinstance(v, bool) and _COUNT_KEY.search(str(k)):
+                    found.append((str(k), v))
+                elif isinstance(v, (dict, list)):
+                    walk(v, depth + 1)
+        elif isinstance(o, list):
+            for v in o[:20]:
+                walk(v, depth + 1)
+
+    for r in resps[:4]:
+        if not 200 <= r.status < 300 or "json" not in (r.headers.get("content-type") or ""):
+            continue
+        try:
+            walk(await r.json())
+        except Exception:  # noqa: BLE001  a body that is gone or not JSON says nothing
+            continue
+    return found[0] if len(found) == 1 else None
 
 
 async def _open(session, url: str):

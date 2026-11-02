@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\cli.py", line 192, in main
+    print(json.dumps(asyncio.run(resweep(cfg, Path(args.run_dir), client_faults=not args.clean)), indent=2))
+                     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 720, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\runner.py", line 402, in resweep
+    await asyncio.to_thread(ctl.reset)
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 99, in reset
+    self._compose(*self.app.reset_compose_args, timeout=90)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Seraphindra\Desktop\agenticproject\src\webtester\appctl.py", line 34, in _compose
+    raise AppControlError(f"docker compose {' '.join(args)} failed:\n{proc.stderr[-2000:]}")
+webtester.appctl.AppControlError: docker compose exec -T db bash /agentic/bin/reset.sh failed:
+service "db" is not running
+

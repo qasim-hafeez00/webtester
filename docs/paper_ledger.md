@@ -203,6 +203,11 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
   - F0.5 (distinct-issue precision, median total recall): BookStack 0.77, Conduit 0.88.
 - New rules R43, R64, R26 (D59): 0 findings on the 5 BookStack fixture pages (17 in-page anchors checked); not yet run on the apps (I54).
 
+### v66 lock measurement (D64, 3 Nov; development numbers)
+- Resweep v66 (hash b63ea788), excluded set D62a + R71: BookStack recall 8/13 (median 0.46), precision 90/92 = 0.98, clean FA 0.4/run; Conduit recall 8/8 (median 0.875), precision 77/78 = 0.99, clean FA 0.2/run.
+- F05 is invisible in Conduit's UI (the frontend counts favourites locally); found only by comparing the app's JSON answer with the page (R19r, 7 findings, precision 1.0, 0 clean). Fact for the threats section: the catalog's oracle text ('count stays the same') does not match the frontend's behaviour.
+- Live pilots D63 (5 min, 2 workers): Conduit 6/8 live; BookStack 4/13 (BS04, BS08, BS10, BS11); precision Conduit 18/19, BookStack 22/32 before the G2 view-history fix (7 of the 10 fp).
+
 ## 7. Run accounting (all runs, as of 24 Oct)
 - **As of 28 Oct, 01:17:** Night 3 (harness v4): 24 attempts, 20 valid (Conduit 10, BookStack 10), 4 invalid (key 7 quota then Docker stop, no-start after Docker stop, key 9 quota, key 10 quota; I48). Keys 7, 9, _OLD (Conduit), 10, 5 (BookStack), recorded in each `config.json` (D41).
 - **As of 26 Oct, 06:30:** BookStack `bsrep`: 17 runs with a summary, 15 valid, 2 invalid (1 crash at login I40, 1 quota on key 9); pilot `20261026-002235` (smoke). Keys 9 then 10 (D41).
@@ -267,6 +272,8 @@ Last updated: 2026-10-26 (after the BookStack held-out runs, `bsrep`).
 - **Storage-only effects (I73):** R29 and R29k treat a change of local storage or IndexedDB as an effect, so a dead control on an app that writes storage on every click is missed.
 - **Labels set by the assistant (I72, E8):** app types, primitives and frameworks in the dev configs, and the per-fault severities, are the assistant's; profile accuracy and per-type recall use them as truth until the user checks them.
 - **Extraction is imperfect (I57):** on 3 labelled synthetic pages, list items are found with 78% precision and 64% recall. Every rule inherits this.
+
+- Live-only rules are not covered by a resweep lock: R71 (environment replays) has no rows in the v63 lock measurement and gave 22 of 68 findings in the four v5 live pilots (30 Oct), 16 judged wrong_expectation (I96).
 
 ## 9. Artifact
 - **Repo layout:** `src/webtester` (harness), `apps/realworld`, `apps/bookstack`, `configs/`, `scripts/run_batch.py`, `tests/` (offline and live), `logs/` (progress, decisions, issues, registry, notes, labels).

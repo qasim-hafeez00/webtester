@@ -84,3 +84,14 @@ pilots and writes D51; then the tag.
 **v63 (the lock measurement, hash 2964342f):** with the D62a set left out, BookStack 8/13, 0.98, 0.4 per run;
 Conduit 7/8, 0.99, 0.2 per run: both pass. The commit must give hash 2964342f (check it with the line in
 `scripts/resweep_lock.sh`); configs are not in the hash, so setting `exclude_rules` there does not change it.
+
+## 6. Re-measurement after the live pilots (D63, D64; 3 Nov)
+
+The v5 pilots (30 Oct) showed R71 noise and reached F05 and BS01-BS03 without a report (I96, I97). Changes: R71 left out; R19 reads its undo click; R19r compares the app's JSON answer with the shown count (Conduit's frontend counts favourites itself, so F05 shows only in the answer); a toggle event names the page's item (R07); new R22h (view history); G2 treats view histories as volatile; R22h skips 'not found' pages. **v66 (hash b63ea788) is the lock measurement now; v63 and 2964342f no longer describe the candidate.**
+
+| | v63 (old candidate) | **v66** |
+|---|---|---|
+| BookStack recall / precision / clean FA per run | 8/13, 0.98, 0.4 | 8/13, **0.98**, **0.4** |
+| Conduit recall / precision / clean FA per run | 7/8, 0.99, 0.2 | **8/8**, **0.99**, **0.2** |
+
+Step 2.3 (commit) must now give hash b63ea788 (`exclude_rules` in the configs adds R71); 2.6 live pilots done (`h5pilotb`, `bs5pilotb`); 2.8 tag after the user's go.

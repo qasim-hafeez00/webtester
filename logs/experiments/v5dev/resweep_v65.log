@@ -1,0 +1,14 @@
+2026-11-02 21:54 v65 code d16ecf62fbec3778f52e60d76081954a8efe74b1a2532a940d6483a114640bc6 38 files
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+22:01 done logs/experiments/v5dev/bs4rep/v65_on_20261027-221950_bookstack_b4_n4_bs4rep1.json
+22:09 done logs/experiments/v5dev/bs4rep/v65_on_20261027-230029_bookstack_b4_n4_bs4rep2.json
+22:15 done logs/experiments/v5dev/bs4rep/v65_on_20261027-232821_bookstack_b4_n4_bs4rep3.json
+22:19 done logs/experiments/v5dev/bs4rep/v65_on_20261028-000919_bookstack_b4_n4_bs4rep4.json
+22:25 done logs/experiments/v5dev/bs4rep/v65_on_20261028-004736_bookstack_b4_n4_bs4rep5.json
+22:32 done logs/experiments/v5dev/bs4rep/v65_off_20261027-221950_bookstack_b4_n4_bs4rep1.json
+22:39 done logs/experiments/v5dev/bs4rep/v65_off_20261027-230029_bookstack_b4_n4_bs4rep2.json
+22:45 done logs/experiments/v5dev/bs4rep/v65_off_20261027-232821_bookstack_b4_n4_bs4rep3.json
+22:49 done logs/experiments/v5dev/bs4rep/v65_off_20261028-000919_bookstack_b4_n4_bs4rep4.json
+22:56 done logs/experiments/v5dev/bs4rep/v65_off_20261028-004736_bookstack_b4_n4_bs4rep5.json
+down
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']

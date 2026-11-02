@@ -293,3 +293,13 @@
 "h4rep|consistency|I-submit|/article/*|create|<script>alert(<n>)</script>" = "fp"
 "h4rep|consistency|I-submit|/article/*|create|test@example.com" = "fp"
 "h4rep|consistency|R30|/login|logged-out|/" = "fp"
+
+# D63 (v66): date-shifted twins of labelled I-delete signatures (the byline holds the run's date), and R19r (D63a)
+"h4rep|consistency|I-delete|/article/*|<b>test comment</b> !@#$%^&*() worker03november <n>, <n>" = "F06"
+"h4rep|consistency|I-delete|/article/*|<b>test comment</b> <s> \\o/ worker01november <n>, <n>" = "F06"
+"h4rep|consistency|I-delete|/article/*|test unicode/emoji: 🚀✨ worker01november <n>, <n>" = "F06"
+"h4rep|consistency|I-delete|/article/*|testuser03@conduit.test testuser03november <n>, <n>" = "F06"
+"h4rep|consistency|I-delete|/profile/alice/favorites|test@example.com worker03november <n>, <n>" = "F06"
+"h4rep|consistency|R19r|/profile/*|favourite|answer" = "F05"  # the favourite answer reports the old count; the page counts locally (D63a)
+"h4rep|consistency|R19r|/profile/alice|favourite|answer" = "F05"  # the favourite answer reports the old count; the page counts locally (D63a)
+"h4rep|consistency|R19r|/|favourite|answer" = "F05"  # the favourite answer reports the old count; the page counts locally (D63a)

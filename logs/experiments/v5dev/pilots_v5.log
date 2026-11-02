@@ -1,0 +1,316 @@
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+run finished in 29.5 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261030-050318_realworld_b4_n2_h5pilot
+  run_id                   20261030-050318_realworld_b4_n2_h5pilot
+  agent                    b4
+  workers                  2
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    47
+  wall_minutes             5.14
+  unique_states            14
+  unique_routes            8
+  actions                  61
+  duplicate_action_rate    0.1967
+  failed_action_rate       0.0
+  findings                 12
+  findings_by_kind         {'consistency': 11, 'console_error': 1}
+  llm_calls                47
+  llm_retries              0
+  policy_errors            0
+  tokens_total             104759
+  tokens_per_step          2228.9
+  gate                     {'candidates': 17, 'confirmed': 15, 'flaky': 1, 'unverified': 1, 'replays': 44, 'minutes': 21.82, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 15, 'judge_tokens': 4767, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       15
+  judge_verdicts           {'bug': 9, 'wrong_expectation': 4, 'unsure': 2}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+05:32 b4 h5pilot exit 0
+run finished in 25.4 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261030-053252_realworld_b5_n2_h5pilot
+  run_id                   20261030-053252_realworld_b5_n2_h5pilot
+  agent                    b5
+  workers                  2
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    47
+  wall_minutes             5.23
+  unique_states            13
+  unique_routes            7
+  actions                  65
+  duplicate_action_rate    0.2462
+  failed_action_rate       0.0
+  findings                 10
+  findings_by_kind         {'consistency': 9, 'console_error': 1}
+  llm_calls                47
+  llm_retries              0
+  policy_errors            0
+  tokens_total             97861
+  tokens_per_step          2082.1
+  checks                   {'proposed': 3, 'pass': 3, 'violated': 0, 'inconclusive': 0, 'skipped': 0}
+  gate                     {'candidates': 13, 'confirmed': 13, 'replays': 39, 'minutes': 17.97, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 12, 'judge_tokens': 3791, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       13
+  judge_verdicts           {'bug': 9, 'wrong_expectation': 3}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+05:58 b5 h5pilot exit 0
+down
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+run finished in 18.8 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261030-055838_bookstack_b4_n2_bs5pilot
+  run_id                   20261030-055838_bookstack_b4_n2_bs5pilot
+  agent                    b4
+  workers                  2
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    36
+  wall_minutes             5.23
+  unique_states            18
+  unique_routes            13
+  actions                  42
+  duplicate_action_rate    0.2143
+  failed_action_rate       0.0476
+  findings                 6
+  findings_by_kind         {'consistency': 6}
+  llm_calls                37
+  llm_retries              0
+  policy_errors            0
+  tokens_total             99853
+  tokens_per_step          2773.7
+  gate                     {'candidates': 14, 'confirmed': 11, 'rejected': 3, 'replays': 19, 'minutes': 11.11, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 11, 'judge_tokens': 2893, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       11
+  judge_verdicts           {'wrong_expectation': 7, 'unsure': 2, 'bug': 2}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+06:17 b4 bs5pilot exit 0
+run finished in 29.3 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261030-061725_bookstack_b5_n2_bs5pilot
+  run_id                   20261030-061725_bookstack_b5_n2_bs5pilot
+  agent                    b5
+  workers                  2
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    44
+  wall_minutes             5.24
+  unique_states            25
+  unique_routes            15
+  actions                  68
+  duplicate_action_rate    0.0882
+  failed_action_rate       0.0
+  findings                 18
+  findings_by_kind         {'consistency': 18}
+  llm_calls                45
+  llm_retries              0
+  policy_errors            0
+  tokens_total             135905
+  tokens_per_step          3088.8
+  gate                     {'candidates': 24, 'confirmed': 8, 'rejected': 1, 'unverified': 15, 'replays': 16, 'minutes': 21.45, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 8, 'judge_tokens': 2100, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       8
+  judge_verdicts           {'wrong_expectation': 6, 'bug': 1, 'unsure': 1}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+06:46 b5 bs5pilot exit 0
+down
+2026-10-30 06:46 pilots v5 done
+scripts/pilots_v5.sh: line 18: .venv/Scripts/python: No such file or directory
+up at http://127.0.0.1:4100 with faults: ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+run finished in 28.5 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261102-195913_realworld_b4_n2_h5pilotb
+  run_id                   20261102-195913_realworld_b4_n2_h5pilotb
+  agent                    b4
+  workers                  2
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    45
+  wall_minutes             5.13
+  unique_states            18
+  unique_routes            10
+  actions                  61
+  duplicate_action_rate    0.1639
+  failed_action_rate       0.0
+  findings                 9
+  findings_by_kind         {'oracle_violation': 1, 'consistency': 7, 'console_error': 1}
+  llm_calls                46
+  llm_retries              0
+  policy_errors            0
+  tokens_total             93019
+  tokens_per_step          2067.1
+  checks                   {'proposed': 1, 'pass': 0, 'violated': 1, 'inconclusive': 0, 'skipped': 0}
+  gate                     {'candidates': 9, 'confirmed': 5, 'unverified': 4, 'replays': 25, 'minutes': 21.09, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 4, 'judge_tokens': 1472, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       5
+  judge_verdicts           {'bug': 3, 'wrong_expectation': 1}
+  fault F01    missed    (crash)
+  fault F02    DETECTED  (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+20:27 b4 h5pilotb exit 0
+run finished in 28.0 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261102-202748_realworld_b5_n2_h5pilotb
+  run_id                   20261102-202748_realworld_b5_n2_h5pilotb
+  agent                    b5
+  workers                  2
+  faults                   ['F01', 'F02', 'F03', 'F04', 'F05', 'F06', 'F07', 'F08', 'F09', 'F10']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    35
+  wall_minutes             5.2
+  unique_states            19
+  unique_routes            6
+  actions                  64
+  duplicate_action_rate    0.1562
+  failed_action_rate       0.0
+  findings                 10
+  findings_by_kind         {'consistency': 8, 'console_error': 1, 'http_5xx': 1}
+  llm_calls                35
+  llm_retries              0
+  policy_errors            0
+  tokens_total             83071
+  tokens_per_step          2373.5
+  checks                   {'proposed': 2, 'pass': 2, 'violated': 0, 'inconclusive': 0, 'skipped': 0}
+  gate                     {'candidates': 10, 'confirmed': 7, 'unverified': 2, 'flaky': 1, 'replays': 40, 'minutes': 20.85, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 6, 'judge_tokens': 1968, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       7
+  judge_verdicts           {'bug': 5, 'wrong_expectation': 1}
+  fault F01    missed    (crash)
+  fault F02    missed    (crash)
+  fault F03    missed    (validation)
+  fault F04    missed    (data)
+  fault F05    missed    (data)
+  fault F06    missed    (data)
+  fault F07    missed    (authorization)
+  fault F08    missed    (data)
+  fault F09    missed    (noop-ui)
+  fault F10    missed    (data)
+20:55 b5 h5pilotb exit 0
+down
+up at http://127.0.0.1:4200 with faults: ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+run finished in 28.5 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261102-205620_bookstack_b4_n2_bs5pilotb
+  run_id                   20261102-205620_bookstack_b4_n2_bs5pilotb
+  agent                    b4
+  workers                  2
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    37
+  wall_minutes             5.15
+  unique_states            19
+  unique_routes            14
+  actions                  51
+  duplicate_action_rate    0.1569
+  failed_action_rate       0.0
+  findings                 16
+  findings_by_kind         {'consistency': 16}
+  llm_calls                38
+  llm_retries              0
+  policy_errors            0
+  tokens_total             111456
+  tokens_per_step          3012.3
+  gate                     {'candidates': 16, 'confirmed': 3, 'flaky': 1, 'rejected': 2, 'unverified': 10, 'replays': 20, 'minutes': 20.52, 'k': 3, 'windows': [1, 4, 0], 'judge_calls': 4, 'judge_tokens': 1224, 'engines': [], 'engine_specific': 0}
+  findings_confirmed       3
+  judge_verdicts           {'bug': 4}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+21:24 b4 bs5pilotb exit 0
+run finished in 13.1 min -> C:\Users\Seraphindra\Desktop\agenticproject\runs\20261102-212454_bookstack_b5_n2_bs5pilotb
+  run_id                   20261102-212454_bookstack_b5_n2_bs5pilotb
+  agent                    b5
+  workers                  2
+  faults                   ['BS01', 'BS02', 'BS03', 'BS04', 'BS05', 'BS06', 'BS07', 'BS08', 'BS09', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS16', 'BS17', 'BS18']
+  stop_reason              ['w1:max_minutes', 'w2:max_minutes']
+  steps                    41
+  wall_minutes             5.12
+  unique_states            25
+  unique_routes            19
+  actions                  53
+  duplicate_action_rate    0.1509
+  failed_action_rate       0.0
+  findings                 16
+  findings_by_kind         {'consistency': 16}
+  llm_calls                42
+  llm_retries              0
+  policy_errors            0
+  tokens_total             121974
+  tokens_per_step          2975.0
+  checks                   {'proposed': 1, 'pass': 1, 'violated': 0, 'inconclusive': 0, 'skipped': 0}
+  fault BS01   missed    (missing-element)
+  fault BS02   missed    (missing-element)
+  fault BS03   missed    (missing-element)
+  fault BS04   missed    (data)
+  fault BS05   missed    (data)
+  fault BS06   missed    (data)
+  fault BS07   missed    (data)
+  fault BS08   missed    (data)
+  fault BS09   missed    (data)
+  fault BS10   missed    (data)
+  fault BS11   missed    (data)
+  fault BS12   missed    (data)
+  fault BS13   missed    (missing-element)
+  fault BS14   missed    (data)
+  fault BS15   missed    (data)
+  fault BS16   missed    (data)
+  fault BS17   missed    (data)
+  fault BS18   missed    (data)
+21:37 b5 bs5pilotb exit 0
+down
+2026-11-02 21:38 pilots v5 done

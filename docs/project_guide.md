@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Status as of** | 29 Oct 2026 |
-| **Harness version** | v4 locked at commit `540887e` (branch `phase2-harness-v4`); **v5 in development** (D55-D62, built through every phase and audited against its plan; replay of the recorded runs under way, not yet locked, §7.5-7.9) |
+| **Status as of** | 3 Nov 2026 |
+| **Harness version** | **v5.0 locked 3 Nov 2026, tag `v5.0`** (branch `phase2-harness-v4`, code hash `b63ea788`, D62-D64, §7.10); v4 locked at commit `540887e` |
 | **Experiments done** | Phase 1 (B0 vs B1), G1 (B2, B3 v1, B3 v2), G2/G3 on Conduit (harness v1, v2, v3), BookStack held-out (v3), v4 development resweeps and pilots, Night 3 (v4 on Conduit and BookStack, labelled), v5 development resweeps of Night 3 on both apps (complete, labelled) |
 | **Latest** | v5 resweeps (28 Oct), v4 → v5 on the same recorded runs: BookStack faults per run median 3 → 6 of 13, precision 51% → 95%, clean-app false alarms 4.0 → 0.6 per run; Conduit 5 → 6 of 8 (F08 now found), 85% → 99%, 2.8 → 0.4 (§11.8). Fault-family table (163 families, D56-D57) and a v5 plan by recall stage with an evidence layer (D58, `docs/v5_plan.md`) |
-| **Next milestones** | v5.0 lock (target 2 Nov) and Night 4 (Conduit, BookStack, PrestaShop held-out); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
+| **Next milestones** | Night 4 on v5.0 (Conduit, BookStack; PrestaShop held-out after the D51 pre-registration is signed); course paper 4 Nov; v5.1 lock (30 Nov); ISSTA 2027 (abstract 8 Jan, paper 11 Jan 2027) |
 | **Course** | AI4015 Agentic AI, FAST-NUCES, Fall 2026 (seed G2, "Agentic AI and MCP for Intelligent Software Engineering") |
 
 This is a living document. It explains the whole project, from the idea to the code to the results, for a reader who has not seen it before. New progress is added; earlier sections keep their numbers. Parts marked *generated* are refilled from the code and logs by `python scripts/guide_gen.py`.
@@ -15,6 +15,7 @@ This is a living document. It explains the whole project, from the idea to the c
 
 | Date | Change | Sections |
 |---|---|---|
+| 3 Nov 2026 | v5.0 locked (D63-D64): live pilots, the causes of the faults they reached but did not report, four rule changes and one new rule each (R19r, R22h), one noisy rule left out (R71), the lock re-measured. Conduit now finds all 8 of its reachable faults in the recorded runs; BookStack stays at 8 of 13; precision 98-99%. New §7.10 | header, 7.10 |
 | 29 Oct 2026 | Preparing the v5.0 lock (D62): a script that checks the lock criteria; a test case on a faulty and a clean app for every rule (27 added; only the login and second-account checks wait for the replay); 7 more bugs found and fixed; a replay of the recorded runs with every v5 rule started as a pilot; a checklist of what is left. New §7.9 | header, 7.9, generated parts |
 | 29 Oct 2026 | v5 audited against its plan, the fault-family table and the paper's metric list (D61): every extension a family row names has its own rule (41 new rule ids, 140 in all); the missing plan items built (input retry, seeding to a second page, role and context in the state, coverage file, discovery checks, API contracts including GraphQL, browser storage, LLM-annotated lists as a condition, recorded-clock replays, safety records); an evaluator block for every metric; tests for every new rule except the login probes; 14 bugs found by the tests and fixed. New §7.8 | header, 7.8, generated parts |
 | 28 Oct 2026 | v5 built through every phase (D60): reach, safety and gate changes; 62 new rules, so every coverable fault family has one (152 of 163 built, 11 spec or out); evaluation and data parts (severity, corpus setup, rebranded control, extraction benchmark, freeze list). Nothing has run on the apps yet. New §7.7; §13, §14 updated | header, 7.7, 13, 14, generated parts |
@@ -542,7 +543,7 @@ v4 is a change of approach, motivated by BookStack. All 32 BookStack false alarm
 
 The lock bar was at most 1 definite (T1) false alarm per clean run. The final numbers were 0.33 on Conduit and 0.60 on BookStack.
 
-### 7.5 v5 (from 28 Oct, in development, not yet locked)
+### 7.5 v5 (from 28 Oct; locked as v5.0 on 3 Nov, §7.10)
 v5 has three layers of work. The first is done in code; the second is a design document; the third is a plan with dates.
 
 **1. Fixes for what Night 3 measured (D55).** Night 3's labels (I49) and a live audit of the faulty BookStack pages named the causes of v4's false alarms and misses. The goal set by the author: precision ≥ 0.90 and recall as high as reachable.
@@ -722,6 +723,38 @@ count and one code version behind the numbers.
   findings, fixing or removing rules that raise false alarms, the commit, the final replay, the live pilots and the
   pre-registered targets (D51), all before the tag.
 
+### 7.10 v5.0 locked (D63-D64, 2-3 Nov)
+The live pilots (two short runs per app, all of v5 switched on) were the last check before the lock. They showed one
+noisy rule and four faults that the agent triggered without any rule reporting them. Each had a specific cause.
+
+- **One rule left out (R71).** R71 replays pages in another time zone and at phone width. It only runs in live runs, so the
+  replay used for the lock had never measured it. In the pilots, 16 of its 22 findings were wrong expectations: a phone
+  layout that hides buttons behind a menu, or dates shown in local time. It still runs, and its findings are kept apart.
+- **Conduit F05 has no visible symptom.** The fault makes the server answer a favourite with the old count. Conduit's
+  page ignores that answer and adds one to the number itself, and the stored count is right, so neither the page nor a
+  reload ever shows the wrong number. The new rule **R19r** compares the server's answer to a click with the number the
+  page then shows. It found F05 seven times in the recorded runs and never on the app without faults.
+- **The favourite probe checks both of its clicks.** It clicks a favourite button and clicks again to undo. When the
+  account had already favourited the item, the first click removed it, and only the second click, never checked before,
+  was the one the fault breaks.
+- **BookStack favourites and history.** A favourite was recorded under the button's label ('Favourite') instead of
+  the item's name, so the check looked for the wrong item; fixed. The new rule **R22h** checks that an item just
+  opened appears in the person's own 'Recently viewed' list (BS02, BS03). An existing reload check had read that list
+  changing as a defect, but opening pages is exactly what changes it; it now treats the list as changing by design.
+- **Lock measurement (v66, the code of tag `v5.0`).** The 10 recorded Night 3 runs were replayed on the faulty and the
+  fault-free apps, without the LLM, and every finding was labelled. With the eleven left-out rules excluded:
+
+| App | Faults found (of reachable) | Findings that are real | False alarms per run, fault-free app |
+|---|---|---|---|
+| Conduit | **8 of 8** (was 7) | 77 of 78 (99%) | 0.2 |
+| BookStack | 8 of 13 | 90 of 92 (98%) | 0.4 |
+
+- **Still not found on BookStack**, and why: BS01-BS03 need the agent to favourite or open three particular seeded
+  items, and no run has done so yet (the rules for them now run cleanly on the real app); BS12 sits in a book no run
+  has opened; BS13 removes a button and leaves nothing else to compare with. Seven more faults (Conduit F03, F04,
+  BookStack BS14-BS18) cannot be triggered through the interface, or only with names from the benchmark's own test
+  script, so they are outside every recall figure.
+
 ## 8. Code reference
 
 ### 8.1 Repository map
@@ -765,9 +798,9 @@ Modules in reading order, by role:
 | [`checks.py`](../src/webtester/checks.py) | 93 | Check-outcome log (v5 plan section 3, D59): what each rule did on each page it considered. |
 | [`cli.py`](../src/webtester/cli.py) | 253 | Command line. |
 | [`config.py`](../src/webtester/config.py) | 252 | Run configuration: one TOML file per app, overridable from the CLI. |
-| [`consistency.py`](../src/webtester/consistency.py) | 2516 | Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and with what the agents did? |
+| [`consistency.py`](../src/webtester/consistency.py) | 2580 | Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and with what the agents did? |
 | [`crawler.py`](../src/webtester/crawler.py) | 199 | B0: deterministic breadth-first crawler with a random form filler (no LLM). |
-| [`crossview.py`](../src/webtester/crossview.py) | 1487 | Cross-view rules (v5 waves W1-W3, D60): one item, one flow or one control seen across pages and steps. |
+| [`crossview.py`](../src/webtester/crossview.py) | 1542 | Cross-view rules (v5 waves W1-W3, D60): one item, one flow or one control seen across pages and steps. |
 | [`envcheck.py`](../src/webtester/envcheck.py) | 162 | Environment replay (M10, rule R71; v5 wave W2, D60): what the data means must not change with the browser's time zone, locale or window width. |
 | [`evaluate.py`](../src/webtester/evaluate.py) | 1189 | v5 evaluation (v5 plan section 11, D59): every number is computed offline from what a run wrote (trace, findings, gate results, check-outcome log), the labels, the fault catalogs and the family registry. Nothing here runs the app or an LLM, so every condition is measured by the same code. |
 | [`evidence.py`](../src/webtester/evidence.py) | 128 | Evidence layer v5 (D58): what the browser layer records beyond statuses, and the rules that read it. |
@@ -1126,67 +1159,68 @@ Consistency oracles (harness v4, G3 v4, D49): does the app agree with itself and
 | `id_segments(url)` | [792](../src/webtester/consistency.py#L792) | The path segments route_shape turns into '*' (the item's ids or slugs), in order. | - |
 | `edit_template(page_url, edit_url)` | [799](../src/webtester/consistency.py#L799) | How an item's edit address is made from its page address: the edit path with the page's id segments as {0}, {1}, ... ('/article/how-to-x' + '/editor/how-to-x' -> '/editor/{0}'), and the edit page's route shape. None when the edit link uses none of the page's ids (it edits something else, e.g. a comment). | - |
 | `apply_template(template, page_url)` | [815](../src/webtester/consistency.py#L815) | Builds an item's edit address from its page address using a learned template (R13). | - |
-| `view_diff(a, b, events, volatile, skipped)` | [830](../src/webtester/consistency.py#L830) | G2: page `a` as the worker saw it vs `b`, the same URL opened again in a fresh tab right after, with no write by this worker in between. Compares the heading, the items of lists with the same heading (as sets: order may change) and counts with a unit shown once on both. `events`: what any worker did meanwhile (explains changes). A list that changes by more than half is marked volatile in `volatile` (rotating content) and skipped from then on. `skipped` collects the guard that dropped each list (check-outcome log, D59). | - |
-| `field_label(d)` | [885](../src/webtester/consistency.py#L885) | A filled field's name, from its element key (tag/type/role/text/label/href). | probes5 |
-| `long_value(base, n)` | [891](../src/webtester/consistency.py#L891) | `n` characters starting with the agent's own value (so the item stays recognisable). | - |
-| `mutation_plan(done, obj)` | [897](../src/webtester/consistency.py#L897) | For a one-step create form: (field that names the new item, field for the long value), or None when the step is not a form the harness may submit again: no fills, no final click/press, a password field (registration, login: a second submit could switch the worker's account) or a search box. | probes5 |
-| `class SweepState` | [921](../src/webtester/consistency.py#L921) | Shared by all workers of a run (or of one replay): memory, graph, probe caches. | checks, crossview, gate, probes5, runner, worker |
-| `SweepState.__init__(graph)` | [924](../src/webtester/consistency.py#L924) | Creates the shared memory and the per-run caches and counters (link statuses, probes, access evidence, mutation forms, reload pages). | - |
-| `class Sweeper` | [990](../src/webtester/consistency.py#L990) | One worker's view: hooks before and after each step's actions. | checks, crossview, gate, norms, reach, runner, worker |
-| `Sweeper.__init__(state, worker, account, llm_rules)` | [993](../src/webtester/consistency.py#L993) | Creates one worker's sweeper over the shared state; `llm_rules` turns on the rule that uses the model's cited contradictions (R15). | - |
-| `Sweeper._ck(rule, outcome, why)` | [1034](../src/webtester/consistency.py#L1034) | Record a check outcome other than detected/exercised (those are settled at the end of the step). | crossview, probes5 |
-| `Sweeper._arm(*rules)` | [1038](../src/webtester/consistency.py#L1038) | Marks rules as armed in this step; _settle_checks then records each as detected or exercised. | crossview, probes5 |
-| `Sweeper.async before(session, obs, actions)` | [1042](../src/webtester/consistency.py#L1042) | Before a step's actions: marks the control about to be clicked and reads its text, number, the item it sits in, form validity and the page text (PRE_JS). | browser, config, crossview, evaluate, evidence, families, gate, inferred, memory, metrics, norms, oracles, probes5, reach, registry, runner, worker |
-| `Sweeper.async actions_done(session)` | [1075](../src/webtester/consistency.py#L1075) | Read the marked control again and take the step's write requests. | gate, runner, worker |
-| `Sweeper.async after(session, obs, done, step, intent, suspect)` | [1101](../src/webtester/consistency.py#L1101) | After a step's actions: audits the page, records a memory event, and runs every rule (junk, links, counts, arithmetic, echo, effects, pending checks, lists, ages, link vs destination, pagination, back, probes, mutation, access, reload); returns the violations as signals. | appctl, browser, config, crawler, crossview, evaluate, frontier, gate, inferred, llm, memory, metrics, norms, policies, probes5, reach, runner, worker |
-| `Sweeper.note_edge(e)` | [1187](../src/webtester/consistency.py#L1187) | G3 (NV5): one navigation action from one state reached two different pages on different occasions. Called by the worker when it records a graph edge; the finding is reported with the next step's. Edges with a data verb, Back (it lands by history, not by state; G1 checks it), and arrivals on a login page (R30's case) are left out. | worker |
-| `Sweeper._count_form(obs, done, facts)` | [1205](../src/webtester/consistency.py#L1205) | R1/R5 measures. A step that filled fields and then clicked or pressed is a form attempt of its route shape; it is accepted when a write was answered 2xx/3xx and no new validation text appeared. Returns None when the step was no form attempt. | - |
-| `Sweeper._new_validation(facts)` | [1220](../src/webtester/consistency.py#L1220) | Validation lines on the page after the step that were not there before it (R1). | - |
-| `Sweeper.async _retry_form(session, obs, done, facts, step)` | [1225](../src/webtester/consistency.py#L1225) | R1 input profiles: a rejected form is submitted once more, in a fresh tab, with each field's value derived from what the page declares about it and from the app's own message (reach.profile_value). Only forms the mutation plan accepts (no password or search fields); at most MAX_RETRY_FORMS per run. | - |
-| `Sweeper._profile_filter(session, viol)` | [1256](../src/webtester/consistency.py#L1256) | X5 ablation only (profile_gating): violations of rules outside the app profile's packs are dropped and logged as suppressed:profile. Off by default, since a wrong profile would hide faults. | - |
-| `Sweeper._health(facts, done, url)` | [1273](../src/webtester/consistency.py#L1273) | C3: why this step looks like a failure of the harness rather than of the app ('' = it does not). | registry |
-| `Sweeper.async _seed(session, obs, done, e, step)` | [1286](../src/webtester/consistency.py#L1286) | R2: after the first accepted create of a form, the harness (not the LLM) submits the same form `seed_copies` more times with distinct names, so list rules (pagination, sort, counts, R09) have 2+ items to read. The copies are writes of this run (memory events, source 'seed'). | - |
-| `Sweeper.async _seed_copies(session, key, copies, step)` | [1308](../src/webtester/consistency.py#L1308) | `copies` more submits of a seeded form, numbered after the ones made before; returns those accepted. | - |
-| `Sweeper._page_size(session)` | [1327](../src/webtester/consistency.py#L1327) | R2: the list page size, from a per-page control on this page (its selected number), else the config. | - |
-| `Sweeper.async _top_up(session, facts, step)` | [1335](../src/webtester/consistency.py#L1335) | R2 (v5 plan 4.1: 0, 1, 2 and page size + 1 items): on a complete list that holds items of a seeded form, with a known page size N, the form is submitted again until the list would hold N + 1 (once per form, MAX_TOPUP copies in all), so pagination, sort and count rules see a second page. | - |
-| `Sweeper.async _norms(session, facts)` | [1357](../src/webtester/consistency.py#L1357) | R43 anchors, R64 control state, R26 declared ranges (norms.py): one page read. | - |
-| `Sweeper._loading(raw, facts, session)` | [1378](../src/webtester/consistency.py#L1378) | R54: a spinner still shown 10 s later on the same page; an empty-state text on a step whose list request failed (needs the network timeline). | - |
-| `Sweeper._settle_checks(viol)` | [1402](../src/webtester/consistency.py#L1402) | Every rule armed this step, or that raised a violation, gets one detected/exercised row. | - |
-| `Sweeper.async _evidence(session, ev)` | [1409](../src/webtester/consistency.py#L1409) | D58: R57 (2xx answers with an error body) and R51 (success and error messages together). | - |
-| `Sweeper._event(obs, done, step, intent, facts, url)` | [1428](../src/webtester/consistency.py#L1428) | Works out what the step did (verb from the model's intent or from word lists over the clicked control; object; fields; whether the app accepted a write) and records it in the action ledger. | - |
-| `Sweeper._effects(e, facts, done, obs)` | [1523](../src/webtester/consistency.py#L1523) | Immediate-effect rules: I-submit (a valid form sent nothing and nothing changed), I-error (a system error after a save), toggle counts that move the wrong way. | - |
-| `Sweeper.async _verify_pending(session, facts, step)` | [1595](../src/webtester/consistency.py#L1595) | Deferred checks of earlier intents: I-create/I-edit (the object is shown where the flow landed or started), I-delete (gone when its address is opened in a fresh tab), search/filter and logout checks. | - |
-| `Sweeper.async _filter_check(session, e, facts)` | [1685](../src/webtester/consistency.py#L1685) | I-filter: every result of a filter or search for T must contain T, on the list or on its own page. | - |
-| `Sweeper.async _logout_check(session, e)` | [1714](../src/webtester/consistency.py#L1714) | I-logout: after logging out, a page that showed the account name must no longer show it. | - |
-| `Sweeper._lists(facts, step)` | [1730](../src/webtester/consistency.py#L1730) | List rules: R07/R07b (what this worker favourited or followed must be in that list) and R09 (a list changed on a revisit with no recorded action to explain it). | norms |
-| `Sweeper._ages(facts, step)` | [1830](../src/webtester/consistency.py#L1830) | R08: ages of the same item across pages, and of items an agent just touched. R18: time order of one item: nothing about it is older than its creation, and its 'updated' age is not older than an update entry in an activity feed (D55 A6; BookStack BS09-BS11). An activity entry ('Admin created page Page 1 15 hours ago') is about its object link, not its author (A5). | - |
-| `Sweeper._link_vs_dest(obs, done, facts)` | [1909](../src/webtester/consistency.py#L1909) | R10: a list item's name against the heading of the page its link opened. | - |
-| `Sweeper._pagination(done, facts)` | [1933](../src/webtester/consistency.py#L1933) | R11: a page-number / next control that leaves the main list unchanged. | - |
-| `Sweeper._back(done, facts)` | [1955](../src/webtester/consistency.py#L1955) | G1: back returns to the page before the last move (not after a form submit). | - |
-| `Sweeper._suspect(s, facts)` | [1969](../src/webtester/consistency.py#L1969) | R15: a contradiction the model cites, kept only when both quotes are really on pages it saw. | - |
-| `Sweeper.async _probes(session, facts)` | [1983](../src/webtester/consistency.py#L1983) | R02 broken link: checks the status of a few list-item links (404/5xx is a violation); runs the R05 search probe. | - |
-| `Sweeper.async _search_probe(session, facts)` | [2017](../src/webtester/consistency.py#L2017) | R05: search for a made-up token; any result not on the page before is a phantom. | - |
-| `Sweeper.async _feed_check(session)` | [2059](../src/webtester/consistency.py#L2059) | 'Your Feed' lists what this account follows: an item whose author's page offers 'Follow' (not 'Unfollow') to this session contradicts the feed (Conduit F08). One author page per feed list. | - |
-| `Sweeper.async _toggle_probe(session, facts)` | [2095](../src/webtester/consistency.py#L2095) | A favourite/like control showing a count must change it by one when clicked and the app accepts the write; the probe clicks it once more to undo (Conduit F05). One page kind per run. | - |
-| `Sweeper.async _access(session, facts)` | [2146](../src/webtester/consistency.py#L2146) | R13 access: an item page's Edit link refused for this session while the same kind of edit address worked, or a hidden Edit whose address still opens the filled form. | - |
-| `Sweeper.async _probe_form(session, url)` | [2201](../src/webtester/consistency.py#L2201) | Opens an edit address in a fresh tab and reports whether it shows a form filled with the item's data (R13 evidence). | - |
-| `Sweeper.async _reload(session, obs, done, facts)` | [2221](../src/webtester/consistency.py#L2221) | G2 reload invariance: after a plain navigation, opens the same URL in a fresh tab and compares heading, lists and counts (view_diff). | - |
-| `Sweeper.async _mutate(session, obs, done, e, step)` | [2256](../src/webtester/consistency.py#L2256) | R16/R17: after an accepted one-step create form, submits it again in fresh tabs with an empty, spaces-only and over-long name and checks how the app answers. | - |
-| `Sweeper.async _submit_variant(session, form_url, done, target, kind, override)` | [2304](../src/webtester/consistency.py#L2304) | Open the form in a fresh tab, fill it as the agent did except `target` (empty, spaces or long; other text fields get a short suffix so a unique-name rule does not reject the copy), submit it the same way, and report what the app answered. `override` (R1, D61): element key -> value used as given for those fields. | probes5 |
-| `Sweeper.async _fresh_text(session, url, until)` | [2405](../src/webtester/consistency.py#L2405) | Visible text of a URL in a fresh tab (counts against the per-step probe budget). | - |
-| `Sweeper.async _fetch(session, url, body)` | [2414](../src/webtester/consistency.py#L2414) | HTTP GET through the worker's session (link status checks); returns status and optionally the body. | - |
-| `async _quiet(page, ms)` | [2425](../src/webtester/consistency.py#L2425) | Waits until a probe page's network is idle. | probes5 |
-| `class _ProbeNet` | [2434](../src/webtester/consistency.py#L2434) | What a probe tab's requests did. Probe tabs are not wired to the session's signal buffer (their errors must not become findings with the worker's trail), so R13/R16/G2 watch them here. | - |
-| `_ProbeNet.__init__(session, page)` | [2438](../src/webtester/consistency.py#L2438) | Attaches request/response listeners to a probe tab. | - |
-| `_ProbeNet._request(req)` | [2451](../src/webtester/consistency.py#L2451) | Tracks a probe tab's in-flight request. | - |
-| `_ProbeNet._finished(req)` | [2456](../src/webtester/consistency.py#L2456) | Marks a probe tab's request as finished. | - |
-| `_ProbeNet._response(resp)` | [2461](../src/webtester/consistency.py#L2461) | Records a probe tab's write statuses and 5xx answers. | - |
-| `_ProbeNet.reset()` | [2470](../src/webtester/consistency.py#L2470) | Clears what was recorded before the next submission. | appctl, browser, cli, crawler, evaluate, frontier, gate, probes5, runner |
-| `_ProbeNet.async quiet(quiet_s, max_s)` | [2473](../src/webtester/consistency.py#L2473) | Like BrowserSession.wait_quiet: no xhr/fetch/document request in flight for `quiet_s`. | probes5 |
-| `async _open(session, url)` | [2483](../src/webtester/consistency.py#L2483) | (page, net, HTTP status) of `url` in a new tab of the worker's context, loaded and quiet; the caller closes the page. None if it does not load. | probes5 |
-| `_locate(els, ekey, nth)` | [2501](../src/webtester/consistency.py#L2501) | Finds an element by key and ordinal in a list of elements. | probes5 |
-| `_href_of(d)` | [2508](../src/webtester/consistency.py#L2508) | Extracts the href from an element description. | - |
-| `_el_text(d)` | [2513](../src/webtester/consistency.py#L2513) | Extracts the quoted visible text from an element description. | - |
+| `view_diff(a, b, events, volatile, skipped)` | [833](../src/webtester/consistency.py#L833) | G2: page `a` as the worker saw it vs `b`, the same URL opened again in a fresh tab right after, with no write by this worker in between. Compares the heading, the items of lists with the same heading (as sets: order may change) and counts with a unit shown once on both. `events`: what any worker did meanwhile (explains changes). A list that changes by more than half is marked volatile in `volatile` (rotating content) and skipped from then on. `skipped` collects the guard that dropped each list (check-outcome log, D59). | - |
+| `field_label(d)` | [888](../src/webtester/consistency.py#L888) | A filled field's name, from its element key (tag/type/role/text/label/href). | probes5 |
+| `long_value(base, n)` | [894](../src/webtester/consistency.py#L894) | `n` characters starting with the agent's own value (so the item stays recognisable). | - |
+| `mutation_plan(done, obj)` | [900](../src/webtester/consistency.py#L900) | For a one-step create form: (field that names the new item, field for the long value), or None when the step is not a form the harness may submit again: no fills, no final click/press, a password field (registration, login: a second submit could switch the worker's account) or a search box. | probes5 |
+| `class SweepState` | [924](../src/webtester/consistency.py#L924) | Shared by all workers of a run (or of one replay): memory, graph, probe caches. | checks, crossview, gate, probes5, runner, worker |
+| `SweepState.__init__(graph)` | [927](../src/webtester/consistency.py#L927) | Creates the shared memory and the per-run caches and counters (link statuses, probes, access evidence, mutation forms, reload pages). | - |
+| `class Sweeper` | [993](../src/webtester/consistency.py#L993) | One worker's view: hooks before and after each step's actions. | checks, crossview, gate, norms, reach, runner, worker |
+| `Sweeper.__init__(state, worker, account, llm_rules)` | [996](../src/webtester/consistency.py#L996) | Creates one worker's sweeper over the shared state; `llm_rules` turns on the rule that uses the model's cited contradictions (R15). | - |
+| `Sweeper._ck(rule, outcome, why)` | [1037](../src/webtester/consistency.py#L1037) | Record a check outcome other than detected/exercised (those are settled at the end of the step). | crossview, probes5 |
+| `Sweeper._arm(*rules)` | [1041](../src/webtester/consistency.py#L1041) | Marks rules as armed in this step; _settle_checks then records each as detected or exercised. | crossview, probes5 |
+| `Sweeper.async before(session, obs, actions)` | [1045](../src/webtester/consistency.py#L1045) | Before a step's actions: marks the control about to be clicked and reads its text, number, the item it sits in, form validity and the page text (PRE_JS). | browser, config, crossview, evaluate, evidence, families, gate, inferred, memory, metrics, norms, oracles, probes5, reach, registry, runner, worker |
+| `Sweeper.async actions_done(session)` | [1078](../src/webtester/consistency.py#L1078) | Read the marked control again and take the step's write requests. | gate, runner, worker |
+| `Sweeper.async after(session, obs, done, step, intent, suspect)` | [1104](../src/webtester/consistency.py#L1104) | After a step's actions: audits the page, records a memory event, and runs every rule (junk, links, counts, arithmetic, echo, effects, pending checks, lists, ages, link vs destination, pagination, back, probes, mutation, access, reload); returns the violations as signals. | appctl, browser, config, crawler, crossview, evaluate, frontier, gate, inferred, llm, memory, metrics, norms, policies, probes5, reach, runner, worker |
+| `Sweeper.note_edge(e)` | [1190](../src/webtester/consistency.py#L1190) | G3 (NV5): one navigation action from one state reached two different pages on different occasions. Called by the worker when it records a graph edge; the finding is reported with the next step's. Edges with a data verb, Back (it lands by history, not by state; G1 checks it), and arrivals on a login page (R30's case) are left out. | worker |
+| `Sweeper._count_form(obs, done, facts)` | [1208](../src/webtester/consistency.py#L1208) | R1/R5 measures. A step that filled fields and then clicked or pressed is a form attempt of its route shape; it is accepted when a write was answered 2xx/3xx and no new validation text appeared. Returns None when the step was no form attempt. | - |
+| `Sweeper._new_validation(facts)` | [1223](../src/webtester/consistency.py#L1223) | Validation lines on the page after the step that were not there before it (R1). | - |
+| `Sweeper.async _retry_form(session, obs, done, facts, step)` | [1228](../src/webtester/consistency.py#L1228) | R1 input profiles: a rejected form is submitted once more, in a fresh tab, with each field's value derived from what the page declares about it and from the app's own message (reach.profile_value). Only forms the mutation plan accepts (no password or search fields); at most MAX_RETRY_FORMS per run. | - |
+| `Sweeper._profile_filter(session, viol)` | [1259](../src/webtester/consistency.py#L1259) | X5 ablation only (profile_gating): violations of rules outside the app profile's packs are dropped and logged as suppressed:profile. Off by default, since a wrong profile would hide faults. | - |
+| `Sweeper._health(facts, done, url)` | [1276](../src/webtester/consistency.py#L1276) | C3: why this step looks like a failure of the harness rather than of the app ('' = it does not). | registry |
+| `Sweeper.async _seed(session, obs, done, e, step)` | [1289](../src/webtester/consistency.py#L1289) | R2: after the first accepted create of a form, the harness (not the LLM) submits the same form `seed_copies` more times with distinct names, so list rules (pagination, sort, counts, R09) have 2+ items to read. The copies are writes of this run (memory events, source 'seed'). | - |
+| `Sweeper.async _seed_copies(session, key, copies, step)` | [1311](../src/webtester/consistency.py#L1311) | `copies` more submits of a seeded form, numbered after the ones made before; returns those accepted. | - |
+| `Sweeper._page_size(session)` | [1330](../src/webtester/consistency.py#L1330) | R2: the list page size, from a per-page control on this page (its selected number), else the config. | - |
+| `Sweeper.async _top_up(session, facts, step)` | [1338](../src/webtester/consistency.py#L1338) | R2 (v5 plan 4.1: 0, 1, 2 and page size + 1 items): on a complete list that holds items of a seeded form, with a known page size N, the form is submitted again until the list would hold N + 1 (once per form, MAX_TOPUP copies in all), so pagination, sort and count rules see a second page. | - |
+| `Sweeper.async _norms(session, facts)` | [1360](../src/webtester/consistency.py#L1360) | R43 anchors, R64 control state, R26 declared ranges (norms.py): one page read. | - |
+| `Sweeper._loading(raw, facts, session)` | [1381](../src/webtester/consistency.py#L1381) | R54: a spinner still shown 10 s later on the same page; an empty-state text on a step whose list request failed (needs the network timeline). | - |
+| `Sweeper._settle_checks(viol)` | [1405](../src/webtester/consistency.py#L1405) | Every rule armed this step, or that raised a violation, gets one detected/exercised row. | - |
+| `Sweeper.async _evidence(session, ev)` | [1412](../src/webtester/consistency.py#L1412) | D58: R57 (2xx answers with an error body) and R51 (success and error messages together). | - |
+| `Sweeper._event(obs, done, step, intent, facts, url)` | [1431](../src/webtester/consistency.py#L1431) | Works out what the step did (verb from the model's intent or from word lists over the clicked control; object; fields; whether the app accepted a write) and records it in the action ledger. | - |
+| `Sweeper._effects(e, facts, done, obs)` | [1529](../src/webtester/consistency.py#L1529) | Immediate-effect rules: I-submit (a valid form sent nothing and nothing changed), I-error (a system error after a save), toggle counts that move the wrong way. | - |
+| `Sweeper.async _verify_pending(session, facts, step)` | [1601](../src/webtester/consistency.py#L1601) | Deferred checks of earlier intents: I-create/I-edit (the object is shown where the flow landed or started), I-delete (gone when its address is opened in a fresh tab), search/filter and logout checks. | - |
+| `Sweeper.async _filter_check(session, e, facts)` | [1691](../src/webtester/consistency.py#L1691) | I-filter: every result of a filter or search for T must contain T, on the list or on its own page. | - |
+| `Sweeper.async _logout_check(session, e)` | [1720](../src/webtester/consistency.py#L1720) | I-logout: after logging out, a page that showed the account name must no longer show it. | - |
+| `Sweeper._lists(facts, step)` | [1736](../src/webtester/consistency.py#L1736) | List rules: R07/R07b (what this worker favourited or followed must be in that list) and R09 (a list changed on a revisit with no recorded action to explain it). | norms |
+| `Sweeper._ages(facts, step)` | [1838](../src/webtester/consistency.py#L1838) | R08: ages of the same item across pages, and of items an agent just touched. R18: time order of one item: nothing about it is older than its creation, and its 'updated' age is not older than an update entry in an activity feed (D55 A6; BookStack BS09-BS11). An activity entry ('Admin created page Page 1 15 hours ago') is about its object link, not its author (A5). | - |
+| `Sweeper._link_vs_dest(obs, done, facts)` | [1917](../src/webtester/consistency.py#L1917) | R10: a list item's name against the heading of the page its link opened. | - |
+| `Sweeper._pagination(done, facts)` | [1941](../src/webtester/consistency.py#L1941) | R11: a page-number / next control that leaves the main list unchanged. | - |
+| `Sweeper._back(done, facts)` | [1963](../src/webtester/consistency.py#L1963) | G1: back returns to the page before the last move (not after a form submit). | - |
+| `Sweeper._suspect(s, facts)` | [1977](../src/webtester/consistency.py#L1977) | R15: a contradiction the model cites, kept only when both quotes are really on pages it saw. | - |
+| `Sweeper.async _probes(session, facts)` | [1991](../src/webtester/consistency.py#L1991) | R02 broken link: checks the status of a few list-item links (404/5xx is a violation); runs the R05 search probe. | - |
+| `Sweeper.async _search_probe(session, facts)` | [2025](../src/webtester/consistency.py#L2025) | R05: search for a made-up token; any result not on the page before is a phantom. | - |
+| `Sweeper.async _feed_check(session)` | [2067](../src/webtester/consistency.py#L2067) | 'Your Feed' lists what this account follows: an item whose author's page offers 'Follow' (not 'Unfollow') to this session contradicts the feed (Conduit F08). One author page per feed list. | - |
+| `Sweeper.async _toggle_probe(session, facts)` | [2103](../src/webtester/consistency.py#L2103) | A favourite/like control showing a count must change it by one when clicked and the app accepts the write; the probe clicks it once more to undo (Conduit F05). One page kind per run. | - |
+| `Sweeper.async _access(session, facts)` | [2177](../src/webtester/consistency.py#L2177) | R13 access: an item page's Edit link refused for this session while the same kind of edit address worked, or a hidden Edit whose address still opens the filled form. | - |
+| `Sweeper.async _probe_form(session, url)` | [2232](../src/webtester/consistency.py#L2232) | Opens an edit address in a fresh tab and reports whether it shows a form filled with the item's data (R13 evidence). | - |
+| `Sweeper.async _reload(session, obs, done, facts)` | [2252](../src/webtester/consistency.py#L2252) | G2 reload invariance: after a plain navigation, opens the same URL in a fresh tab and compares heading, lists and counts (view_diff). | - |
+| `Sweeper.async _mutate(session, obs, done, e, step)` | [2287](../src/webtester/consistency.py#L2287) | R16/R17: after an accepted one-step create form, submits it again in fresh tabs with an empty, spaces-only and over-long name and checks how the app answers. | - |
+| `Sweeper.async _submit_variant(session, form_url, done, target, kind, override)` | [2335](../src/webtester/consistency.py#L2335) | Open the form in a fresh tab, fill it as the agent did except `target` (empty, spaces or long; other text fields get a short suffix so a unique-name rule does not reject the copy), submit it the same way, and report what the app answered. `override` (R1, D61): element key -> value used as given for those fields. | probes5 |
+| `Sweeper.async _fresh_text(session, url, until)` | [2436](../src/webtester/consistency.py#L2436) | Visible text of a URL in a fresh tab (counts against the per-step probe budget). | - |
+| `Sweeper.async _fetch(session, url, body)` | [2445](../src/webtester/consistency.py#L2445) | HTTP GET through the worker's session (link status checks); returns status and optionally the body. | - |
+| `async _quiet(page, ms)` | [2456](../src/webtester/consistency.py#L2456) | Waits until a probe page's network is idle. | probes5 |
+| `class _ProbeNet` | [2465](../src/webtester/consistency.py#L2465) | What a probe tab's requests did. Probe tabs are not wired to the session's signal buffer (their errors must not become findings with the worker's trail), so R13/R16/G2 watch them here. | - |
+| `_ProbeNet.__init__(session, page)` | [2469](../src/webtester/consistency.py#L2469) | Attaches request/response listeners to a probe tab. | - |
+| `_ProbeNet._request(req)` | [2483](../src/webtester/consistency.py#L2483) | Tracks a probe tab's in-flight request. | - |
+| `_ProbeNet._finished(req)` | [2488](../src/webtester/consistency.py#L2488) | Marks a probe tab's request as finished. | - |
+| `_ProbeNet._response(resp)` | [2493](../src/webtester/consistency.py#L2493) | Records a probe tab's write statuses and 5xx answers. | - |
+| `_ProbeNet.reset()` | [2503](../src/webtester/consistency.py#L2503) | Clears what was recorded before the next submission. | appctl, browser, cli, crawler, evaluate, frontier, gate, probes5, runner |
+| `_ProbeNet.async quiet(quiet_s, max_s)` | [2506](../src/webtester/consistency.py#L2506) | Like BrowserSession.wait_quiet: no xhr/fetch/document request in flight for `quiet_s`. | probes5 |
+| `async _answered_count(resps)` | [2519](../src/webtester/consistency.py#L2519) | R19r: the one count-like number (favoritesCount, likes_count, count) in the JSON answers to a click, or None when there is none or more than one. | - |
+| `async _open(session, url)` | [2547](../src/webtester/consistency.py#L2547) | (page, net, HTTP status) of `url` in a new tab of the worker's context, loaded and quiet; the caller closes the page. None if it does not load. | probes5 |
+| `_locate(els, ekey, nth)` | [2565](../src/webtester/consistency.py#L2565) | Finds an element by key and ordinal in a list of elements. | probes5 |
+| `_href_of(d)` | [2572](../src/webtester/consistency.py#L2572) | Extracts the href from an element description. | - |
+| `_el_text(d)` | [2577](../src/webtester/consistency.py#L2577) | Extracts the quoted visible text from an element description. | - |
 
 #### `crawler.py`
 
@@ -1208,66 +1242,68 @@ Cross-view rules (v5 waves W1-W3, D60): one item, one flow or one control seen a
 
 | Name | Line | What it does | Used in |
 |---|---:|---|---|
-| `datetimes(text)` | [162](../src/webtester/crossview.py#L162) | (date, minutes after midnight or None) for each date in `text`, with a time right after it. | - |
-| `_label_of(d)` | [189](../src/webtester/crossview.py#L189) | The visible label of a done action's element, normalised. | - |
-| `_nav_texts(raw)` | [193](../src/webtester/crossview.py#L193) | The texts of the page's navigation links (page read). | - |
-| `_names(facts)` | [197](../src/webtester/crossview.py#L197) | The item names of the page's main list. | - |
-| `class CrossState` | [203](../src/webtester/crossview.py#L203) | Shared by all workers of a run (SweepState.cross). | consistency |
-| `_who_when(name)` | [242](../src/webtester/crossview.py#L242) | A name made only of one name token and a date or time (a card's byline, 'worker01October 29, 2026'). | - |
-| `_written_since(mem, key, names, step)` | [247](../src/webtester/crossview.py#L247) | Whether any worker wrote to an item (by key or name) since a step: such changes are explained. | - |
-| `_status_of(text)` | [260](../src/webtester/crossview.py#L260) | The first status word (open, paid, shipped, ...) in a text, from the lexicon. | probes5 |
-| `_page_money(facts)` | [265](../src/webtester/crossview.py#L265) | The price nearest the heading: the first amount within 400 characters after it. | - |
-| `_complete(L, raw)` | [275](../src/webtester/crossview.py#L275) | Whether a list is complete: no pager, at most 50 items, no 'view all' or 'load more'. | - |
-| `_path(u)` | [280](../src/webtester/crossview.py#L280) | A URL's path without the trailing slash (navigation badges and collection pages are keyed by it). | frontier |
-| `class CrossView` | [285](../src/webtester/crossview.py#L285) | The passive cross-view rules: one item, flow or control compared across pages and steps. | consistency |
-| `CrossView.__init__(st)` | [286](../src/webtester/crossview.py#L286) | Binds the rules to the run's shared cross-view memory (CrossState). | - |
-| `CrossView.check(sw, facts, raw, obs, done, ev, step)` | [289](../src/webtester/crossview.py#L289) | All passive cross-view rules for this step; `sw` is the worker's Sweeper (memory, check log). | appctl, browser, checks, consistency, evaluate, families, frontier, gate, inferred, labels, memory, metrics, norms, openapi, policies, probes5, reach, registry, runner, worker |
-| `CrossView._registry(sw, facts, raw, obs, done, ev, step)` | [312](../src/webtester/crossview.py#L312) | R20: an item's name, price or status in a list against its own page; a list still showing a replaced name. | - |
-| `CrossView._declared(sw, facts, raw, obs, done, ev, step)` | [384](../src/webtester/crossview.py#L384) | R20d (O7): JSON-LD offers or product meta against the visible price and name. | - |
-| `CrossView._prefill(sw, facts, raw, obs, done, ev, step)` | [413](../src/webtester/crossview.py#L413) | R21a: an item's edit form must hold the name its page shows. | - |
-| `CrossView._hierarchy(sw, facts, raw, obs, done, ev, step)` | [436](../src/webtester/crossview.py#L436) | R40: the breadcrumb parent of an item must list it. | - |
-| `CrossView._badges(sw, facts, raw, obs, done, ev, step)` | [471](../src/webtester/crossview.py#L471) | R47: a navigation badge must not count more items than the page it opens lists. | - |
-| `CrossView._referenced(sw, facts, raw, obs, done, ev, step)` | [490](../src/webtester/crossview.py#L490) | R31: the page must not tell the user to use a control it lacks while the app shows it elsewhere. | - |
-| `CrossView._history(sw, facts, raw, obs, done, ev, step)` | [505](../src/webtester/crossview.py#L505) | R73: an activity page showing an older write of this run must show the newer ones too. | - |
-| `CrossView._relations(sw, facts, raw, obs, done, ev, step)` | [531](../src/webtester/crossview.py#L531) | R68: a follow must move the follower count by one; following oneself must be refused. | - |
-| `CrossView._collections(sw, facts, raw, obs, done, ev, step)` | [552](../src/webtester/crossview.py#L552) | R22: an accepted add to a cart or wishlist must raise its badge and put the item on its page. | - |
-| `CrossView._lifecycle(sw, facts, raw, obs, done, ev, step)` | [588](../src/webtester/crossview.py#L588) | R34: after Approve, Close or Publish the item must show the new status; status tab counts must add up to All. | - |
-| `CrossView._capacity(sw, facts, raw, obs, done, ev, step)` | [616](../src/webtester/crossview.py#L616) | R35: availability must fall after an accepted booking; taking more than available must be refused. | - |
-| `CrossView._conservation(sw, facts, raw, obs, done, ev, step)` | [637](../src/webtester/crossview.py#L637) | R32 (LG1): after an accepted transfer, the two balances must move by the amount. | - |
-| `CrossView._funnel(sw, facts, raw, obs, done, ev, step)` | [671](../src/webtester/crossview.py#L671) | R70: values typed in a multi-step flow must appear on its review or confirmation page. | - |
-| `CrossView._echo(sw, facts, raw, obs, done, ev, step)` | [700](../src/webtester/crossview.py#L700) | R12b: a typed value with markup or accents must not be shown escaped, accent-folded or with question marks. | - |
-| `CrossView._fidelity_values(sw, facts, raw, step)` | [733](../src/webtester/crossview.py#L733) | R12c (FM8, UQ3): a typed value cut short, its emoji dropped, its spaces collapsed in the form, its leading zeros or long digits lost. Only values the app accepted in a write, never the harness's probes. | - |
-| `CrossView._times(sw, facts, raw, obs, done, ev, step)` | [777](../src/webtester/crossview.py#L777) | R20t (TM3, TM4): an item's date or time in a list against its own page. | - |
-| `CrossView._idents(sw, facts, raw, obs, done, ev, step)` | [805](../src/webtester/crossview.py#L805) | R20u (UQ1): one shown identifier on two items; one item address showing another item later. | - |
-| `CrossView._choice(sw, facts, raw, obs, done, ev, step)` | [831](../src/webtester/crossview.py#L831) | R21s (FM11): an option chosen in a saved form, shown as another option when the form opens again. | - |
-| `CrossView._collateral(sw, facts, raw, obs, done, ev, step)` | [857](../src/webtester/crossview.py#L857) | R09d (DB4), R09r (DB9): what a single delete removed from the list it was made on. | - |
-| `CrossView._archive(sw, facts, raw, obs, done, ev, step)` | [885](../src/webtester/crossview.py#L885) | R49a (DB12): an archived item listed in an active list; a restored item with fewer children. | - |
-| `CrossView._guest(sw, facts, raw, obs, done, ev, step)` | [920](../src/webtester/crossview.py#L920) | R22g (CT5) guest merge, R22v (PX4) the chosen variant on the collection line. | - |
-| `CrossView._closed(sw, facts, raw, obs, done, ev, step)` | [963](../src/webtester/crossview.py#L963) | R34c (SM3): a write accepted on an item whose page called it closed or locked. | - |
-| `CrossView._status_tabs(sw, facts, raw, obs, done, ev, step)` | [981](../src/webtester/crossview.py#L981) | R34 (SM4): one item listed under two exclusive status tabs. | - |
-| `CrossView._booking(sw, facts, raw, obs, done, ev, step)` | [1005](../src/webtester/crossview.py#L1005) | R36b (TM2): two accepted bookings of one slot of one resource (the agent's or the seeder's). | - |
-| `CrossView._dates(sw, facts, raw, obs, done, ev, step)` | [1025](../src/webtester/crossview.py#L1025) | R38 (SF7): a date-range filter in the address and items dated outside it. | - |
-| `CrossView._forbidden(sw, facts, raw, obs, done, ev, step)` | [1046](../src/webtester/crossview.py#L1046) | R67f (CX3): an item this account's list showed, answering 'forbidden' when opened from it. | - |
-| `CrossView._tag_pages(sw, facts, raw, obs, done, ev, step)` | [1060](../src/webtester/crossview.py#L1060) | R68t (RL1): an item saved with a tag or assignee, missing from that tag's own page. | - |
-| `CrossView._undo(sw, facts, raw, obs, done, ev, step)` | [1089](../src/webtester/crossview.py#L1089) | R48u (RC3): redo right after undo must give back the list as it was before the undo. | - |
-| `CrossView._keys(sw, facts, raw, obs, done, ev, step)` | [1108](../src/webtester/crossview.py#L1108) | R29k (RC4): a key the page advertises that changed nothing. | - |
-| `CrossView._unread(sw, facts, raw, obs, done, ev, step)` | [1127](../src/webtester/crossview.py#L1127) | R47r (MU2, T3): a notification opened from its list is still counted unread on the next visit. | - |
-| `CrossView._shuffle(sw, facts, raw, obs, done, ev, step)` | [1146](../src/webtester/crossview.py#L1146) | R74 (MD2): shuffle must keep the set of tracks. | - |
-| `CrossView._header(sw, facts, raw, obs, done, ev, step)` | [1159](../src/webtester/crossview.py#L1159) | R30 (SA2): the header offers 'Log in' while the page greets this account by name. | - |
-| `CrossView._empty_state(sw, facts, raw, obs, done, ev, step)` | [1173](../src/webtester/crossview.py#L1173) | R31 (PR7): an empty state that asks to create one, on a page with no control to do it. | - |
-| `CrossView._suggestion(sw, facts, raw, obs, done, ev, step)` | [1188](../src/webtester/crossview.py#L1188) | R61 (SF9): a chosen suggestion opening another item than the one it named. | - |
-| `CrossView._cart_algebra(sw, facts, raw, obs, done, ev, step)` | [1205](../src/webtester/crossview.py#L1205) | R69 (PX1, PX2): the same cart lines must cost the same; a quantity set must stay; a coupon below its stated minimum, marked expired, or applied twice must not lower the total. | - |
-| `CrossView._fidelity(sw, facts, raw, obs, done, ev, step)` | [1249](../src/webtester/crossview.py#L1249) | R12c: typed values cut, stripped of emoji, spaces or leading zeros, or rounded (see _fidelity_values). | - |
-| `CrossView._parity(sw, facts, raw, obs, done, ev, step)` | [1253](../src/webtester/crossview.py#L1253) | R56 (T3): two create routes for one item kind must keep the same fields. | - |
-| `CrossView._session(sw, facts, raw, obs, done, ev, step)` | [1275](../src/webtester/crossview.py#L1275) | R30: a login page with no logout in the trail means the session ended. | consistency, probes5 |
-| `CrossView._input_kept(sw, facts, raw, obs, done, ev, step)` | [1292](../src/webtester/crossview.py#L1292) | R27: after a rejected submit, the fields the agent filled must still hold their values. | - |
-| `CrossView._dead(sw, facts, raw, obs, done, ev, step)` | [1314](../src/webtester/crossview.py#L1314) | R29: an action button that sends no request, changes no address and leaves the page as it was. | - |
-| `CrossView._facets(sw, facts, raw, obs, done, ev, step)` | [1335](../src/webtester/crossview.py#L1335) | R38: a facet count against the results it opens; a range filter returns only items in range; R38c filter composition. | - |
-| `CrossView._prefs(sw, facts, raw, obs, done, ev, step)` | [1382](../src/webtester/crossview.py#L1382) | R44: a chosen page size must be kept by later lists. | - |
-| `CrossView._bulk(sw, facts, raw, obs, done, ev, step)` | [1399](../src/webtester/crossview.py#L1399) | R55: a bulk action must change exactly the selected rows, and its message count must match. | - |
-| `CrossView._clone(sw, facts, raw, obs, done, ev, step)` | [1422](../src/webtester/crossview.py#L1422) | R58: a copy must have its original's children. | - |
-| `CrossView._cart(sw, facts, raw, obs, done, ev, step)` | [1441](../src/webtester/crossview.py#L1441) | R69: quantity 0 removes the line; removing a coupon restores the total. | - |
-| `message_fidelity(sw, msgs, ev, done)` | [1469](../src/webtester/crossview.py#L1469) | R51c (FB2): a message counting another number than one single change, or naming another item. Called from the Sweeper's evidence step (it drains the transient messages). | consistency |
+| `datetimes(text)` | [164](../src/webtester/crossview.py#L164) | (date, minutes after midnight or None) for each date in `text`, with a time right after it. | - |
+| `_label_of(d)` | [191](../src/webtester/crossview.py#L191) | The visible label of a done action's element, normalised. | - |
+| `_nav_texts(raw)` | [195](../src/webtester/crossview.py#L195) | The texts of the page's navigation links (page read). | - |
+| `_names(facts)` | [199](../src/webtester/crossview.py#L199) | The item names of the page's main list. | - |
+| `class CrossState` | [205](../src/webtester/crossview.py#L205) | Shared by all workers of a run (SweepState.cross). | consistency |
+| `_who_when(name)` | [245](../src/webtester/crossview.py#L245) | A name made only of one name token and a date or time (a card's byline, 'worker01October 29, 2026'). | - |
+| `_first_seg(url)` | [256](../src/webtester/crossview.py#L256) | The first path segment of an item address ('books' for /books/x/page/y): which kinds of items a list holds (R22h). | - |
+| `_written_since(mem, key, names, step)` | [260](../src/webtester/crossview.py#L260) | Whether any worker wrote to an item (by key or name) since a step: such changes are explained. | - |
+| `_status_of(text)` | [273](../src/webtester/crossview.py#L273) | The first status word (open, paid, shipped, ...) in a text, from the lexicon. | probes5 |
+| `_page_money(facts)` | [278](../src/webtester/crossview.py#L278) | The price nearest the heading: the first amount within 400 characters after it. | - |
+| `_complete(L, raw)` | [288](../src/webtester/crossview.py#L288) | Whether a list is complete: no pager, at most 50 items, no 'view all' or 'load more'. | - |
+| `_path(u)` | [293](../src/webtester/crossview.py#L293) | A URL's path without the trailing slash (navigation badges and collection pages are keyed by it). | frontier |
+| `class CrossView` | [298](../src/webtester/crossview.py#L298) | The passive cross-view rules: one item, flow or control compared across pages and steps. | consistency |
+| `CrossView.__init__(st)` | [299](../src/webtester/crossview.py#L299) | Binds the rules to the run's shared cross-view memory (CrossState). | - |
+| `CrossView.check(sw, facts, raw, obs, done, ev, step)` | [302](../src/webtester/crossview.py#L302) | All passive cross-view rules for this step; `sw` is the worker's Sweeper (memory, check log). | appctl, browser, checks, consistency, evaluate, families, frontier, gate, inferred, labels, memory, metrics, norms, openapi, policies, probes5, reach, registry, runner, worker |
+| `CrossView._registry(sw, facts, raw, obs, done, ev, step)` | [325](../src/webtester/crossview.py#L325) | R20: an item's name, price or status in a list against its own page; a list still showing a replaced name. | - |
+| `CrossView._declared(sw, facts, raw, obs, done, ev, step)` | [397](../src/webtester/crossview.py#L397) | R20d (O7): JSON-LD offers or product meta against the visible price and name. | - |
+| `CrossView._prefill(sw, facts, raw, obs, done, ev, step)` | [426](../src/webtester/crossview.py#L426) | R21a: an item's edit form must hold the name its page shows. | - |
+| `CrossView._hierarchy(sw, facts, raw, obs, done, ev, step)` | [449](../src/webtester/crossview.py#L449) | R40: the breadcrumb parent of an item must list it. | - |
+| `CrossView._badges(sw, facts, raw, obs, done, ev, step)` | [484](../src/webtester/crossview.py#L484) | R47: a navigation badge must not count more items than the page it opens lists. | - |
+| `CrossView._referenced(sw, facts, raw, obs, done, ev, step)` | [503](../src/webtester/crossview.py#L503) | R31: the page must not tell the user to use a control it lacks while the app shows it elsewhere. | - |
+| `CrossView._history(sw, facts, raw, obs, done, ev, step)` | [518](../src/webtester/crossview.py#L518) | R73: an activity page showing an older write of this run must show the newer ones too. | - |
+| `CrossView._relations(sw, facts, raw, obs, done, ev, step)` | [544](../src/webtester/crossview.py#L544) | R68: a follow must move the follower count by one; following oneself must be refused. | - |
+| `CrossView._collections(sw, facts, raw, obs, done, ev, step)` | [565](../src/webtester/crossview.py#L565) | R22: an accepted add to a cart or wishlist must raise its badge and put the item on its page. | - |
+| `CrossView._viewed(sw, facts, raw, obs, done, ev, step)` | [601](../src/webtester/crossview.py#L601) | A 'recently viewed' list must hold the item this worker opened last (or the one before), unless an edit or delete since explains its absence. Only items of a kind the app keeps in that history are checked: their address must share its first segment with an item of the list, and form, draft and export pages are no views. Tolerant of probes that add views in between: only the last two items, within 6 steps. | - |
+| `CrossView._lifecycle(sw, facts, raw, obs, done, ev, step)` | [643](../src/webtester/crossview.py#L643) | R34: after Approve, Close or Publish the item must show the new status; status tab counts must add up to All. | - |
+| `CrossView._capacity(sw, facts, raw, obs, done, ev, step)` | [671](../src/webtester/crossview.py#L671) | R35: availability must fall after an accepted booking; taking more than available must be refused. | - |
+| `CrossView._conservation(sw, facts, raw, obs, done, ev, step)` | [692](../src/webtester/crossview.py#L692) | R32 (LG1): after an accepted transfer, the two balances must move by the amount. | - |
+| `CrossView._funnel(sw, facts, raw, obs, done, ev, step)` | [726](../src/webtester/crossview.py#L726) | R70: values typed in a multi-step flow must appear on its review or confirmation page. | - |
+| `CrossView._echo(sw, facts, raw, obs, done, ev, step)` | [755](../src/webtester/crossview.py#L755) | R12b: a typed value with markup or accents must not be shown escaped, accent-folded or with question marks. | - |
+| `CrossView._fidelity_values(sw, facts, raw, step)` | [788](../src/webtester/crossview.py#L788) | R12c (FM8, UQ3): a typed value cut short, its emoji dropped, its spaces collapsed in the form, its leading zeros or long digits lost. Only values the app accepted in a write, never the harness's probes. | - |
+| `CrossView._times(sw, facts, raw, obs, done, ev, step)` | [832](../src/webtester/crossview.py#L832) | R20t (TM3, TM4): an item's date or time in a list against its own page. | - |
+| `CrossView._idents(sw, facts, raw, obs, done, ev, step)` | [860](../src/webtester/crossview.py#L860) | R20u (UQ1): one shown identifier on two items; one item address showing another item later. | - |
+| `CrossView._choice(sw, facts, raw, obs, done, ev, step)` | [886](../src/webtester/crossview.py#L886) | R21s (FM11): an option chosen in a saved form, shown as another option when the form opens again. | - |
+| `CrossView._collateral(sw, facts, raw, obs, done, ev, step)` | [912](../src/webtester/crossview.py#L912) | R09d (DB4), R09r (DB9): what a single delete removed from the list it was made on. | - |
+| `CrossView._archive(sw, facts, raw, obs, done, ev, step)` | [940](../src/webtester/crossview.py#L940) | R49a (DB12): an archived item listed in an active list; a restored item with fewer children. | - |
+| `CrossView._guest(sw, facts, raw, obs, done, ev, step)` | [975](../src/webtester/crossview.py#L975) | R22g (CT5) guest merge, R22v (PX4) the chosen variant on the collection line. | - |
+| `CrossView._closed(sw, facts, raw, obs, done, ev, step)` | [1018](../src/webtester/crossview.py#L1018) | R34c (SM3): a write accepted on an item whose page called it closed or locked. | - |
+| `CrossView._status_tabs(sw, facts, raw, obs, done, ev, step)` | [1036](../src/webtester/crossview.py#L1036) | R34 (SM4): one item listed under two exclusive status tabs. | - |
+| `CrossView._booking(sw, facts, raw, obs, done, ev, step)` | [1060](../src/webtester/crossview.py#L1060) | R36b (TM2): two accepted bookings of one slot of one resource (the agent's or the seeder's). | - |
+| `CrossView._dates(sw, facts, raw, obs, done, ev, step)` | [1080](../src/webtester/crossview.py#L1080) | R38 (SF7): a date-range filter in the address and items dated outside it. | - |
+| `CrossView._forbidden(sw, facts, raw, obs, done, ev, step)` | [1101](../src/webtester/crossview.py#L1101) | R67f (CX3): an item this account's list showed, answering 'forbidden' when opened from it. | - |
+| `CrossView._tag_pages(sw, facts, raw, obs, done, ev, step)` | [1115](../src/webtester/crossview.py#L1115) | R68t (RL1): an item saved with a tag or assignee, missing from that tag's own page. | - |
+| `CrossView._undo(sw, facts, raw, obs, done, ev, step)` | [1144](../src/webtester/crossview.py#L1144) | R48u (RC3): redo right after undo must give back the list as it was before the undo. | - |
+| `CrossView._keys(sw, facts, raw, obs, done, ev, step)` | [1163](../src/webtester/crossview.py#L1163) | R29k (RC4): a key the page advertises that changed nothing. | - |
+| `CrossView._unread(sw, facts, raw, obs, done, ev, step)` | [1182](../src/webtester/crossview.py#L1182) | R47r (MU2, T3): a notification opened from its list is still counted unread on the next visit. | - |
+| `CrossView._shuffle(sw, facts, raw, obs, done, ev, step)` | [1201](../src/webtester/crossview.py#L1201) | R74 (MD2): shuffle must keep the set of tracks. | - |
+| `CrossView._header(sw, facts, raw, obs, done, ev, step)` | [1214](../src/webtester/crossview.py#L1214) | R30 (SA2): the header offers 'Log in' while the page greets this account by name. | - |
+| `CrossView._empty_state(sw, facts, raw, obs, done, ev, step)` | [1228](../src/webtester/crossview.py#L1228) | R31 (PR7): an empty state that asks to create one, on a page with no control to do it. | - |
+| `CrossView._suggestion(sw, facts, raw, obs, done, ev, step)` | [1243](../src/webtester/crossview.py#L1243) | R61 (SF9): a chosen suggestion opening another item than the one it named. | - |
+| `CrossView._cart_algebra(sw, facts, raw, obs, done, ev, step)` | [1260](../src/webtester/crossview.py#L1260) | R69 (PX1, PX2): the same cart lines must cost the same; a quantity set must stay; a coupon below its stated minimum, marked expired, or applied twice must not lower the total. | - |
+| `CrossView._fidelity(sw, facts, raw, obs, done, ev, step)` | [1304](../src/webtester/crossview.py#L1304) | R12c: typed values cut, stripped of emoji, spaces or leading zeros, or rounded (see _fidelity_values). | - |
+| `CrossView._parity(sw, facts, raw, obs, done, ev, step)` | [1308](../src/webtester/crossview.py#L1308) | R56 (T3): two create routes for one item kind must keep the same fields. | - |
+| `CrossView._session(sw, facts, raw, obs, done, ev, step)` | [1330](../src/webtester/crossview.py#L1330) | R30: a login page with no logout in the trail means the session ended. | consistency, probes5 |
+| `CrossView._input_kept(sw, facts, raw, obs, done, ev, step)` | [1347](../src/webtester/crossview.py#L1347) | R27: after a rejected submit, the fields the agent filled must still hold their values. | - |
+| `CrossView._dead(sw, facts, raw, obs, done, ev, step)` | [1369](../src/webtester/crossview.py#L1369) | R29: an action button that sends no request, changes no address and leaves the page as it was. | - |
+| `CrossView._facets(sw, facts, raw, obs, done, ev, step)` | [1390](../src/webtester/crossview.py#L1390) | R38: a facet count against the results it opens; a range filter returns only items in range; R38c filter composition. | - |
+| `CrossView._prefs(sw, facts, raw, obs, done, ev, step)` | [1437](../src/webtester/crossview.py#L1437) | R44: a chosen page size must be kept by later lists. | - |
+| `CrossView._bulk(sw, facts, raw, obs, done, ev, step)` | [1454](../src/webtester/crossview.py#L1454) | R55: a bulk action must change exactly the selected rows, and its message count must match. | - |
+| `CrossView._clone(sw, facts, raw, obs, done, ev, step)` | [1477](../src/webtester/crossview.py#L1477) | R58: a copy must have its original's children. | - |
+| `CrossView._cart(sw, facts, raw, obs, done, ev, step)` | [1496](../src/webtester/crossview.py#L1496) | R69: quantity 0 removes the line; removing a coupon restores the total. | - |
+| `message_fidelity(sw, msgs, ev, done)` | [1524](../src/webtester/crossview.py#L1524) | R51c (FB2): a message counting another number than one single change, or naming another item. Called from the Sweeper's evidence step (it drains the transient messages). | consistency |
 
 #### `envcheck.py`
 
@@ -1790,7 +1826,7 @@ Abstract state graph (harness v4, D49): states, actions and transitions seen whi
 | `action_label(actions)` | [33](../src/webtester/stategraph.py#L33) | Identity of a step's actions without the state: do + element key + value class. | - |
 | `is_navigation(actions)` | [44](../src/webtester/stategraph.py#L44) | One link click (an <a> with an href) or one navigate/back: moves without changing data. | consistency |
 | `class Node` | [58](../src/webtester/stategraph.py#L58) | One abstract state in the graph: page, URL, visits, first step. | - |
-| `class Page` | [68](../src/webtester/stategraph.py#L68) | One page (route shape): name, heading, URL, its states, visits. | browser, checks, consistency, gate, norms |
+| `class Page` | [68](../src/webtester/stategraph.py#L68) | One page (route shape): name, heading, URL, its states, visits. | browser, checks, consistency, crossview, gate, norms |
 | `class Edge` | [78](../src/webtester/stategraph.py#L78) | One (state, action) -> next-state distribution, with who took it (LLM, harness, crawler), data verbs and signal counts. | - |
 | `Edge.dst_pages()` | [91](../src/webtester/stategraph.py#L91) | Pages this edge has led to. | consistency |
 | `class StateGraph` | [95](../src/webtester/stategraph.py#L95) | The run's abstract state graph, shared by all workers (v4, D49). | runner |
@@ -2713,6 +2749,8 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | D60 | 28 Oct | v5 built through every phase, with a rule for every coverable fault family (`docs/v5_plan.md` section 14) |
 | D61 | 29 Oct | Audit of v5 against its plan, the fault-family table and the paper's metric list; every gap built and tested |
 | D62 | 29 Oct | Road to the v5.0 lock: entry check, fixture tests for every built rule, pilot and final resweep |
+| D63 | 2 Nov | v5.0 candidate changed after the live pilots (I96, I97): R71 left out, R19 reads its undo click, toggle events name the page's item, new rule R22h; the lock is measured again (v64) |
+| D64 | 3 Nov | v66 lock measurement (code hash b63ea788, D63-D63d): both development apps pass; Conduit recall 8/8 |
 <!-- gen:end -->
 
 ## Appendix D: Issue index
@@ -2817,6 +2855,8 @@ Known upstream Conduit defects (not seeded, count as real when found): U1 userna
 | I93 | 29 Oct | R48c read the corrupted start after a fixed 0.8 s (a slower start would read as blank) |
 | I94 | 29 Oct | Pilot: R30 'session ended without a logout' on Conduit (15 findings, both passes), cause not found: in the replay, clicking Settings led to the login page, while the live run reached Settings at the s |
 | I95 | 29 Oct | Pilot: R01x on BookStack's audit log ('maintenance_action_run', an event code the log lists by design) |
+| I96 | 2 Nov | Live v5 pilots (`h5pilot`, `bs5pilot`, 30 Oct) look worse than v4 but the lock check never saw their main noise: R71 runs in live runs only (`envcheck.py`, time-zone and phone-width replays), so the v |
+| I97 | 2 Nov | Reached but unreported in the v5 pilots: F05 (Conduit), BS01-BS03 (BookStack) |
 <!-- gen:end -->
 
 ## Appendix E: Run registry summary

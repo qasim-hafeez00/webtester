@@ -196,10 +196,10 @@ at T2 until it is measured.
 
 | ID | Family | Sources | Evidence | Our rules | Status | Dev faults |
 |---|---|---|---|---|---|---|
-| CT1 | Toggle not applied or not shown | GN | intent-effect | I-toggle, R07, R07b, R19 | covered | F05, BS01 |
+| CT1 | Toggle not applied or not shown | GN | intent-effect | I-toggle, R07, R07b, R19; **R19r** answer vs page (I97) | covered | F05, BS01 |
 | CT2 | Item added to a collection (cart, wishlist, compare, bookmarks, watch list) missing from that collection's page, or its badge count wrong | VK shopping cart | intent-effect | R07 (favourite and follow only); **R22 collection ledger** | partial | BS01 |
 | CT3 | Undo does not restore | | metamorphic | R19 (second click) | covered | |
-| CT4 | Collection lost on navigation | VK navigation | metamorphic | R09 (revisit); **R22** revisit | partial | BS02, BS03 |
+| CT4 | Collection lost on navigation | VK navigation | metamorphic | R09 (revisit); **R22** revisit; **R22h** view history (I97) | partial | BS02, BS03 |
 | CT5 | A guest's collection (cart, wishlist) merged at login with lines duplicated or lost | VK shopping cart; REV | intent-effect | **R22 extension** (fill as guest, log in, compare) (D61: **R22g**) | coverable, low |  |
 
 ### 3.10 Workflows and business rules

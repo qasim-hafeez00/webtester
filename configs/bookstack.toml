@@ -66,4 +66,6 @@ env_axes = ["tz-west", "tz-east", "locale", "phone"]
 coverage_metrics = true
 # D62a: rules left out of the v5.0 report (they still run; findings go to findings_withheld.json).
 # Proposed set (D62a), switched on for the v5.0 candidate and its live pilots on 30 Oct:
-exclude_rules = ["R02h", "R02m", "R09", "R09d", "R12c", "R21b", "R30", "R50m", "R65", "R68t"]
+# I96 (2 Nov): R71 added; it runs in live runs only, so the v63 resweep never measured it, and in the live
+# pilots 16 of its 22 findings were judged wrong expectations (phone-width menus, local-time dates).
+exclude_rules = ["R02h", "R02m", "R09", "R09d", "R12c", "R21b", "R30", "R50m", "R65", "R68t", "R71"]
